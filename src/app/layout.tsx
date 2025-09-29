@@ -26,14 +26,26 @@ export default function RootLayout({
                     GCS Demo
                   </h1>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <a href="/" className="text-gray-700 hover:text-gray-900">
+                <div className="flex items-center space-x-6">
+                  <a href="/" className="text-gray-700 hover:text-gray-900 transition-colors">
                     홈
                   </a>
-                  <a href="/posts" className="text-gray-700 hover:text-gray-900">
+                  <a href="/about" className="text-gray-700 hover:text-gray-900 transition-colors">
+                    About GCS
+                  </a>
+                  <a href="/archive" className="text-gray-700 hover:text-gray-900 transition-colors">
+                    Archive
+                  </a>
+                  <a href="/community" className="text-gray-700 hover:text-gray-900 transition-colors">
+                    Community
+                  </a>
+                  <a href="/shop" className="text-gray-700 hover:text-gray-900 transition-colors">
+                    Shop
+                  </a>
+                  <a href="/posts" className="text-gray-700 hover:text-gray-900 transition-colors">
                     게시글
                   </a>
-                  <a href="/login" className="text-gray-700 hover:text-gray-900">
+                  <a href="/login" className="text-gray-700 hover:text-gray-900 transition-colors">
                     로그인
                   </a>
                 </div>
