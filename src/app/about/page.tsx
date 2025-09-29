@@ -2,7 +2,7 @@ export default function AboutPage() {
   return (
     <div className="fixed inset-0 bg-black overflow-auto">
       <div className="relative min-h-screen bg-black px-4 py-6 sm:px-0">
-        <div className="max-w-4xl mx-auto pt-20">
+        <div className="max-w-4xl mx-auto pt-24">
           <h1 className="text-4xl font-bold text-white mb-8 text-center">About GCS</h1>
           
           <div className="prose prose-lg max-w-none text-white">
