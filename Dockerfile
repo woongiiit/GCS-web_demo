@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --only=production=false
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -20,6 +20,9 @@ RUN npx prisma generate
 
 # Build the application
 RUN npm run build
+
+# Verify Next.js is available
+RUN npx next --version
 
 # Production image, copy all the files and run next
 FROM base AS runner
