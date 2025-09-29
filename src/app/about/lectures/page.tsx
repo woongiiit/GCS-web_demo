@@ -12,24 +12,33 @@ export default function LecturesPage() {
           </Link>
           
           <div className="prose prose-lg max-w-none text-white">
-            <p className="text-gray-300 mb-8 text-lg leading-relaxed text-center">
-              GCS (Graphic Communication Science)는 동국대학교 연계전공으로, 
-              그래픽 디자인과 커뮤니케이션 기술을 융합한 혁신적인 전공입니다.
+            <p className="text-gray-300 mb-6 text-lg leading-relaxed text-center">
+              GCS 연계 전공을 소개하는 공간입니다.
             </p>
             
+            {/* 홈 아이콘 */}
+            <Link href="/" className="flex justify-center mb-8">
+              <div className="w-6 h-6">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+            </Link>
+            
             {/* 서브 메뉴 배너 */}
-            <div className="bg-gray-600 rounded-lg p-4 mb-8">
-              <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-                <Link href="/about/gcsweb" className="text-gray-300 hover:text-white transition-colors font-medium px-3 py-2 rounded-md hover:bg-gray-700">
+            <div className="bg-white rounded-lg p-4 mb-8">
+              <div className="flex flex-wrap justify-center gap-2 md:gap-8">
+                <Link href="/about/gcsweb" className="text-black hover:text-gray-600 transition-colors font-medium px-2 py-1 md:px-3 md:py-2 rounded-md hover:bg-gray-100 text-sm md:text-base">
                   GCS:Web
                 </Link>
-                <Link href="/about/intro" className="text-gray-300 hover:text-white transition-colors font-medium px-3 py-2 rounded-md hover:bg-gray-700">
+                <Link href="/about/intro" className="text-black hover:text-gray-600 transition-colors font-medium px-2 py-1 md:px-3 md:py-2 rounded-md hover:bg-gray-100 text-sm md:text-base">
                   전공 소개
                 </Link>
-                <Link href="/about/lectures" className="text-white bg-gray-800 transition-colors font-medium px-3 py-2 rounded-md">
+                <Link href="/about/lectures" className="text-black px-2 py-1 md:px-3 md:py-2 pb-1 border-b-2 border-black font-medium text-sm md:text-base">
                   개설 과목
                 </Link>
-                <Link href="/about/professor" className="text-gray-300 hover:text-white transition-colors font-medium px-3 py-2 rounded-md hover:bg-gray-700">
+                <Link href="/about/professor" className="text-black hover:text-gray-600 transition-colors font-medium px-2 py-1 md:px-3 md:py-2 rounded-md hover:bg-gray-100 text-sm md:text-base">
                   교수진
                 </Link>
               </div>
