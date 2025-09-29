@@ -29,7 +29,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* 로고 - 좌측 */}
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
+            <Link href="/" className="text-xl font-bold text-black hover:text-gray-800 transition-colors">
               GCS Demo
             </Link>
           </div>
@@ -43,8 +43,8 @@ export default function Navigation() {
                 className={`
                   nav-item relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300
                   ${isActive(item.href)
-                    ? 'text-indigo-600 bg-indigo-50 shadow-sm border border-indigo-200'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 hover:shadow-md'
+                    ? 'text-black bg-black text-white font-semibold shadow-lg'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-100 hover:shadow-md'
                   }
                   hover:scale-105 hover:-translate-y-0.5
                 `}
@@ -52,7 +52,7 @@ export default function Navigation() {
                 {item.label}
                 {/* 활성 상태 하단 밑줄 */}
                 {isActive(item.href) && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-indigo-600 rounded-full"></div>
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>
                 )}
               </Link>
             ))}
@@ -60,7 +60,9 @@ export default function Navigation() {
           
           {/* 우측 공간 (향후 사용자 메뉴 등) */}
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">U</span>
+            </div>
           </div>
         </div>
         
@@ -74,8 +76,8 @@ export default function Navigation() {
                 className={`
                   px-3 py-2 text-sm font-medium rounded-md transition-all duration-200
                   ${isActive(item.href)
-                    ? 'text-indigo-600 bg-indigo-50'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'text-white bg-black font-semibold shadow-md'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-100'
                   }
                 `}
               >
