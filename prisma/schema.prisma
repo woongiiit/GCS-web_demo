@@ -11,13 +11,15 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  posts     Post[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  password     String
+  posts        Post[]
+  boardPosts   BoardPost[]
+  loungePosts  LoungePost[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@map("users")
 }
@@ -33,4 +35,32 @@ model Post {
   updatedAt DateTime @updatedAt
 
   @@map("posts")
+}
+
+model BoardPost {
+  id          String   @id @default(cuid())
+  title       String
+  content     String?
+  description String?
+  thumbnail   String?
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("board_posts")
+}
+
+model LoungePost {
+  id          String   @id @default(cuid())
+  title       String
+  content     String?
+  description String?
+  thumbnail   String?
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("lounge_posts")
 }

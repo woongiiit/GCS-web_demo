@@ -10,7 +10,7 @@ export default function Navigation() {
     { href: '/', label: '홈' },
     { href: '/about', label: 'About GCS' },
     { href: '/archive', label: 'Archive' },
-    { href: '/community', label: 'Community' },
+    { href: '/community/board', label: 'Community' },
     { href: '/shop', label: 'Shop' },
     { href: '/posts', label: '게시글' },
     { href: '/login', label: '로그인' },
