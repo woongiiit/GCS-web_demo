@@ -1,3 +1,7 @@
+'use client'
+
+import Link from 'next/link'
+
 export default function AboutPage() {
   return (
     <div className="fixed inset-0 bg-black overflow-auto">
@@ -12,7 +16,7 @@ export default function AboutPage() {
             </p>
             
             {/* 서브 메뉴 배너 */}
-            <div className="bg-gray-800 rounded-lg p-4 mb-8">
+            <div className="bg-gray-600 rounded-lg p-4 mb-8">
               <div className="flex flex-wrap justify-center gap-4 md:gap-8">
                 <button className="text-gray-300 hover:text-white transition-colors font-medium px-3 py-2 rounded-md hover:bg-gray-700">
                   GCS:Web
@@ -23,9 +27,9 @@ export default function AboutPage() {
                 <button className="text-gray-300 hover:text-white transition-colors font-medium px-3 py-2 rounded-md hover:bg-gray-700">
                   개설 과목
                 </button>
-                <button className="text-gray-300 hover:text-white transition-colors font-medium px-3 py-2 rounded-md hover:bg-gray-700">
+                <Link href="/about/professor" className="text-gray-300 hover:text-white transition-colors font-medium px-3 py-2 rounded-md hover:bg-gray-700">
                   교수진
-                </button>
+                </Link>
               </div>
             </div>
             
@@ -43,6 +47,7 @@ export default function AboutPage() {
               <li>커뮤니티: 학생들의 정보 공유, 소통, 교류 공간</li>
               <li>전공 홍보: GCS 전공 안내 및 매력 소개</li>
             </ul>
+            
             
             <h2 className="text-2xl font-semibold text-white mb-6">연락처</h2>
             <p className="text-gray-300 text-lg mb-8">
