@@ -56,8 +56,8 @@ export default function Navigation() {
             ))}
           </div>
           
-          {/* 로그인/회원가입 - 우측 */}
-          <div className="flex-1 flex justify-end items-center space-x-4">
+          {/* 로그인/회원가입 - 우측 (데스크톱만) */}
+          <div className="flex-1 hidden md:flex justify-end items-center space-x-4">
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
               로그인
             </Link>
