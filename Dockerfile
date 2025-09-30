@@ -23,8 +23,8 @@ RUN npm ci
 # Copy source code including Prisma schema
 COPY . .
 
-# Generate Prisma Client (now that schema is available)
-RUN npx prisma generate
+# Generate Prisma Client with explicit binary targets for Alpine Linux
+RUN npx prisma generate --binary-targets linux-musl
 
 # Build the application
 RUN npm run build
@@ -38,6 +38,9 @@ WORKDIR /app
 
 ENV NODE_ENV production
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -47,6 +50,11 @@ COPY --from=builder /app/public ./public
 # Set the correct permission for prerender cache
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
+
+# Copy Prisma client and schema
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/prisma ./prisma
 
 # Automatically leverage output traces to reduce image size
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
