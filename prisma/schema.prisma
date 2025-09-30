@@ -19,6 +19,7 @@ model User {
   studentId   String   @unique
   major       String
   phone       String
+  role        UserRole @default(USER)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -229,6 +230,11 @@ model Professor {
 }
 
 // Enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
 enum PostCategory {
   BOARD
   LOUNGE

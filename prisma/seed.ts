@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -311,6 +312,44 @@ async function main() {
   ])
 
   console.log('✅ 샘플 상품 데이터 생성 완료')
+
+  // 비밀번호 해시 생성
+  const adminPassword = await bcrypt.hash('admin123', 10)
+  const userPassword = await bcrypt.hash('user123', 10)
+
+  // 관리자 계정 생성
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@gcs-demo.com' },
+    update: {},
+    create: {
+      email: 'admin@gcs-demo.com',
+      password: adminPassword,
+      name: '관리자',
+      studentId: 'ADMIN001',
+      major: 'GCS:Web',
+      phone: '010-0000-0000',
+      role: 'ADMIN'
+    }
+  })
+
+  // 일반 사용자 계정 생성
+  const normalUser = await prisma.user.upsert({
+    where: { email: 'user@gcs-demo.com' },
+    update: {},
+    create: {
+      email: 'user@gcs-demo.com',
+      password: userPassword,
+      name: '일반사용자',
+      studentId: 'USER001',
+      major: 'GCS:Web',
+      phone: '010-1111-1111',
+      role: 'USER'
+    }
+  })
+
+  console.log('✅ 사용자 데이터 생성 완료')
+  console.log('👤 관리자 계정: admin@gcs-demo.com / admin123')
+  console.log('👤 일반 사용자: user@gcs-demo.com / user123')
 
   console.log('🎉 데이터베이스 시드 작업 완료!')
 }
