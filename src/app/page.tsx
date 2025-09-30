@@ -56,7 +56,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => e.target.style.color = '#5B7C99'} onMouseLeave={(e) => e.target.style.color = 'inherit'}>학부 소개</h3>
+                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#5B7C99'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>학부 소개</h3>
                       <p className="text-gray-600 text-sm">GCS:Web 전공 소개, 개설 과목, 교수진 정보를 확인하세요.</p>
                     </div>
                   </div>
@@ -76,7 +76,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => e.target.style.color = '#8A9A5B'} onMouseLeave={(e) => e.target.style.color = 'inherit'}>프로젝트 & 뉴스</h3>
+                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#8A9A5B'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>프로젝트 & 뉴스</h3>
                       <p className="text-gray-600 text-sm">학부 프로젝트와 최신 소식을 연도별로 확인하세요.</p>
                     </div>
                   </div>
@@ -96,7 +96,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => e.target.style.color = '#B85C47'} onMouseLeave={(e) => e.target.style.color = 'inherit'}>커뮤니티</h3>
+                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#B85C47'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>커뮤니티</h3>
                       <p className="text-gray-600 text-sm">학생들과 소통하고 정보를 공유하는 공간입니다.</p>
                     </div>
                   </div>
@@ -116,7 +116,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => e.target.style.color = '#AFA79D'} onMouseLeave={(e) => e.target.style.color = 'inherit'}>GCS Shop</h3>
+                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#AFA79D'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>GCS Shop</h3>
                       <p className="text-gray-600 text-sm">GCS 브랜드 상품을 만나보세요. 의류, 문구, 액세서리 등 다양한 상품이 있습니다.</p>
                     </div>
                   </div>
