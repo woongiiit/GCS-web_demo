@@ -313,9 +313,9 @@ async function main() {
 
   console.log('✅ 샘플 상품 데이터 생성 완료')
 
-  // 비밀번호 해시 생성
-  const adminPassword = await bcrypt.hash('admin123', 10)
-  const userPassword = await bcrypt.hash('user123', 10)
+  // 비밀번호 해시 생성 (더 안전한 비밀번호 사용)
+  const adminPassword = await bcrypt.hash('GCS_Admin_2024!', 10)
+  const userPassword = await bcrypt.hash('GCS_User_2024!', 10)
 
   // 관리자 계정 생성
   const adminUser = await prisma.user.upsert({
@@ -348,8 +348,8 @@ async function main() {
   })
 
   console.log('✅ 사용자 데이터 생성 완료')
-  console.log('👤 관리자 계정: admin@gcs-demo.com / admin123')
-  console.log('👤 일반 사용자: user@gcs-demo.com / user123')
+  console.log('👤 관리자 계정: admin@gcs-demo.com / GCS_Admin_2024!')
+  console.log('👤 일반 사용자: user@gcs-demo.com / GCS_User_2024!')
 
   console.log('🎉 데이터베이스 시드 작업 완료!')
 }
