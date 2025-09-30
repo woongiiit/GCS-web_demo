@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -10,24 +11,37 @@ export default function LoginPage() {
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError('')
     
     try {
-      // TODO: 로그인 API 호출 구현
-      console.log('로그인 시도:', formData)
-      
-      // 임시로 2초 대기 (실제 API 호출 시뮬레이션)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // 성공 시 홈페이지로 이동하거나 성공 메시지 표시
-      alert('로그인 성공!')
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // 로그인 성공 시 홈으로 이동
+        router.push('/')
+        router.refresh()
+      } else {
+        // 로그인 실패 시 오류 메시지 표시
+        setError(data.error || '로그인에 실패했습니다.')
+      }
       
     } catch (error) {
       console.error('로그인 오류:', error)
-      alert('로그인 중 오류가 발생했습니다. 다시 시도해주세요.')
+      setError('서버 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
       setIsSubmitting(false)
     }
@@ -64,6 +78,13 @@ export default function LoginPage() {
           <div className="bg-gray-50 min-h-screen px-4 py-6">
             <div className="bg-white rounded-lg shadow-md p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
+                
+                {/* 오류 메시지 */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    {error}
+                  </div>
+                )}
                 
                 {/* 이메일 */}
                 <div>
