@@ -9,7 +9,6 @@ export default function Navigation() {
   const { user, isLoading, logout } = useAuth()
 
   const menuItems = [
-    { href: '/', label: '홈' },
     { href: '/about', label: 'About GCS' },
     { href: '/archive', label: 'Archive' },
     { href: '/community', label: 'Community' },
