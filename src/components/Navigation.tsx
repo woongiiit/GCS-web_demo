@@ -66,7 +66,12 @@ export default function Navigation() {
               // 로그인된 사용자
               <div className="flex items-center space-x-3">
                 <span className="text-sm font-medium text-gray-600">
-                  환영합니다. <span className="text-black font-semibold">{user.name}</span>님
+                  환영합니다. <Link 
+                    href={user.role === 'ADMIN' ? '/admin' : '/mypage'} 
+                    className="text-black font-semibold hover:text-gray-700 hover:underline transition-colors cursor-pointer"
+                  >
+                    {user.name}
+                  </Link>님
                 </span>
                 <button
                   onClick={logout}
