@@ -6,6 +6,9 @@ interface User {
   id: string
   email: string
   name: string
+  studentId: string
+  major: string
+  phone: string
   role: string
 }
 

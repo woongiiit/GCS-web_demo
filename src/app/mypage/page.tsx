@@ -48,16 +48,16 @@ export default function MyPage() {
         id: user.id,
         email: user.email,
         name: user.name,
-        studentId: '',
-        major: '',
-        phone: '',
+        studentId: user.studentId,
+        major: user.major,
+        phone: user.phone,
         role: user.role
       })
       setFormData({
         name: user.name || '',
-        studentId: '',
-        major: '',
-        phone: '',
+        studentId: user.studentId || '',
+        major: user.major || '',
+        phone: user.phone || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -160,6 +160,30 @@ export default function MyPage() {
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-black mb-6">개인정보</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                    <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+                      {user.name}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">학번</label>
+                    <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+                      {user.studentId}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">주전공</label>
+                    <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+                      {user.major}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">전화번호</label>
+                    <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+                      {user.phone}
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
                     <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">

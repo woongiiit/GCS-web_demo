@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
           id: user.id,
           email: user.email,
           name: user.name,
+          studentId: user.studentId,
+          major: user.major,
+          phone: user.phone,
           role: user.role
         }
       },
