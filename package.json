@@ -15,7 +15,6 @@
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:setup": "node scripts/setup-db.js",
     "railway:setup": "prisma db push && npm run db:setup",
-    "postinstall": "prisma generate",
     "deploy:setup": "prisma db push && npm run db:seed",
     "railway:db:setup": "node scripts/railway-setup.js"
   },

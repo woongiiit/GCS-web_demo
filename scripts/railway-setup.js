@@ -4,11 +4,16 @@ const { execSync } = require('child_process');
 
 console.log('🚀 Railway PostgreSQL 데이터베이스 설정 시작...');
 
+// 환경 변수 확인
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error('❌ DATABASE_URL 환경 변수가 설정되지 않았습니다.');
+  process.exit(1);
+}
+
+console.log('✅ DATABASE_URL 환경 변수 확인 완료');
+
 try {
-  // 1. Prisma 클라이언트 생성
-  console.log('📦 Prisma 클라이언트 생성 중...');
-  execSync('npx prisma generate', { stdio: 'inherit' });
-  console.log('✅ Prisma 클라이언트 생성 완료');
 
   // 2. 데이터베이스 스키마 푸시
   console.log('🗄️ 데이터베이스 스키마 적용 중...');
