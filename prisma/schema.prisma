@@ -212,7 +212,7 @@ model Professor {
   id          String   @id @default(cuid())
   name        String
   title       String   // 직급 (교수, 부교수, 조교수 등)
-  email       String
+  email       String   @unique
   phone       String?
   office      String?
   researchAreas String[] // 연구 분야
