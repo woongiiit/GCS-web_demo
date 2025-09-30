@@ -1,0 +1,228 @@
+'use client'
+
+import Link from 'next/link'
+
+export default function AccessoryPage() {
+  const products = [
+    {
+      id: 1,
+      name: '핀 배지',
+      price: '8,000원',
+      originalPrice: '12,000원',
+      discount: '33%',
+      image: '/images/shop/accessory/pin.jpg',
+      description: '컬렉션용 핀 배지입니다. 고급스러운 금속 소재와 정교한 디테일이 특징입니다.',
+      features: ['금속 소재', '정교한 디테일', '컬렉션용'],
+      inStock: true,
+      tags: ['NEW']
+    },
+    {
+      id: 2,
+      name: '목걸이',
+      price: '22,000원',
+      originalPrice: '30,000원',
+      discount: '27%',
+      image: '/images/shop/accessory/necklace.jpg',
+      description: '심플한 디자인의 목걸이입니다. 일상복과 정장 모두에 잘 어울립니다.',
+      features: ['실버 소재', '심플 디자인', '다양한 길이'],
+      inStock: true,
+      tags: ['베스트셀러']
+    },
+    {
+      id: 3,
+      name: '팔찌',
+      price: '15,000원',
+      originalPrice: '20,000원',
+      discount: '25%',
+      image: '/images/shop/accessory/bracelet.jpg',
+      description: '고급스러운 실버 팔찌입니다. 세련된 디자인으로 스타일을 완성해보세요.',
+      features: ['실버 소재', '조절 가능', '고급스러운 디자인'],
+      inStock: true,
+      tags: ['인기상품']
+    },
+    {
+      id: 4,
+      name: '귀걸이',
+      price: '18,000원',
+      originalPrice: '25,000원',
+      discount: '28%',
+      image: '/images/shop/accessory/earring.jpg',
+      description: '우아한 디자인의 귀걸이입니다. 특별한 날을 위한 완벽한 액세서리입니다.',
+      features: ['실버 소재', '우아한 디자인', '알레르기 방지'],
+      inStock: false,
+      tags: ['품절임박']
+    },
+    {
+      id: 5,
+      name: '반지',
+      price: '12,000원',
+      originalPrice: '18,000원',
+      discount: '33%',
+      image: '/images/shop/accessory/ring.jpg',
+      description: '미니멀한 디자인의 반지입니다. 일상에서 부담 없이 착용할 수 있습니다.',
+      features: ['실버 소재', '미니멀 디자인', '다양한 사이즈'],
+      inStock: true,
+      tags: ['NEW']
+    },
+    {
+      id: 6,
+      name: '브로치',
+      price: '10,000원',
+      originalPrice: '15,000원',
+      discount: '33%',
+      image: '/images/shop/accessory/brooch.jpg',
+      description: 'GCS 로고가 새겨진 브로치입니다. 옷이나 가방에 포인트를 줄 수 있습니다.',
+      features: ['금속 소재', '안전핀 타입', '포인트 액세서리'],
+      inStock: true,
+      tags: ['인기상품']
+    }
+  ]
+
+  return (
+    <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
+      <div className="relative min-h-screen bg-white px-4 py-6 sm:px-0">
+        <div className="max-w-6xl mx-auto pt-32">
+          {/* 페이지 제목 */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-black mb-4">Accessory</h1>
+            <p className="text-gray-600 mb-8">스타일을 완성하는 액세서리</p>
+            
+            {/* 홈 아이콘 */}
+            <Link href="/" className="inline-block mb-8">
+              <div className="w-6 h-6 mx-auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-black">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+            </Link>
+
+            {/* Shop으로 돌아가기 */}
+            <div className="mb-8">
+              <Link 
+                href="/shop" 
+                className="inline-flex items-center text-gray-600 hover:text-black transition-colors"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Shop으로 돌아가기
+              </Link>
+            </div>
+          </div>
+
+          {/* 컨텐츠 영역 */}
+          <div className="bg-gray-50 min-h-screen px-4 py-6">
+            {/* 상품 그리드 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              {products.map((product) => (
+                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative">
+                    <div className="h-64 bg-gray-200 flex items-center justify-center">
+                      <div className="text-gray-400 text-sm">
+                        {product.name}
+                      </div>
+                    </div>
+                    
+                    {/* 태그 */}
+                    <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                      {product.tags.map((tag) => (
+                        <span 
+                          key={tag}
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            tag === '베스트셀러' ? 'bg-red-500 text-white' :
+                            tag === 'NEW' ? 'bg-green-500 text-white' :
+                            tag === '인기상품' ? 'bg-blue-500 text-white' :
+                            tag === '품절임박' ? 'bg-orange-500 text-white' :
+                            'bg-gray-500 text-white'
+                          }`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* 품절 오버레이 */}
+                    {!product.inStock && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">품절</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                    
+                    {/* 가격 */}
+                    <div className="mb-3">
+                      <span className="text-red-600 font-bold text-lg">{product.price}</span>
+                      <span className="text-gray-400 line-through ml-2 text-sm">{product.originalPrice}</span>
+                      <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-2">
+                        {product.discount}
+                      </span>
+                    </div>
+
+                    {/* 특징 */}
+                    <div className="mb-4">
+                      <div className="text-sm text-gray-600 mb-1">특징:</div>
+                      <ul className="text-xs text-gray-500">
+                        {product.features.map((feature, index) => (
+                          <li key={index}>• {feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* 장바구니 버튼 */}
+                    <button 
+                      className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                        product.inStock
+                          ? 'bg-black text-white hover:bg-gray-800'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      disabled={!product.inStock}
+                    >
+                      {product.inStock ? '장바구니에 추가' : '품절'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 필터 및 정렬 옵션 */}
+            <div className="bg-white rounded-lg p-4 mb-6">
+              <div className="flex flex-wrap gap-4 items-center justify-between">
+                <div className="flex flex-wrap gap-4">
+                  <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <option>전체 상품</option>
+                    <option>목걸이</option>
+                    <option>귀걸이</option>
+                    <option>팔찌</option>
+                    <option>반지</option>
+                    <option>기타</option>
+                  </select>
+                  
+                  <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <option>인기순</option>
+                    <option>최신순</option>
+                    <option>낮은가격순</option>
+                    <option>높은가격순</option>
+                  </select>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  총 {products.length}개 상품
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 푸터 */}
+          <div className="text-center text-gray-400 text-xs mt-12">
+            DONGGUK UNIVERSITY
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

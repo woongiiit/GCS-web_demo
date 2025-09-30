@@ -10,10 +10,8 @@ export default function Navigation() {
     { href: '/', label: '홈' },
     { href: '/about', label: 'About GCS' },
     { href: '/archive', label: 'Archive' },
-    { href: '/community/board', label: 'Community' },
+    { href: '/community', label: 'Community' },
     { href: '/shop', label: 'Shop' },
-    { href: '/posts', label: '게시글' },
-    { href: '/login', label: '로그인' },
   ]
 
   const isActive = (href: string) => {
@@ -26,22 +24,22 @@ export default function Navigation() {
   return (
     <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center h-16">
           {/* 로고 - 좌측 */}
-          <div className="flex items-center">
+          <div className="flex-1 flex items-center">
             <Link href="/" className="text-xl font-bold text-black hover:text-gray-800 transition-colors">
-              GCS Demo
+              GCS:Web_Demo
             </Link>
           </div>
           
           {/* 메뉴 - 중앙 */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="flex-1 hidden md:flex justify-center items-center space-x-4">
             {menuItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`
-                  nav-item relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300
+                  nav-item relative px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 whitespace-nowrap
                   ${isActive(item.href)
                     ? 'text-black bg-black text-white font-semibold shadow-lg'
                     : 'text-gray-600 hover:text-black hover:bg-gray-100 hover:shadow-md'
@@ -58,23 +56,26 @@ export default function Navigation() {
             ))}
           </div>
           
-          {/* 우측 공간 (향후 사용자 메뉴 등) */}
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">U</span>
-            </div>
+          {/* 로그인/회원가입 - 우측 */}
+          <div className="flex-1 flex justify-end items-center space-x-4">
+            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
+              로그인
+            </Link>
+            <Link href="/signup" className="text-sm font-medium text-black hover:text-gray-800 transition-colors">
+              회원가입
+            </Link>
           </div>
         </div>
         
         {/* 모바일 메뉴 */}
         <div className="md:hidden pb-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-nowrap justify-evenly gap-1 overflow-x-auto mb-4">
             {menuItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`
-                  px-3 py-2 text-sm font-medium rounded-md transition-all duration-200
+                  flex-shrink-0 px-2 py-2 text-xs font-medium rounded-md transition-all duration-200
                   ${isActive(item.href)
                     ? 'text-white bg-black font-semibold shadow-md'
                     : 'text-gray-600 hover:text-black hover:bg-gray-100'
@@ -84,6 +85,14 @@ export default function Navigation() {
                 {item.label}
               </Link>
             ))}
+          </div>
+          <div className="flex justify-center space-x-4">
+            <Link href="/login" className="text-xs font-medium text-gray-600 hover:text-black transition-colors">
+              로그인
+            </Link>
+            <Link href="/signup" className="text-xs font-medium text-black hover:text-gray-800 transition-colors">
+              회원가입
+            </Link>
           </div>
         </div>
       </div>

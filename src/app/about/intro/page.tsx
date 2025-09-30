@@ -6,7 +6,7 @@ export default function IntroPage() {
   return (
     <div className="fixed inset-0 bg-black overflow-auto" style={{ overflowY: 'scroll' }}>
       <div className="relative min-h-screen bg-black px-4 py-6 sm:px-0">
-        <div className="max-w-6xl mx-auto pt-24">
+        <div className="max-w-6xl mx-auto pt-32">
           <Link href="/about">
             <h1 className="text-4xl font-bold text-white mb-8 text-center hover:text-gray-300 transition-colors cursor-pointer">About GCS</h1>
           </Link>

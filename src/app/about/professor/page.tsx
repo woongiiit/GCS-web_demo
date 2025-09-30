@@ -6,7 +6,7 @@ export default function ProfessorPage() {
   return (
     <div className="fixed inset-0 bg-black overflow-auto" style={{ overflowY: 'scroll' }}>
       <div className="relative min-h-screen bg-black px-4 py-6 sm:px-0">
-        <div className="max-w-6xl mx-auto pt-24">
+        <div className="max-w-6xl mx-auto pt-32">
           <Link href="/about">
             <h1 className="text-4xl font-bold text-white mb-8 text-center hover:text-gray-300 transition-colors cursor-pointer">About GCS</h1>
           </Link>
@@ -50,8 +50,8 @@ export default function ProfessorPage() {
           <div className="space-y-12 mb-8">
             {/* 김교수 섹션 */}
             <div className="flex flex-col lg:flex-row gap-8 pb-8 border-b border-white">
-              {/* 좌측: 설명 */}
-              <div className="flex-1">
+              {/* 모바일: 사진, 데스크톱: 설명 */}
+              <div className="flex-1 lg:order-1 order-2">
                 <h3 className="text-white font-semibold text-2xl mb-4">김교수</h3>
                 <p className="text-gray-300 text-lg mb-4">
                   그래픽 디자인과 시각 커뮤니케이션 전문가로서 15년간의 교육 경험을 가지고 있습니다.
@@ -64,9 +64,9 @@ export default function ProfessorPage() {
                 </div>
               </div>
               
-              {/* 우측: 사진 */}
-              <div className="lg:w-80 text-center">
-                <div className="w-48 h-48 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+              {/* 모바일: 설명, 데스크톱: 사진 */}
+              <div className="w-32 text-center lg:order-2 order-1 mx-auto">
+                <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
                   <img 
                     src="/images/professor1.png" 
                     alt="김교수" 
@@ -83,14 +83,13 @@ export default function ProfessorPage() {
                     김교수
                   </div>
                 </div>
-                <h3 className="text-white font-semibold text-xl">김교수</h3>
               </div>
             </div>
             
             {/* 이교수 섹션 */}
             <div className="flex flex-col lg:flex-row gap-8 pb-8 border-b border-white">
-              {/* 좌측: 설명 */}
-              <div className="flex-1">
+              {/* 모바일: 사진, 데스크톱: 설명 */}
+              <div className="flex-1 lg:order-1 order-2">
                 <h3 className="text-white font-semibold text-2xl mb-4">이교수</h3>
                 <p className="text-gray-300 text-lg mb-4">
                   디지털 미디어와 인터랙션 디자인 전문가로 사용자 중심의 디자인을 추구합니다.
@@ -103,9 +102,9 @@ export default function ProfessorPage() {
                 </div>
               </div>
               
-              {/* 우측: 사진 */}
-              <div className="lg:w-80 text-center">
-                <div className="w-48 h-48 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+              {/* 모바일: 설명, 데스크톱: 사진 */}
+              <div className="w-32 text-center lg:order-2 order-1 mx-auto">
+                <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
                   <img 
                     src="/images/professor2.png" 
                     alt="이교수" 
@@ -122,14 +121,13 @@ export default function ProfessorPage() {
                     이교수
                   </div>
                 </div>
-                <h3 className="text-white font-semibold text-xl">이교수</h3>
               </div>
             </div>
             
             {/* 박교수 섹션 */}
             <div className="flex flex-col lg:flex-row gap-8 pb-8">
-              {/* 좌측: 설명 */}
-              <div className="flex-1">
+              {/* 모바일: 사진, 데스크톱: 설명 */}
+              <div className="flex-1 lg:order-1 order-2">
                 <h3 className="text-white font-semibold text-2xl mb-4">박교수</h3>
                 <p className="text-gray-300 text-lg mb-4">
                   웹 기술과 사용자 경험 디자인 전문가로 현대적인 웹 애플리케이션 개발을 지도합니다.
@@ -142,9 +140,9 @@ export default function ProfessorPage() {
                 </div>
               </div>
               
-              {/* 우측: 사진 */}
-              <div className="lg:w-80 text-center">
-                <div className="w-48 h-48 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+              {/* 모바일: 설명, 데스크톱: 사진 */}
+              <div className="w-32 text-center lg:order-2 order-1 mx-auto">
+                <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
                   <img 
                     src="/images/professor3.png" 
                     alt="박교수" 
@@ -161,7 +159,6 @@ export default function ProfessorPage() {
                     박교수
                   </div>
                 </div>
-                <h3 className="text-white font-semibold text-xl">박교수</h3>
               </div>
             </div>
           </div>
