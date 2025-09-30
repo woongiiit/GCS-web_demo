@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,7 +33,8 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        // 로그인 성공 시 홈으로 이동
+        // 로그인 성공 시 사용자 정보를 컨텍스트에 저장하고 홈으로 이동
+        login(data.user)
         router.push('/')
         router.refresh()
       } else {

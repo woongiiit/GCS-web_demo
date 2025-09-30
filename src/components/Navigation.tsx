@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Navigation() {
   const pathname = usePathname()
+  const { user, isLoading, logout } = useAuth()
 
   const menuItems = [
     { href: '/', label: '홈' },
@@ -56,14 +58,35 @@ export default function Navigation() {
             ))}
           </div>
           
-          {/* 로그인/회원가입 - 우측 (모든 화면 크기) */}
+          {/* 로그인/회원가입 또는 사용자 정보 - 우측 (모든 화면 크기) */}
           <div className="flex items-center space-x-3">
-            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
-              로그인
-            </Link>
-            <Link href="/signup" className="text-sm font-medium text-black hover:text-gray-800 transition-colors">
-              회원가입
-            </Link>
+            {isLoading ? (
+              // 로딩 중
+              <div className="text-sm text-gray-400">로딩 중...</div>
+            ) : user ? (
+              // 로그인된 사용자
+              <div className="flex items-center space-x-3">
+                <span className="text-sm font-medium text-gray-600">
+                  환영합니다. <span className="text-black font-semibold">{user.name}</span>님
+                </span>
+                <button
+                  onClick={logout}
+                  className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              // 로그인되지 않은 사용자
+              <>
+                <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
+                  로그인
+                </Link>
+                <Link href="/signup" className="text-sm font-medium text-black hover:text-gray-800 transition-colors">
+                  회원가입
+                </Link>
+              </>
+            )}
           </div>
         </div>
         
