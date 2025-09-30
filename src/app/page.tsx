@@ -9,8 +9,8 @@ export default function Home() {
         <div className="max-w-6xl mx-auto pt-32">
           {/* 페이지 제목 */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-black mb-4">GCS Demo</h1>
-            <p className="text-gray-600 mb-8">동국대학교 글로벌커뮤니케이션학부</p>
+            <h1 className="text-4xl font-bold text-black mb-4">GCS</h1>
+            <p className="text-gray-600 mb-8">Graphic Communication Science</p>
             
             {/* 홈 아이콘 */}
             <div className="inline-block mb-8">
