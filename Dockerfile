@@ -23,8 +23,8 @@ RUN npm ci
 # Copy source code including Prisma schema
 COPY . .
 
-# Generate Prisma Client with explicit binary targets for Alpine Linux
-RUN npx prisma generate --binary-targets linux-musl
+# Generate Prisma Client (binary targets are set in schema.prisma)
+RUN npx prisma generate
 
 # Build the application
 RUN npm run build
