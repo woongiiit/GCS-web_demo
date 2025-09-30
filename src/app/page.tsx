@@ -31,8 +31,7 @@ export default function Home() {
               <div className="bg-white rounded-lg p-8 mb-8">
                 <h2 className="text-3xl font-bold text-black mb-4 text-center">환영합니다</h2>
                 <p className="text-gray-600 text-center text-lg leading-relaxed">
-                  동국대학교 글로벌커뮤니케이션학부(GCS) 공식 웹사이트에 오신 것을 환영합니다.<br/>
-                  디지털 시대의 커뮤니케이션 전문가를 양성하는 우리 학부의 다양한 프로그램과 활동을 만나보세요.
+                  동국대학교 GCS 연계전공 홈페이지에 오신 것을 환영합니다.
                 </p>
               </div>
             </div>
