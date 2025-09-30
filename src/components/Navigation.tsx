@@ -32,7 +32,7 @@ export default function Navigation() {
             </Link>
           </div>
           
-          {/* 메뉴 - 중앙 */}
+          {/* 메뉴 - 중앙 (데스크톱만) */}
           <div className="flex-1 hidden md:flex justify-center items-center space-x-4">
             {menuItems.map((item) => (
               <Link
@@ -56,8 +56,8 @@ export default function Navigation() {
             ))}
           </div>
           
-          {/* 로그인/회원가입 - 우측 (데스크톱만) */}
-          <div className="flex-1 hidden md:flex justify-end items-center space-x-4">
+          {/* 로그인/회원가입 - 우측 (모든 화면 크기) */}
+          <div className="flex items-center space-x-3">
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
               로그인
             </Link>
@@ -69,7 +69,7 @@ export default function Navigation() {
         
         {/* 모바일 메뉴 */}
         <div className="md:hidden pb-4">
-          <div className="flex flex-nowrap justify-evenly gap-1 overflow-x-auto mb-4">
+          <div className="flex flex-nowrap justify-evenly gap-1 overflow-x-auto">
             {menuItems.map((item) => (
               <Link
                 key={item.href}
@@ -85,14 +85,6 @@ export default function Navigation() {
                 {item.label}
               </Link>
             ))}
-          </div>
-          <div className="flex justify-center space-x-4">
-            <Link href="/login" className="text-xs font-medium text-gray-600 hover:text-black transition-colors">
-              로그인
-            </Link>
-            <Link href="/signup" className="text-xs font-medium text-black hover:text-gray-800 transition-colors">
-              회원가입
-            </Link>
           </div>
         </div>
       </div>
