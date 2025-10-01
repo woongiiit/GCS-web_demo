@@ -213,31 +213,31 @@ export default function ShopPage() {
               <div className="relative z-10 mt-8 overflow-x-auto pb-4">
                 <div className="flex gap-6 min-w-max">
                   {/* 샘플 Best Item 1 */}
-                  <div className="bg-white w-[200px] flex-shrink-0">
+                  <Link href="/shop/1" className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
                       <div className="w-3/4 h-3/4 bg-gray-300"></div>
                     </div>
                     <h3 className="font-bold text-sm mb-1">동등(動動) 키링</h3>
                     <p className="text-gray-500 text-xs">2025 어멍</p>
-                  </div>
+                  </Link>
                   
                   {/* 샘플 Best Item 2 */}
-                  <div className="bg-white w-[200px] flex-shrink-0">
+                  <Link href="/shop/2" className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
                       <div className="w-3/4 h-3/4 bg-gray-300"></div>
                     </div>
                     <h3 className="font-bold text-sm mb-1">USB (Welcome-kit)</h3>
                     <p className="text-gray-500 text-xs">2025 Kitty</p>
-                  </div>
+                  </Link>
                   
                   {/* 샘플 Best Item 3 */}
-                  <div className="bg-white w-[200px] flex-shrink-0">
+                  <Link href="/shop/3" className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
                       <div className="w-3/4 h-3/4 bg-gray-300"></div>
                     </div>
                     <h3 className="font-bold text-sm mb-1">RFID 차단 카드 홀더</h3>
                     <p className="text-gray-500 text-xs">2025 DEUX</p>
-                  </div>
+                  </Link>
                 </div>
               </div>
               
@@ -254,7 +254,11 @@ export default function ShopPage() {
             {/* 상품 그리드 - 2열 */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               {sampleProducts[activeTab].map((product) => (
-                <div key={product.id} className="bg-white rounded-lg overflow-hidden">
+                <Link 
+                  key={product.id} 
+                  href={`/shop/${product.id}`}
+                  className="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                >
                   <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
                     <div className="w-3/4 h-3/4 bg-gray-300"></div>
                   </div>
@@ -263,7 +267,7 @@ export default function ShopPage() {
                     <p className="text-gray-600 text-xs mb-2 line-clamp-2">{product.description}</p>
                     <p className="text-black font-bold text-base">{product.price}</p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
