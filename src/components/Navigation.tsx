@@ -21,16 +21,16 @@ export default function Navigation() {
       href: '/archive', 
       label: 'Archive',
       subItems: [
-        { href: '/archive/projects', label: 'Project' },
-        { href: '/archive/news', label: 'News' }
+        { href: '/archive?tab=projects', label: 'Project' },
+        { href: '/archive?tab=news', label: 'News' }
       ]
     },
     { 
       href: '/community', 
       label: 'Community',
       subItems: [
-        { href: '/community/board', label: 'Board' },
-        { href: '/community/lounge', label: 'Lounge' }
+        { href: '/community?tab=board', label: 'Board' },
+        { href: '/community?tab=lounge', label: 'Lounge' }
       ]
     },
     { 
@@ -148,8 +148,12 @@ export default function Navigation() {
       {/* 모바일 메뉴 오버레이 */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={toggleMobileMenu}></div>
-          <div className="fixed top-0 left-0 right-0 bottom-0 bg-white flex flex-col">
+          <div 
+            className="fixed inset-0 bg-black transition-opacity duration-300 ease-in-out"
+            style={{ opacity: isMobileMenuOpen ? 0.5 : 0 }}
+            onClick={toggleMobileMenu}
+          ></div>
+          <div className="fixed top-0 left-0 right-0 bottom-0 bg-white flex flex-col transform transition-transform duration-300 ease-in-out animate-slide-in">
             {/* 헤더 */}
             <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
               <Link href="/" className="text-xl font-bold text-black" onClick={toggleMobileMenu}>
@@ -193,18 +197,26 @@ export default function Navigation() {
                         </button>
                       )}
                     </div>
-                    {item.subItems.length > 0 && expandedMenus.includes(item.href) && (
-                      <div className="mt-3 ml-4 space-y-2">
-                        {item.subItems.map((subItem) => (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            onClick={toggleMobileMenu}
-                            className="block text-black text-lg font-bold hover:text-gray-800 transition-colors"
-                          >
-                            {subItem.label}
-                          </Link>
-                        ))}
+                    {item.subItems.length > 0 && (
+                      <div 
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          expandedMenus.includes(item.href) 
+                            ? 'max-h-40 opacity-100 mt-3' 
+                            : 'max-h-0 opacity-0 mt-0'
+                        }`}
+                      >
+                        <div className="ml-4 space-y-2">
+                          {item.subItems.map((subItem) => (
+                            <Link
+                              key={subItem.href}
+                              href={subItem.href}
+                              onClick={toggleMobileMenu}
+                              className="block text-black text-lg font-bold hover:text-gray-800 transition-colors"
+                            >
+                              {subItem.label}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

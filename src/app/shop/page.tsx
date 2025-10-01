@@ -149,29 +149,37 @@ export default function ShopPage() {
 
   return (
     <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
-      <div className="relative min-h-screen bg-white px-4 py-6 sm:px-0">
-        <div className="max-w-6xl mx-auto pt-32">
-          {/* 페이지 제목 */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-black mb-8">Shop</h1>
-            
-            {/* 홈 아이콘 */}
-            <Link href="/" className="inline-block mb-8">
-              <div className="w-6 h-6 mx-auto">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-black">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-              </div>
-            </Link>
+      <div className="relative min-h-screen bg-white">
+        {/* 상단 검은색 영역 */}
+        <div className="bg-black pt-32 pb-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-0">
+            {/* 페이지 제목 */}
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-white mb-4">Shop</h1>
+              <p className="text-white text-sm mb-8">학생들이 직접 제작한 굿즈를 판매하고 공유하는 공간입니다.</p>
+              
+              {/* 홈 아이콘 */}
+              <Link href="/" className="inline-block">
+                <div className="w-6 h-6 mx-auto">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9,22 9,12 15,12 15,22"/>
+                  </svg>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
 
-            {/* 탭 메뉴 */}
-            <div className="flex flex-wrap justify-center gap-2 md:gap-8 mb-8">
+        {/* 탭 메뉴 - 흰색 배경 영역 */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-0">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-8 py-4">
               {['apparel', 'stationary', 'bag', 'life', 'accessory'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                  className={`pb-2 border-b-2 font-medium transition-colors px-2 py-1 md:px-3 md:py-2 text-sm md:text-base ${
+                  className={`pb-2 border-b-2 font-medium transition-colors text-sm md:text-base ${
                     activeTab === tab
                       ? 'text-black border-black'
                       : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
@@ -182,28 +190,78 @@ export default function ShopPage() {
               ))}
             </div>
           </div>
+        </div>
 
-          {/* 컨텐츠 영역 */}
-          <div className="bg-gray-50 min-h-screen px-4 py-6">
+        {/* 컨텐츠 영역 */}
+        <div className="bg-white min-h-screen">
+          <div className="max-w-6xl mx-auto px-4 py-8 sm:px-0">
+            
+            {/* Best Item 섹션 */}
+            <div className="mb-12 relative">
+              {/* NOW 텍스트 */}
+              <div className="absolute top-0 right-0 text-2xl font-black text-black leading-none">
+                NOW
+              </div>
+              
+              {/* Best Item 타이틀 */}
+              <div className="relative z-10 mb-6">
+                <h2 className="text-2xl font-bold text-black">Best Item</h2>
+                <div className="w-16 h-1 bg-black mt-1"></div>
+              </div>
+              
+              {/* Best Item 상품 가로 스크롤 */}
+              <div className="relative z-10 mt-8 overflow-x-auto pb-4">
+                <div className="flex gap-6 min-w-max">
+                  {/* 샘플 Best Item 1 */}
+                  <div className="bg-white w-[200px] flex-shrink-0">
+                    <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
+                      <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                    </div>
+                    <h3 className="font-bold text-sm mb-1">동등(動動) 키링</h3>
+                    <p className="text-gray-500 text-xs">2025 어멍</p>
+                  </div>
+                  
+                  {/* 샘플 Best Item 2 */}
+                  <div className="bg-white w-[200px] flex-shrink-0">
+                    <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
+                      <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                    </div>
+                    <h3 className="font-bold text-sm mb-1">USB (Welcome-kit)</h3>
+                    <p className="text-gray-500 text-xs">2025 Kitty</p>
+                  </div>
+                  
+                  {/* 샘플 Best Item 3 */}
+                  <div className="bg-white w-[200px] flex-shrink-0">
+                    <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
+                      <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                    </div>
+                    <h3 className="font-bold text-sm mb-1">RFID 차단 카드 홀더</h3>
+                    <p className="text-gray-500 text-xs">2025 DEUX</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 하단 보더 */}
+              <div className="w-full h-px bg-gray-300 mt-8"></div>
+            </div>
+
             {/* 카테고리 설명 */}
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-black mb-2">{getCategoryName(activeTab)}</h2>
               <p className="text-gray-600">{getCategoryDescription(activeTab)}</p>
             </div>
 
-            {/* 상품 그리드 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* 상품 그리드 - 2열 */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
               {sampleProducts[activeTab].map((product) => (
-                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-48 bg-gray-200 flex items-center justify-center">
-                    <div className="text-gray-400 text-sm">
-                      {product.name}
-                    </div>
+                <div key={product.id} className="bg-white rounded-lg overflow-hidden">
+                  <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
+                    <div className="w-3/4 h-3/4 bg-gray-300"></div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mb-3">{product.description}</p>
-                    <p className="text-black font-bold text-lg">{product.price}</p>
+                  <div className="p-3">
+                    <h3 className="font-bold text-sm mb-1">{product.name}</h3>
+                    <p className="text-gray-600 text-xs mb-2 line-clamp-2">{product.description}</p>
+                    <p className="text-black font-bold text-base">{product.price}</p>
                   </div>
                 </div>
               ))}
@@ -218,11 +276,11 @@ export default function ShopPage() {
                 More
               </Link>
             </div>
-          </div>
 
-          {/* 푸터 */}
-          <div className="text-center text-gray-400 text-xs mt-12">
-            DONGGUK UNIVERSITY
+            {/* 푸터 */}
+            <div className="text-center text-gray-400 text-xs mt-12">
+              DONGGUK UNIVERSITY
+            </div>
           </div>
         </div>
       </div>
