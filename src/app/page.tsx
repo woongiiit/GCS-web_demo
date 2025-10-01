@@ -4,8 +4,171 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
-      <div className="relative min-h-screen bg-white px-4 py-6 sm:px-0">
+    <>
+      {/* 모바일 전용 레이아웃 */}
+      <div className="md:hidden min-h-screen bg-[#f57520] -mt-4">
+        {/* 모바일 주황색 섹션 - 텍스트만 포함 */}
+        <div className="relative h-[280px] bg-[#f57520] pt-16">
+          {/* GCS:Web 텍스트 - 주황색 영역의 왼쪽 아래 끝에 맞닿게 배치 */}
+          <div className="absolute bottom-0 left-2 text-white text-6xl font-bold z-10">
+            GCS:Web
+          </div>
+          
+          {/* 동국대학교 텍스트 */}
+          <div className="absolute bottom-[88px] right-[76px] text-white italic text-[15px] transform rotate-[23deg]">
+            Dongguk University
+          </div>
+          
+          {/* 흰색 직사각형 바 */}
+          <div className="absolute bottom-[93px] right-[60px] w-56 h-1 bg-white transform rotate-[23deg]"></div>
+          <div className="absolute bottom-[77px] right-[64px] w-56 h-4 bg-white transform rotate-[20deg]"></div>
+        </div>
+
+        {/* 주황색 직사각형들을 위한 영역 */}
+        <div className="relative h-[220px] bg-white">
+          <div className="absolute top-[0px] left-[10px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-7deg]"></div>
+          <div className="absolute top-[40px] left-[20px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0deg]"></div>
+          <div className="absolute top-[57px] left-[19px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-1.5deg]"></div>
+          <div className="absolute top-[76px] left-[10px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-2deg]"></div>
+          <div className="absolute top-[98px] left-[24px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0deg]"></div>
+          <div className="absolute top-[115px] left-[30px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0deg]"></div>
+          <div className="absolute top-[134px] left-[20px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0.5deg]"></div>
+        </div>
+
+        {/* 콘텐츠 영역 */}
+        <div className="bg-white px-4 pb-8">
+            
+            {/* Project Archive 섹션 */}
+            <div className="mb-10">
+              <h2 className="text-xl font-bold mb-2 flex items-center">
+                Project Archive
+                <span className="ml-2 w-8 h-0.5 bg-[#f57520]"></span>
+              </h2>
+              <div className="bg-gray-50 rounded-lg p-4 flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-bold text-base mb-2">2025 유랑 : NFC Welcome-kit</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    태깅 한 번으로 연계에 필사이트에 접속하는 뷰 연동된 웰컴키트 굿즈 
+                    NFC 태깅을 통해 신입생을 위한 교내 홍보페이지 Link-tree로 접속해 보세요!
+                  </p>
+                </div>
+                <div className="ml-4 flex-shrink-0">
+                  <div className="w-16 h-16 bg-[#f57520] rounded flex items-center justify-center">
+                    <span className="text-white text-2xl font-bold">동국</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-center mt-3 space-x-1">
+                <span className="w-2 h-2 rounded-full bg-[#f57520]"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+              </div>
+            </div>
+
+            {/* News 섹션 */}
+            <div className="mb-10">
+              <h2 className="text-xl font-bold mb-2 flex items-center">
+                News
+                <span className="ml-2 w-8 h-0.5 bg-[#f57520]"></span>
+              </h2>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="h-20 bg-gray-300"></div>
+                  <div className="p-2">
+                    <p className="text-xs font-semibold">2021 해외연수</p>
+                    <p className="text-xs text-gray-500">— Singapore</p>
+                  </div>
+                </div>
+                <div className="bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="h-20 bg-gray-300"></div>
+                  <div className="p-2">
+                    <p className="text-xs font-semibold">2023 전공견학</p>
+                    <p className="text-xs text-gray-500">— The Paper Lab</p>
+                  </div>
+                </div>
+                <div className="bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="h-20 bg-gray-300"></div>
+                  <div className="p-2">
+                    <p className="text-xs font-semibold">2024 해외탐방</p>
+                    <p className="text-xs text-gray-500">— 대만</p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="h-20 bg-gray-300"></div>
+                  <div className="p-2">
+                    <p className="text-xs font-semibold">2024 전공견학</p>
+                    <p className="text-xs text-gray-500">— WEBLING</p>
+                  </div>
+                </div>
+                <div className="bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="h-20 bg-gray-300"></div>
+                  <div className="p-2">
+                    <p className="text-xs font-semibold">2024 전공견학</p>
+                    <p className="text-xs text-gray-500">— AMORE ...</p>
+                  </div>
+                </div>
+                <div className="bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="h-20 bg-gray-300"></div>
+                  <div className="p-2">
+                    <p className="text-xs font-semibold">2025 하계 워크샵</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-center mt-3 space-x-1">
+                <span className="w-2 h-2 rounded-full bg-[#f57520]"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+              </div>
+            </div>
+
+            {/* Shop 섹션 */}
+            <div className="mb-8">
+              <h2 className="text-xl font-bold mb-2 flex items-center">
+                Shop
+                <span className="ml-2 w-8 h-0.5 bg-[#f57520]"></span>
+              </h2>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <div className="bg-gray-100 rounded-lg h-24 mb-2"></div>
+                  <p className="text-xs font-semibold">동등(動等) 키링</p>
+                  <p className="text-xs text-gray-500">2025 어랩</p>
+                </div>
+                <div className="text-center">
+                  <div className="bg-gray-100 rounded-lg h-24 mb-2"></div>
+                  <p className="text-xs font-semibold">USB</p>
+                  <p className="text-xs text-gray-500">2025 Kitty</p>
+                </div>
+                <div className="text-center">
+                  <div className="bg-gray-100 rounded-lg h-24 mb-2"></div>
+                  <p className="text-xs font-semibold">볼첨 도트 반팔</p>
+                  <p className="text-xs text-gray-500">2025 MUA</p>
+                </div>
+              </div>
+              <div className="flex justify-center mt-3 space-x-1">
+                <span className="w-2 h-2 rounded-full bg-[#f57520]"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+              </div>
+            </div>
+
+        </div>
+
+        {/* 하단 배너 */}
+        <div className="bg-white py-6 border-t border-gray-200">
+          <div className="px-4 text-center">
+            <p className="text-xs text-gray-500 mb-1">DONGGUK UNIVERSITY</p>
+            <h3 className="text-lg font-bold text-black">GCS:Web</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* 데스크톱 전용 레이아웃 */}
+      <div className="hidden md:block">
         <div className="max-w-6xl mx-auto pt-32">
           {/* 페이지 제목 */}
           <div className="text-center mb-8">
@@ -23,7 +186,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 컨텐츠 영역 */}
+          {/* 컨텐츠 영역 (데스크톱) */}
           <div className="bg-gray-50 min-h-screen px-4 py-6">
             
             {/* 환영 섹션 */}
@@ -225,6 +388,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
