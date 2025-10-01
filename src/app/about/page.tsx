@@ -87,20 +87,21 @@ export default function AboutPage() {
               <div>
                 {/* 메인 타이틀 */}
                 <div className="mb-12">
-                  <h2 className="text-xl md:text-2xl font-bold text-white mb-4">GCS:Web</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-2">GCS:Web</h2>
+                  <div className="w-24 h-1 bg-[#f57520]"></div>
                 </div>
                 
                 {/* 이미지 슬라이더 */}
                 <div className="mb-12 overflow-x-auto pb-4 scrollbar-hide">
-                  <div className="flex gap-4 min-w-max">
-                    <div className="w-[300px] md:w-[400px] h-[200px] md:h-[300px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <span className="text-gray-500 text-sm">활동 이미지 1</span>
+                  <div className="flex gap-3 min-w-max">
+                    <div className="w-[120px] h-[120px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">이미지 1</span>
                     </div>
-                    <div className="w-[300px] md:w-[400px] h-[200px] md:h-[300px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <span className="text-gray-500 text-sm">활동 이미지 2</span>
+                    <div className="w-[120px] h-[120px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">이미지 2</span>
                     </div>
-                    <div className="w-[300px] md:w-[400px] h-[200px] md:h-[300px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <span className="text-gray-500 text-sm">활동 이미지 3</span>
+                    <div className="w-[120px] h-[120px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">이미지 3</span>
                     </div>
                   </div>
                 </div>
@@ -138,7 +139,8 @@ export default function AboutPage() {
               <div>
                 {/* 메인 타이틀 */}
                 <div className="mb-12">
-                  <h2 className="text-xl md:text-2xl font-bold text-white mb-4">그래픽커뮤니케이션사이언스</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-2">그래픽커뮤니케이션사이언스</h2>
+                  <div className="w-24 h-1 bg-[#f57520] mb-4"></div>
                   <h3 className="text-base md:text-lg font-bold text-white">
                     Graphic Communication Science (GCS)
                   </h3>
@@ -146,15 +148,15 @@ export default function AboutPage() {
                 
                 {/* 이미지 슬라이더 */}
                 <div className="mb-12 overflow-x-auto pb-4 scrollbar-hide">
-                  <div className="flex gap-4 min-w-max">
-                    <div className="w-[300px] md:w-[400px] h-[200px] md:h-[300px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <span className="text-gray-500 text-sm">활동 이미지 1</span>
+                  <div className="flex gap-3 min-w-max">
+                    <div className="w-[120px] h-[120px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">이미지 1</span>
                     </div>
-                    <div className="w-[300px] md:w-[400px] h-[200px] md:h-[300px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <span className="text-gray-500 text-sm">활동 이미지 2</span>
+                    <div className="w-[120px] h-[120px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">이미지 2</span>
                     </div>
-                    <div className="w-[300px] md:w-[400px] h-[200px] md:h-[300px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <span className="text-gray-500 text-sm">활동 이미지 3</span>
+                    <div className="w-[120px] h-[120px] bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">이미지 3</span>
                     </div>
                   </div>
                 </div>
@@ -219,7 +221,7 @@ export default function AboutPage() {
               <div>
                 {/* 메인 타이틀 */}
                 <div className="mb-12">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">GCS 개설과목</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-2">GCS 개설과목</h2>
                   <div className="w-24 h-1 bg-[#f57520]"></div>
                 </div>
                 
@@ -384,132 +386,142 @@ export default function AboutPage() {
 
             {activeTab === 'professor' && (
               <div>
-                <h2 className="text-2xl font-semibold text-white mb-6">교수진</h2>
+                {/* 메인 타이틀 */}
+                <div className="mb-12">
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Academic & Industry Mentors</h2>
+                  <div className="w-24 h-1 bg-[#f57520]"></div>
+                </div>
                 
-                <div className="space-y-12 mb-8">
-                  {/* 김교수 섹션 */}
-                  <div className="flex flex-col lg:flex-row gap-8 pb-8 border-b border-white">
-                    {/* 모바일: 사진, 데스크톱: 설명 */}
-                    <div className="flex-1 lg:order-1 order-2">
-                      <h3 className="text-white font-semibold text-2xl mb-4">김교수</h3>
-                      <p className="text-gray-300 text-lg mb-4">
-                        그래픽 디자인과 시각 커뮤니케이션 전문가로서 15년간의 교육 경험을 가지고 있습니다.
-                      </p>
-                      <div className="text-gray-300 space-y-3">
-                        <p><span className="text-white font-medium">전공 분야:</span> 그래픽 디자인, 시각 커뮤니케이션, 브랜드 디자인</p>
-                        <p><span className="text-white font-medium">연구 분야:</span> 타이포그래피, 색채 이론, 디자인 시스템</p>
-                        <p><span className="text-white font-medium">주요 과목:</span> 그래픽 디자인 기초, 브랜드 아이덴티티 디자인, 시각 커뮤니케이션 이론</p>
-                        <p><span className="text-white font-medium">학위:</span> 서울대학교 미술대학 시각디자인과 박사</p>
+                <div className="space-y-0 mb-8">
+                  {/* 김봉구 교수님 - 사진 오른쪽 */}
+                  <div className="border-t border-b border-white py-4">
+                    <div className="flex items-start gap-4">
+                      {/* 왼쪽: 이름과 설명 */}
+                      <div className="flex-1 space-y-1 text-white text-xs text-right">
+                        <h3 className="text-white font-bold text-xl mb-2">김봉구 교수님</h3>
+                        <p>동국대학교 경영대학 GCS연계전공 대우교수</p>
+                        <p>프린팅플랫폼(주) 대표이사</p>
+                        <p className="pt-3">그래픽커뮤니케이션사이언스입문</p>
+                        <p>캡스톤디자인</p>
                       </div>
-                    </div>
-                    
-                    {/* 모바일: 설명, 데스크톱: 사진 */}
-                    <div className="w-32 text-center lg:order-2 order-1 mx-auto">
-                      <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+                      
+                      {/* 오른쪽: 사진 */}
+                      <div className="w-[120px] h-[150px] bg-gray-700 rounded overflow-hidden flex-shrink-0">
                         <img 
                           src="/images/professor1.png" 
-                          alt="김교수" 
+                          alt="김봉구 교수님" 
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (nextElement) {
-                              nextElement.style.display = 'flex';
-                            }
-                          }}
                         />
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
-                          김교수
-                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* 이교수 섹션 */}
-                  <div className="flex flex-col lg:flex-row gap-8 pb-8 border-b border-white">
-                    {/* 모바일: 사진, 데스크톱: 설명 */}
-                    <div className="flex-1 lg:order-1 order-2">
-                      <h3 className="text-white font-semibold text-2xl mb-4">이교수</h3>
-                      <p className="text-gray-300 text-lg mb-4">
-                        디지털 미디어와 인터랙션 디자인 전문가로 사용자 중심의 디자인을 추구합니다.
-                      </p>
-                      <div className="text-gray-300 space-y-3">
-                        <p><span className="text-white font-medium">전공 분야:</span> 디지털 미디어, 인터랙션 디자인, 사용자 경험 디자인</p>
-                        <p><span className="text-white font-medium">연구 분야:</span> HCI, 모바일 인터페이스, 가상현실 디자인</p>
-                        <p><span className="text-white font-medium">주요 과목:</span> 인터랙션 디자인, UX/UI 디자인, 디지털 미디어 프로젝트</p>
-                        <p><span className="text-white font-medium">학위:</span> 카이스트 컴퓨터공학과 박사</p>
-                      </div>
-                    </div>
-                    
-                    {/* 모바일: 설명, 데스크톱: 사진 */}
-                    <div className="w-32 text-center lg:order-2 order-1 mx-auto">
-                      <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+                  {/* 김병수 교수님 - 사진 왼쪽 */}
+                  <div className="border-b border-white py-4">
+                    <div className="flex items-start gap-4">
+                      {/* 왼쪽: 사진 */}
+                      <div className="w-[120px] h-[150px] bg-gray-700 rounded overflow-hidden flex-shrink-0">
                         <img 
                           src="/images/professor2.png" 
-                          alt="이교수" 
+                          alt="김병수 교수님" 
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (nextElement) {
-                              nextElement.style.display = 'flex';
-                            }
-                          }}
                         />
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
-                          이교수
-                        </div>
+                      </div>
+                      
+                      {/* 오른쪽: 이름과 설명 */}
+                      <div className="flex-1 space-y-1 text-white text-xs">
+                        <h3 className="text-white font-bold text-xl mb-2">김병수 교수님</h3>
+                        <p>동국대학교 경영대학 GCS연계전공 대우교수</p>
+                        <p>HP Asia Pacific Graphic Industrial Strategic Biz 상무</p>
+                        <p className="pt-3">4차산업과 패키징</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* 박교수 섹션 */}
-                  <div className="flex flex-col lg:flex-row gap-8 pb-8">
-                    {/* 모바일: 사진, 데스크톱: 설명 */}
-                    <div className="flex-1 lg:order-1 order-2">
-                      <h3 className="text-white font-semibold text-2xl mb-4">박교수</h3>
-                      <p className="text-gray-300 text-lg mb-4">
-                        웹 기술과 사용자 경험 디자인 전문가로 현대적인 웹 애플리케이션 개발을 지도합니다.
-                      </p>
-                      <div className="text-gray-300 space-y-3">
-                        <p><span className="text-white font-medium">전공 분야:</span> 웹 개발, 프론트엔드 기술, UI/UX 디자인</p>
-                        <p><span className="text-white font-medium">연구 분야:</span> React, Vue.js, 웹 접근성, 반응형 웹 디자인</p>
-                        <p><span className="text-white font-medium">주요 과목:</span> 웹 프로그래밍, 프론트엔드 개발, 웹 디자인 프로젝트</p>
-                        <p><span className="text-white font-medium">학위:</span> 연세대학교 컴퓨터과학과 박사</p>
+                  {/* 김정욱 교수님 - 사진 오른쪽 */}
+                  <div className="border-b border-white py-4">
+                    <div className="flex items-start gap-4">
+                      {/* 왼쪽: 이름과 설명 */}
+                      <div className="flex-1 space-y-1 text-white text-xs text-right">
+                        <h3 className="text-white font-bold text-xl mb-2">김정욱 교수님</h3>
+                        <p>동국대학교 경영대학 GCS연계전공 대우교수</p>
+                        <p>콘타그립 대표</p>
+                        <p className="pt-3">컬러매니지먼트와 디자인</p>
                       </div>
-                    </div>
-                    
-                    {/* 모바일: 설명, 데스크톱: 사진 */}
-                    <div className="w-32 text-center lg:order-2 order-1 mx-auto">
-                      <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+                      
+                      {/* 오른쪽: 사진 */}
+                      <div className="w-[120px] h-[150px] bg-gray-700 rounded overflow-hidden flex-shrink-0">
                         <img 
                           src="/images/professor3.png" 
-                          alt="박교수" 
+                          alt="김정욱 교수님" 
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (nextElement) {
-                              nextElement.style.display = 'flex';
-                            }
-                          }}
                         />
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
-                          박교수
-                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* 교수진 소개 */}
-                <div className="bg-gray-800 rounded-lg p-8 mb-8">
-                  <h2 className="text-2xl font-semibold text-white mb-6 text-center">교수진 소개</h2>
-                  <p className="text-gray-300 text-lg leading-relaxed text-center">
-                    동국대학교 GCS 연계전공 교수진은 그래픽 디자인, 시각 커뮤니케이션, 디지털 미디어, 웹 기술 등
-                    다양한 분야의 전문가들로 구성되어 있습니다. 학생들에게 최신 이론과 실무 경험을 바탕으로
-                    혁신적인 교육을 제공하며, 미래 시대의 창의적 인재 양성에 힘쓰고 있습니다.
-                  </p>
+                  
+                  {/* 김승용 교수님 - 사진 왼쪽 */}
+                  <div className="border-b border-white py-4">
+                    <div className="flex items-start gap-4">
+                      {/* 왼쪽: 사진 */}
+                      <div className="w-[120px] h-[150px] bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                        <img 
+                          src="/images/professor4.png" 
+                          alt="김승용 교수님" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      {/* 오른쪽: 이름과 설명 */}
+                      <div className="flex-1 space-y-1 text-white text-xs">
+                        <h3 className="text-white font-bold text-xl mb-2">김승용 교수님</h3>
+                        <p>동국대학교 경영대학 GCS연계전공 교수</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 정구현 교수님 - 사진 오른쪽 */}
+                  <div className="border-b border-white py-4">
+                    <div className="flex items-start gap-4">
+                      {/* 왼쪽: 이름과 설명 */}
+                      <div className="flex-1 space-y-1 text-white text-xs text-right">
+                        <h3 className="text-white font-bold text-xl mb-2">정구현 교수님</h3>
+                        <p>동국대학교 경영대학 GCS연계전공 교수</p>
+                      </div>
+                      
+                      {/* 오른쪽: 사진 */}
+                      <div className="w-[120px] h-[150px] bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                        <img 
+                          src="/images/professor5.png" 
+                          alt="정구현 교수님" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 정승원 교수님 - 사진 왼쪽 */}
+                  <div className="border-b border-white py-4">
+                    <div className="flex items-start gap-4">
+                      {/* 왼쪽: 사진 */}
+                      <div className="w-[120px] h-[150px] bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                        <img 
+                          src="/images/professor6.png" 
+                          alt="정승원 교수님" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      {/* 오른쪽: 이름과 설명 */}
+                      <div className="flex-1 space-y-1 text-white text-xs">
+                        <h3 className="text-white font-bold text-xl mb-2">정승원 교수님</h3>
+                        <p>동국대학교 경영대학 GCS연계전공 교수</p>
+                        <p className="pt-3">식품포장특론</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* DB에서 불러온 다른 교수진 정보가 여기에 표시됩니다 */}
                 </div>
               </div>
             )}
