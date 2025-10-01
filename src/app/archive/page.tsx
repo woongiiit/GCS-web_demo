@@ -1,12 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export default function ArchivePage() {
+function ArchiveContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'project' | 'news'>('project')
@@ -223,5 +221,13 @@ export default function ArchivePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ArchivePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ArchiveContent />
+    </Suspense>
   )
 }
