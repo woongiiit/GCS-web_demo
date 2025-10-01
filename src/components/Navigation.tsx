@@ -9,6 +9,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const { user, isLoading, logout } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([])
 
   const menuItems = [
     { 
@@ -50,6 +51,14 @@ export default function Navigation() {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
+  const toggleSubMenu = (href: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(href) 
+        ? prev.filter(item => item !== href)
+        : [...prev, href]
+    )
+  }
+
   return (
     <>
       <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
@@ -58,7 +67,7 @@ export default function Navigation() {
             {/* 로고 - 좌측 */}
             <div className="flex-1 flex items-center">
               <Link href="/" className="text-xl font-bold text-black hover:text-gray-800 transition-colors">
-                GCS:Web_Demo
+                GCS<span className="text-[#f57520]">:</span>Web
               </Link>
             </div>
             
@@ -140,11 +149,11 @@ export default function Navigation() {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={toggleMobileMenu}></div>
-          <div className="fixed top-0 left-0 right-0 bottom-0 bg-white">
+          <div className="fixed top-0 left-0 right-0 bottom-0 bg-white flex flex-col">
             {/* 헤더 */}
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
               <Link href="/" className="text-xl font-bold text-black" onClick={toggleMobileMenu}>
-                GCS:Web
+                GCS<span className="text-[#f57520]">:</span>Web
               </Link>
               <button
                 onClick={toggleMobileMenu}
@@ -157,25 +166,41 @@ export default function Navigation() {
             </div>
 
             {/* 메뉴 컨텐츠 */}
-            <div className="bg-orange-500 flex-1 p-6">
-              <div className="space-y-4">
+            <div className="bg-orange-500 flex-1 p-6 overflow-y-auto">
+              <div className="space-y-6 pt-4">
                 {menuItems.map((item) => (
                   <div key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={toggleMobileMenu}
-                      className="block text-black font-bold text-lg hover:text-gray-800 transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                    {item.subItems.length > 0 && (
-                      <div className="mt-2 ml-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Link
+                        href={item.href}
+                        onClick={toggleMobileMenu}
+                        className="flex-1 text-black font-bold text-3xl hover:text-gray-800 transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                      {item.subItems.length > 0 && (
+                        <button
+                          onClick={() => toggleSubMenu(item.href)}
+                          className="ml-3 text-black hover:text-gray-800 transition-transform"
+                        >
+                          <svg
+                            className={`w-6 h-6 transition-transform ${expandedMenus.includes(item.href) ? 'rotate-90' : ''}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    {item.subItems.length > 0 && expandedMenus.includes(item.href) && (
+                      <div className="mt-3 ml-4 space-y-2">
                         {item.subItems.map((subItem) => (
                           <Link
                             key={subItem.href}
                             href={subItem.href}
                             onClick={toggleMobileMenu}
-                            className="block text-black text-sm hover:text-gray-800 transition-colors"
+                            className="block text-black text-lg font-bold hover:text-gray-800 transition-colors"
                           >
                             {subItem.label}
                           </Link>
@@ -184,6 +209,35 @@ export default function Navigation() {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* 하단 배너 */}
+            <div className="bg-white py-6 border-t border-gray-200 flex-shrink-0">
+              <div className="px-4 flex justify-between items-start gap-4">
+                {/* 왼쪽: 로고 정보 */}
+                <div className="flex-shrink-0">
+                  <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
+                  <h3 className="text-sm font-bold text-black">
+                    GCS<span className="text-[#f57520]">:</span>Web
+                  </h3>
+                </div>
+                
+                {/* 오른쪽: 회사 정보 */}
+                <div className="flex-1 text-right space-y-1 min-w-0">
+                  <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
+                  <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
+                  <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
+                  <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
+                  
+                  <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
+                    <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
+                    <span className="text-[10px] text-gray-400">|</span>
+                    <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
+                    <span className="text-[10px] text-gray-400">|</span>
+                    <span className="text-[10px] text-gray-500">site by 제작담</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

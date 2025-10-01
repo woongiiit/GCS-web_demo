@@ -40,10 +40,10 @@ export default function Home() {
             
             {/* Project Archive 섹션 */}
             <div className="mb-10">
-              <h2 className="text-xl font-bold mb-2 flex items-center">
+              <h2 className="text-xl font-bold mb-1">
                 Project Archive
-                <span className="ml-2 w-8 h-0.5 bg-[#f57520]"></span>
               </h2>
+              <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
               <div className="bg-gray-50 rounded-lg p-4 flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="font-bold text-base mb-2">2025 유랑 : NFC Welcome-kit</h3>
@@ -68,10 +68,10 @@ export default function Home() {
 
             {/* News 섹션 */}
             <div className="mb-10">
-              <h2 className="text-xl font-bold mb-2 flex items-center">
+              <h2 className="text-xl font-bold mb-1">
                 News
-                <span className="ml-2 w-8 h-0.5 bg-[#f57520]"></span>
               </h2>
+              <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
               <div className="grid grid-cols-3 gap-2 mb-3">
                 <div className="bg-gray-100 rounded-lg overflow-hidden">
                   <div className="h-20 bg-gray-300"></div>
@@ -127,10 +127,10 @@ export default function Home() {
 
             {/* Shop 섹션 */}
             <div className="mb-8">
-              <h2 className="text-xl font-bold mb-2 flex items-center">
+              <h2 className="text-xl font-bold mb-1">
                 Shop
-                <span className="ml-2 w-8 h-0.5 bg-[#f57520]"></span>
               </h2>
+              <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center">
                   <div className="bg-gray-100 rounded-lg h-24 mb-2"></div>
@@ -160,9 +160,30 @@ export default function Home() {
 
         {/* 하단 배너 */}
         <div className="bg-white py-6 border-t border-gray-200">
-          <div className="px-4 text-center">
-            <p className="text-xs text-gray-500 mb-1">DONGGUK UNIVERSITY</p>
-            <h3 className="text-lg font-bold text-black">GCS:Web</h3>
+          <div className="px-4 flex justify-between items-start gap-4">
+            {/* 왼쪽: 로고 정보 */}
+            <div className="flex-shrink-0">
+              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
+              <h3 className="text-sm font-bold text-black">
+                GCS<span className="text-[#f57520]">:</span>Web
+              </h3>
+            </div>
+            
+            {/* 오른쪽: 회사 정보 */}
+            <div className="flex-1 text-right space-y-1 min-w-0">
+              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
+              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
+              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
+              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
+              
+              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
+                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
+                <span className="text-[10px] text-gray-400">|</span>
+                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
+                <span className="text-[10px] text-gray-400">|</span>
+                <span className="text-[10px] text-gray-500">site by 제작담</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
