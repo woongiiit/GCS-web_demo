@@ -71,6 +71,7 @@ model Comment {
 model Category {
   id          String   @id @default(cuid())
   name        String   @unique
+  slug        String   @unique // URL용 슬러그 (apparel, stationary, bag, life, accessory)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -86,16 +87,20 @@ model Product {
   id          String   @id @default(cuid())
   name        String
   description String
+  shortDescription String? // 짧은 설명 (제품 상세 페이지용)
   price       Int      // 원 단위
   originalPrice Int?
   discount    Int?     // 할인율 (%)
   stock       Int      @default(0)
   imageUrl    String?
+  images      String[] // 제품 이미지 배열 (메인 이미지, 상세 이미지들)
+  brand       String?  // 브랜드명 (DEUX 등)
   tags        String[] // 태그 배열
   features    String[] // 특징 배열
   sizes       String[] // 사이즈 배열 (의류용)
   colors      String[] // 색상 배열 (의류용)
   isActive    Boolean  @default(true)
+  isBestItem  Boolean  @default(false) // Best Item 여부
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   createdAt   DateTime @default(now())
@@ -103,8 +108,30 @@ model Product {
 
   // 관계
   orderItems  OrderItem[]
+  productDetails ProductDetail[]
 
   @@map("products")
+}
+
+// 상품 상세 정보 모델
+model ProductDetail {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productionYear Int?  // 제작년도
+  project     String?  // 프로젝트명
+  material    String?  // 제품 소재
+  color       String?  // 제품 색상
+  size        String?  // 사이즈
+  printingMethod String? // 프린팅 방식
+  manufacturer String? // 제조 협력업체
+  shippingInfo String? // 배송 안내 및 반품 고지
+  qualityStandard String? // 품질 보증 기준
+  customerService String? // 고객 센터 안내
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("product_details")
 }
 
 // 주문 모델
@@ -152,8 +179,10 @@ model Project {
   githubUrl   String?
   demoUrl     String?
   imageUrl    String?
+  images      String[] // 프로젝트 이미지 배열
   authorId    String
   author      User     @relation(fields: [authorId], references: [id])
+  isFeatured  Boolean  @default(false) // 추천 프로젝트 여부
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -167,8 +196,11 @@ model News {
   content     String
   summary     String?
   year        Int
+  imageUrl    String?
+  images      String[] // 뉴스 이미지 배열
   authorId    String
   author      User     @relation(fields: [authorId], references: [id])
+  isFeatured  Boolean  @default(false) // 추천 뉴스 여부
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -199,10 +231,13 @@ model Subject {
   credits     Int
   semester    String
   year        Int
+  category    SubjectCategory // 예술, 경영, 공학
   majorId     String
   major       Major    @relation(fields: [majorId], references: [id])
   professorId String
   professor   Professor @relation(fields: [professorId], references: [id])
+  isActive    Boolean  @default(true) // 활성 과목 여부
+  displayOrder Int?    // 표시 순서
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -213,14 +248,20 @@ model Subject {
 model Professor {
   id          String   @id @default(cuid())
   name        String
-  title       String   // 직급 (교수, 부교수, 조교수 등)
+  title       String   // 직급 (교수, 부교수, 조교수, 대우교수 등)
   email       String   @unique
   phone       String?
   office      String?
+  affiliation String?  // 소속 (동국대학교 경영대학 GCS연계전공 등)
+  company     String?  // 회사명 (프린팅플랫폼(주) 등)
+  position    String?  // 직책 (대표이사, 상무 등)
+  courses     String[] // 담당 과목 배열
   researchAreas String[] // 연구 분야
   education   String?  // 학력
   experience  String?  // 경력
   imageUrl    String?
+  isActive    Boolean  @default(true) // 활성 교수 여부
+  displayOrder Int?    // 표시 순서
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -247,4 +288,10 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum SubjectCategory {
+  ART      // 예술
+  BUSINESS // 경영
+  ENGINEERING // 공학
 }

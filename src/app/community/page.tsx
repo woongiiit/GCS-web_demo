@@ -82,7 +82,15 @@ function CommunityContent() {
           <div className="max-w-6xl mx-auto px-4 py-6 sm:px-0">
           {activeTab === 'board' ? (
             <div>
-              <h2 className="text-xl font-bold text-black mb-6">Board</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-black">Board</h2>
+                <Link 
+                  href="/community/write?category=board"
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  글 작성
+                </Link>
+              </div>
 
               {/* 게시글 목록 */}
               <div className="space-y-4 mb-8">
@@ -100,21 +108,18 @@ function CommunityContent() {
                 </div>
                 */}
               </div>
-
-              {/* 페이징 */}
-              <div className="flex justify-center items-center space-x-2 text-sm mb-8">
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">&lt;</button>
-                <button className="px-3 py-1 rounded-md bg-black text-white">1</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">2</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">3</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">4</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">5</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">&gt;</button>
-              </div>
             </div>
           ) : (
             <div>
-              <h2 className="text-xl font-bold text-black mb-6">Lounge</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-black">Lounge</h2>
+                <Link 
+                  href="/community/write?category=lounge"
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  글 작성
+                </Link>
+              </div>
 
               {/* 게시글 목록 */}
               <div className="space-y-4 mb-8">
@@ -132,24 +137,38 @@ function CommunityContent() {
                 </div>
                 */}
               </div>
-
-              {/* 페이징 */}
-              <div className="flex justify-center items-center space-x-2 text-sm mb-8">
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">&lt;</button>
-                <button className="px-3 py-1 rounded-md bg-black text-white">1</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">2</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">3</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">4</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">5</button>
-                <button className="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-200">&gt;</button>
-              </div>
             </div>
           )}
 
-          {/* 푸터 */}
-          <div className="text-center text-gray-400 text-xs mt-12">
-            DONGGUK UNIVERSITY
           </div>
+        </div>
+
+        {/* 하단 배너 */}
+        <div className="bg-white py-6 border-t border-gray-200">
+          <div className="px-4 flex justify-between items-start gap-4">
+            {/* 왼쪽: 로고 정보 */}
+            <div className="flex-shrink-0">
+              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
+              <h3 className="text-sm font-bold text-black">
+                GCS<span className="text-[#f57520]">:</span>Web
+              </h3>
+            </div>
+            
+            {/* 오른쪽: 회사 정보 */}
+            <div className="flex-1 text-right space-y-1 min-w-0">
+              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
+              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
+              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
+              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
+              
+              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
+                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
+                <span className="text-[10px] text-gray-400">|</span>
+                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
+                <span className="text-[10px] text-gray-400">|</span>
+                <span className="text-[10px] text-gray-500">site by 제작담</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

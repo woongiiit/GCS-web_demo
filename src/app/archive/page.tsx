@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 function ArchiveContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'project' | 'news'>('project')
 
   // URL 쿼리 파라미터에서 초기 탭 설정
@@ -53,27 +55,40 @@ function ArchiveContent() {
         {/* 탭 메뉴 - 흰색 배경 영역 */}
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            <div className="flex justify-center space-x-8 py-4">
-              <button
-                onClick={() => handleTabChange('project')}
-                className={`pb-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'project'
-                    ? 'text-black border-black'
-                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                }`}
-              >
-                Project
-              </button>
-              <button
-                onClick={() => handleTabChange('news')}
-                className={`pb-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'news'
-                    ? 'text-black border-black'
-                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                }`}
-              >
-                News
-              </button>
+            <div className="flex justify-between items-center py-4">
+              {/* 탭 버튼들 */}
+              <div className="flex justify-center space-x-8 flex-1">
+                <button
+                  onClick={() => handleTabChange('project')}
+                  className={`pb-2 border-b-2 font-medium transition-colors ${
+                    activeTab === 'project'
+                      ? 'text-black border-black'
+                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                  }`}
+                >
+                  Project
+                </button>
+                <button
+                  onClick={() => handleTabChange('news')}
+                  className={`pb-2 border-b-2 font-medium transition-colors ${
+                    activeTab === 'news'
+                      ? 'text-black border-black'
+                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                  }`}
+                >
+                  News
+                </button>
+              </div>
+              
+              {/* 관리자 전용 글 작성 버튼 */}
+              {user && user.role === 'ADMIN' && (
+                <Link 
+                  href={`/archive/write?type=${activeTab}`}
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  글 작성
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -214,9 +229,34 @@ function ArchiveContent() {
             )}
           </div>
 
-          {/* 푸터 */}
-          <div className="text-center text-gray-400 text-xs mt-12">
-            DONGGUK UNIVERSITY
+        </div>
+
+        {/* 하단 배너 */}
+        <div className="bg-white py-6 border-t border-gray-200">
+          <div className="px-4 flex justify-between items-start gap-4">
+            {/* 왼쪽: 로고 정보 */}
+            <div className="flex-shrink-0">
+              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
+              <h3 className="text-sm font-bold text-black">
+                GCS<span className="text-[#f57520]">:</span>Web
+              </h3>
+            </div>
+            
+            {/* 오른쪽: 회사 정보 */}
+            <div className="flex-1 text-right space-y-1 min-w-0">
+              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
+              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
+              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
+              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
+              
+              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
+                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
+                <span className="text-[10px] text-gray-400">|</span>
+                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
+                <span className="text-[10px] text-gray-400">|</span>
+                <span className="text-[10px] text-gray-500">site by 제작담</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
