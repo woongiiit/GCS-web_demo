@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 
-export default function ArchiveWritePage() {
+function ArchiveWriteContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, isLoading } = useAuth()
@@ -348,3 +348,20 @@ export default function ArchiveWritePage() {
     </div>
   )
 }
+
+export default function ArchiveWritePage() {
+  return (
+    <Suspense fallback={
+      <div className="fixed inset-0 bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <ArchiveWriteContent />
+    </Suspense>
+  )
+}
+
+export const dynamic = 'force-dynamic'
