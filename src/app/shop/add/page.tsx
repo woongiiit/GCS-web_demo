@@ -45,15 +45,14 @@ export default function ShopAddPage() {
 
   const fetchCategories = async () => {
     try {
-      // TODO: 실제 API 호출
-      // 임시 카테고리 데이터
-      setCategories([
-        { id: '1', name: 'Apparel', slug: 'apparel' },
-        { id: '2', name: 'Stationary', slug: 'stationary' },
-        { id: '3', name: 'Bag & Pouch', slug: 'bag' },
-        { id: '4', name: 'Life', slug: 'life' },
-        { id: '5', name: 'Accessory', slug: 'accessory' },
-      ])
+      const response = await fetch('/api/shop/categories')
+      const data = await response.json()
+      
+      if (data.success) {
+        setCategories(data.data)
+      } else {
+        console.error('카테고리 조회 실패:', data.error)
+      }
     } catch (error) {
       console.error('카테고리 조회 오류:', error)
     }
