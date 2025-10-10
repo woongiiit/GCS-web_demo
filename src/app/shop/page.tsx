@@ -1,132 +1,44 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 
 export default function ShopPage() {
   const { role } = usePermissions()
   const [activeTab, setActiveTab] = useState<'apparel' | 'stationary' | 'bag' | 'life' | 'accessory'>('apparel')
+  const [bestProducts, setBestProducts] = useState<any[]>([])
+  const [categoryProducts, setCategoryProducts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // 샘플 상품 데이터 (실제로는 API에서 가져올 데이터)
-  const sampleProducts = {
-    apparel: [
-      {
-        id: 1,
-        name: 'GCS 로고 티셔츠',
-        price: '25,000원',
-        image: '/images/shop/apparel/tshirt-1.jpg',
-        description: 'GCS 브랜드 로고가 새겨진 기본 티셔츠'
-      },
-      {
-        id: 2,
-        name: '후드 집업',
-        price: '45,000원',
-        image: '/images/shop/apparel/hoodie-1.jpg',
-        description: '편안한 착용감의 후드 집업'
-      },
-      {
-        id: 3,
-        name: '폴로셔츠',
-        price: '35,000원',
-        image: '/images/shop/apparel/polo-1.jpg',
-        description: '클래식한 폴로셔츠 디자인'
+  useEffect(() => {
+    fetchProducts()
+  }, [activeTab])
+
+  const fetchProducts = async () => {
+    setIsLoading(true)
+    try {
+      // Best Item 조회
+      const bestRes = await fetch('/api/shop/products?bestItem=true')
+      const bestData = await bestRes.json()
+      if (bestData.success) {
+        setBestProducts(bestData.data)
       }
-    ],
-    stationary: [
-      {
-        id: 4,
-        name: 'GCS 노트북',
-        price: '8,000원',
-        image: '/images/shop/stationary/notebook-1.jpg',
-        description: 'GCS 브랜드가 새겨진 스프링 노트북'
-      },
-      {
-        id: 5,
-        name: '볼펜 세트',
-        price: '12,000원',
-        image: '/images/shop/stationary/pen-set.jpg',
-        description: '다양한 색상의 볼펜 세트'
-      },
-      {
-        id: 6,
-        name: '스티커 팩',
-        price: '5,000원',
-        image: '/images/shop/stationary/sticker.jpg',
-        description: 'GCS 캐릭터 스티커 모음'
+
+      // 카테고리별 상품 조회
+      const categoryRes = await fetch(`/api/shop/products?category=${activeTab}`)
+      const categoryData = await categoryRes.json()
+      if (categoryData.success) {
+        setCategoryProducts(categoryData.data)
       }
-    ],
-    bag: [
-      {
-        id: 7,
-        name: '토트백',
-        price: '28,000원',
-        image: '/images/shop/bag/tote.jpg',
-        description: '내구성이 뛰어난 캔버스 토트백'
-      },
-      {
-        id: 8,
-        name: '백팩',
-        price: '55,000원',
-        image: '/images/shop/bag/backpack.jpg',
-        description: '대학생활에 최적화된 백팩'
-      },
-      {
-        id: 9,
-        name: '파우치',
-        price: '15,000원',
-        image: '/images/shop/bag/pouch.jpg',
-        description: '소지품 정리에 유용한 파우치'
-      }
-    ],
-    life: [
-      {
-        id: 10,
-        name: '텀블러',
-        price: '18,000원',
-        image: '/images/shop/life/tumbler.jpg',
-        description: '보온성이 뛰어난 스테인리스 텀블러'
-      },
-      {
-        id: 11,
-        name: '마우스패드',
-        price: '12,000원',
-        image: '/images/shop/life/mousepad.jpg',
-        description: '게이밍에 최적화된 마우스패드'
-      },
-      {
-        id: 12,
-        name: '키링',
-        price: '6,000원',
-        image: '/images/shop/life/keyring.jpg',
-        description: 'GCS 로고가 새겨진 키링'
-      }
-    ],
-    accessory: [
-      {
-        id: 13,
-        name: '핀 배지',
-        price: '8,000원',
-        image: '/images/shop/accessory/pin.jpg',
-        description: '컬렉션용 핀 배지'
-      },
-      {
-        id: 14,
-        name: '목걸이',
-        price: '22,000원',
-        image: '/images/shop/accessory/necklace.jpg',
-        description: '심플한 디자인의 목걸이'
-      },
-      {
-        id: 15,
-        name: '팔찌',
-        price: '15,000원',
-        image: '/images/shop/accessory/bracelet.jpg',
-        description: '고급스러운 실버 팔찌'
-      }
-    ]
+    } catch (error) {
+      console.error('상품 조회 오류:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
+
 
   const getCategoryName = (category: string) => {
     switch (category) {
@@ -180,19 +92,19 @@ export default function ShopPage() {
             <div className="flex justify-between items-center py-4">
               {/* 카테고리 탭들 */}
               <div className="flex flex-wrap justify-center gap-4 md:gap-8 flex-1">
-                {['apparel', 'stationary', 'bag', 'life', 'accessory'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab as any)}
+              {['apparel', 'stationary', 'bag', 'life', 'accessory'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
                     className={`pb-2 border-b-2 font-medium transition-colors text-sm md:text-base ${
-                      activeTab === tab
-                        ? 'text-black border-black'
-                        : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                    }`}
-                  >
-                    {getCategoryName(tab)}
-                  </button>
-                ))}
+                    activeTab === tab
+                      ? 'text-black border-black'
+                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                  }`}
+                >
+                  {getCategoryName(tab)}
+                </button>
+              ))}
               </div>
               
               {/* 상품 등록 버튼 (관리자만) */}
@@ -226,35 +138,41 @@ export default function ShopPage() {
               </div>
               
               {/* Best Item 상품 가로 스크롤 */}
-              <div className="relative z-10 mt-8 overflow-x-auto pb-4">
-                <div className="flex gap-6 min-w-max">
-                  {/* 샘플 Best Item 1 */}
-                  <Link href="/shop/1" className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
-                      <div className="w-3/4 h-3/4 bg-gray-300"></div>
-                    </div>
-                    <h3 className="font-bold text-sm mb-1">동등(動動) 키링</h3>
-                    <p className="text-gray-500 text-xs">2025 어멍</p>
-                  </Link>
-                  
-                  {/* 샘플 Best Item 2 */}
-                  <Link href="/shop/2" className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
-                      <div className="w-3/4 h-3/4 bg-gray-300"></div>
-                    </div>
-                    <h3 className="font-bold text-sm mb-1">USB (Welcome-kit)</h3>
-                    <p className="text-gray-500 text-xs">2025 Kitty</p>
-                  </Link>
-                  
-                  {/* 샘플 Best Item 3 */}
-                  <Link href="/shop/3" className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="w-full aspect-square bg-gray-100 rounded mb-3 flex items-center justify-center">
-                      <div className="w-3/4 h-3/4 bg-gray-300"></div>
-                    </div>
-                    <h3 className="font-bold text-sm mb-1">RFID 차단 카드 홀더</h3>
-                    <p className="text-gray-500 text-xs">2025 DEUX</p>
-                  </Link>
-                </div>
+              <div className="relative z-10 mt-8 overflow-x-auto pb-4 scrollbar-hide">
+                {isLoading ? (
+                  <div className="flex gap-6 min-w-max">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-white w-[200px] flex-shrink-0">
+                        <div className="w-full aspect-square bg-gray-100 rounded mb-3 animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : bestProducts.length > 0 ? (
+                  <div className="flex gap-6 min-w-max">
+                    {bestProducts.map((product) => (
+                      <Link key={product.id} href={`/shop/${product.id}`} className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                        <div className="w-full aspect-square bg-gray-100 rounded mb-3 overflow-hidden">
+                          {product.images && product.images[0] ? (
+                            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
+                              e.currentTarget.src = '/images/placeholder-product.jpg'
+                            }} />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
+                        <p className="text-gray-500 text-xs line-clamp-1">{product.brand || 'GCS'}</p>
+                        <p className="text-black font-semibold text-sm mt-1">{product.price.toLocaleString()}원</p>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Best Item이 없습니다.
+                  </div>
+                )}
               </div>
               
               {/* 하단 보더 */}
@@ -268,24 +186,50 @@ export default function ShopPage() {
             </div>
 
             {/* 상품 그리드 - 2열 */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {sampleProducts[activeTab].map((product) => (
-                <Link 
-                  key={product.id} 
-                  href={`/shop/${product.id}`}
-                  className="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                >
-                  <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
-                    <div className="w-3/4 h-3/4 bg-gray-300"></div>
+            {isLoading ? (
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-white rounded-lg overflow-hidden">
+                    <div className="w-full aspect-square bg-gray-100 animate-pulse"></div>
+                    <div className="p-3">
+                      <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                      <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
                     </div>
-                  <div className="p-3">
-                    <h3 className="font-bold text-sm mb-1">{product.name}</h3>
-                    <p className="text-gray-600 text-xs mb-2 line-clamp-2">{product.description}</p>
-                    <p className="text-black font-bold text-base">{product.price}</p>
                   </div>
-                </Link>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : categoryProducts.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {categoryProducts.map((product) => (
+                  <Link 
+                    key={product.id} 
+                    href={`/shop/${product.id}`}
+                    className="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                  >
+                    <div className="w-full aspect-square bg-gray-100 overflow-hidden">
+                      {product.images && product.images[0] ? (
+                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
+                          e.currentTarget.src = '/images/placeholder-product.jpg'
+                        }} />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
+                      <p className="text-gray-600 text-xs mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
+                      <p className="text-black font-bold text-base">{product.price.toLocaleString()}원</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                등록된 상품이 없습니다.
+              </div>
+            )}
 
             {/* More 버튼 */}
             <div className="text-right">

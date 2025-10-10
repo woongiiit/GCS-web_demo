@@ -1,42 +1,62 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 
 export default function ProductDetailPage() {
   const params = useParams()
-  const productId = params.id
+  const productId = params.id as string
   const [activeTab, setActiveTab] = useState<'details' | 'contact'>('details')
+  const [product, setProduct] = useState<any>(null)
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // 임시 제품 데이터 (실제로는 API에서 가져올 데이터)
-  const product = {
-    id: productId,
-    brand: 'DEUX',
-    name: '자비 부적',
-    description: '사랑과 행운을 전하는 자비 부적\n내 마음도 꼬~옥 안아취야 해!',
-    price: 'W00,000',
-    image: '/images/shop/sample-product.jpg',
-    category: 'Life',
-    details: `🐰 자비부적(慈悲符籍)
-내 마음도 꼬~옥 안아취야 해! 🐘💖💜
+  useEffect(() => {
+    if (productId) {
+      fetchProduct()
+    }
+  }, [productId])
 
-공모전에서 화제가 된 바로 그 부적!
-DEUX팀의 자랑!
+  const fetchProduct = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/shop/products/${productId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setProduct(data.data.product)
+        setRelatedProducts(data.data.relatedProducts)
+      }
+    } catch (error) {
+      console.error('상품 조회 오류:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-"MZ의 심장을 후벼판다"
-"귀여움과 힐링의 폭격기"라는 별명이 붙을 정도로 인기 폭발 🔥
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center pt-32">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">상품 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
 
-자비부적은 단순한 종이가 아니다.
-👉 스스로에게 건네는 다정한 자기암시이자,
-👉 위로와 행운을 끌어오는 작은 의식 같은 존재.
-
-시험 합격을 바라는 이에게는 진중령 부적
-사랑이 필요한 이에게는 따뜻한 포옹 부적
-그냥 지친 하루에는 웃음을 주는 작은 힐링템.
-
-이 부적을 지갑이나 가방에 넣고 다니면,
-어느 순간 스스로도 모르게 마음이 한결 가벼워지는 걸 느끼게 될 거야.`
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center pt-32">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">상품을 찾을 수 없습니다.</p>
+          <Link href="/shop" className="text-black underline hover:text-gray-600">
+            Shop으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -115,10 +135,10 @@ DEUX팀의 자랑!
 
           {/* 오른쪽: 제품 정보 */}
           <div className="flex flex-col">
-            <p className="text-sm text-gray-600 mb-2">{product.brand}</p>
+            <p className="text-sm text-gray-600 mb-2">{product.brand || 'GCS'}</p>
             <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
-            <p className="text-sm text-gray-700 mb-6 whitespace-pre-line">{product.description}</p>
-            <p className="text-2xl font-bold mb-8">{product.price}</p>
+            <p className="text-sm text-gray-700 mb-6 whitespace-pre-line">{product.shortDescription || product.description}</p>
+            <p className="text-2xl font-bold mb-8">{product.price.toLocaleString()}원</p>
 
             {/* 버튼 그룹 */}
             <div className="flex gap-3 mb-4">
@@ -171,7 +191,7 @@ DEUX팀의 자랑!
             {activeTab === 'details' && (
               <div>
                 <div className="text-sm text-gray-700 whitespace-pre-line mb-8">
-                  {product.details}
+                  {product.description}
                 </div>
                 
                 {/* 제품 예시 사진 */}
@@ -199,56 +219,78 @@ DEUX팀의 자랑!
                 </div>
                 
                 {/* 상품 정보 고시 내용 */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-white border-b border-gray-200 px-6 py-4">
-                    <h3 className="text-lg font-bold">상품 정보 고시 내용</h3>
+                {product.productDetails && product.productDetails.length > 0 && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-white border-b border-gray-200 px-6 py-4">
+                      <h3 className="text-lg font-bold">상품 정보 고시 내용</h3>
+                    </div>
+                    
+                    <table className="w-full text-sm">
+                      <tbody>
+                        {product.productDetails[0].productionYear && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold w-1/3">제작년도</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].productionYear}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].project && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">프로젝트</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].project}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].material && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">제품 소재</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].material}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].color && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">제품 색상</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].color}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].size && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">사이즈</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].size}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].printingMethod && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">프린팅 방식</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].printingMethod}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].manufacturer && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">제조 협력업체</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].manufacturer}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].shippingInfo && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">배송 안내 및 반품 고지</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].shippingInfo}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].qualityStandard && (
+                          <tr className="border-b border-gray-200">
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">품질 보증 기준</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].qualityStandard}</td>
+                          </tr>
+                        )}
+                        {product.productDetails[0].customerService && (
+                          <tr>
+                            <td className="px-6 py-3 bg-gray-100 font-semibold">고객 센터 안내</td>
+                            <td className="px-6 py-3 bg-white">{product.productDetails[0].customerService}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                  
-                  <table className="w-full text-sm">
-                    <tbody>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold w-1/3">제작년도</td>
-                        <td className="px-6 py-3 bg-white">2024</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">프로젝트</td>
-                        <td className="px-6 py-3 bg-white">DEUX</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">제품 소재</td>
-                        <td className="px-6 py-3 bg-white">제품 소재</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">제품 색상</td>
-                        <td className="px-6 py-3 bg-white">단색 1종</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">사이즈</td>
-                        <td className="px-6 py-3 bg-white">0000 × 0000 (단위:)</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">프린팅 방식</td>
-                        <td className="px-6 py-3 bg-white">프린팅 방식</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">제조 현력</td>
-                        <td className="px-6 py-3 bg-white">프린팅 업체</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">배송 안내 및 반품 고지</td>
-                        <td className="px-6 py-3 bg-white">단순 변심으로 인한 교환, 환불이 불가합니다.</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">품질 보증 기준</td>
-                        <td className="px-6 py-3 bg-white">본 상품은 철저한 품질관리를 거쳐 생산되었습니다.</td>
-                      </tr>
-                      <tr>
-                        <td className="px-6 py-3 bg-gray-100 font-semibold">고객 센터 안내</td>
-                        <td className="px-6 py-3 bg-white">1234-5678</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                )}
                 
                 {/* 관련 상품 섹션 */}
                 <div className="mt-12">
@@ -259,76 +301,38 @@ DEUX팀의 자랑!
                     </Link>
                   </div>
                   
-                  <div className="overflow-x-auto pb-4">
-                    <div className="flex gap-6 min-w-max">
-                      {/* 관련 상품 1 */}
-                      <Link href="/shop/4" className="group cursor-pointer w-[280px] flex-shrink-0">
-                        <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-                          <img 
-                            src="/images/shop/related-1.jpg"
-                            alt="아코 만년 블록 달력"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E아코 만년 블록 달력%3C/text%3E%3C/svg%3E'
-                            }}
-                          />
-                        </div>
-                        <h4 className="font-bold text-base mb-1">아코 만년 블록 달력</h4>
-                        <p className="text-sm text-gray-600 mb-1">Deux</p>
-                        <p className="text-sm font-semibold">W00,000</p>
-                      </Link>
-                      
-                      {/* 관련 상품 2 */}
-                      <Link href="/shop/5" className="group cursor-pointer w-[280px] flex-shrink-0">
-                        <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-                          <img 
-                            src="/images/shop/related-2.jpg"
-                            alt="자비 부적"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E자비 부적%3C/text%3E%3C/svg%3E'
-                            }}
-                          />
-                        </div>
-                        <h4 className="font-bold text-base mb-1">자비 부적</h4>
-                        <p className="text-sm text-gray-600 mb-1">DEUX</p>
-                        <p className="text-sm font-semibold">W00,000</p>
-                      </Link>
-                      
-                      {/* 관련 상품 3 */}
-                      <Link href="/shop/6" className="group cursor-pointer w-[280px] flex-shrink-0">
-                        <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-                          <img 
-                            src="/images/shop/related-3.jpg"
-                            alt="지혜 부적"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E지혜 부적%3C/text%3E%3C/svg%3E'
-                            }}
-                          />
-                        </div>
-                        <h4 className="font-bold text-base mb-1">지혜 부적</h4>
-                        <p className="text-sm text-gray-600 mb-1">DEUX</p>
-                        <p className="text-sm font-semibold">W00,000</p>
-                      </Link>
-                      
-                      {/* 추가 관련 상품 예시 (더 많은 상품이 있다는 것을 보여주기 위해) */}
-                      <Link href="/shop/7" className="group cursor-pointer w-[280px] flex-shrink-0">
-                        <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-                          <img 
-                            src="/images/shop/related-4.jpg"
-                            alt="관련 상품"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E관련 상품%3C/text%3E%3C/svg%3E'
-                            }}
-                          />
-                        </div>
-                        <h4 className="font-bold text-base mb-1">관련 상품</h4>
-                        <p className="text-sm text-gray-600 mb-1">DEUX</p>
-                        <p className="text-sm font-semibold">W00,000</p>
-                      </Link>
-                    </div>
+                  <div className="overflow-x-auto pb-4 scrollbar-hide">
+                    {relatedProducts.length > 0 ? (
+                      <div className="flex gap-6 min-w-max">
+                        {relatedProducts.map((relatedProduct) => (
+                          <Link key={relatedProduct.id} href={`/shop/${relatedProduct.id}`} className="group cursor-pointer w-[280px] flex-shrink-0">
+                            <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
+                              {relatedProduct.images && relatedProduct.images[0] ? (
+                                <img 
+                                  src={relatedProduct.images[0]}
+                                  alt={relatedProduct.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/images/placeholder-product.jpg'
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+                            <h4 className="font-bold text-base mb-1 line-clamp-1">{relatedProduct.name}</h4>
+                            <p className="text-sm text-gray-600 mb-1">{relatedProduct.brand || 'GCS'}</p>
+                            <p className="text-sm font-semibold">{relatedProduct.price.toLocaleString()}원</p>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        관련 상품이 없습니다.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

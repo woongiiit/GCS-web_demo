@@ -11,6 +11,9 @@ function ArchiveContent() {
   const router = useRouter()
   const { role } = usePermissions()
   const [activeTab, setActiveTab] = useState<'project' | 'news'>('project')
+  const [projects, setProjects] = useState<any>({})
+  const [news, setNews] = useState<any>({})
+  const [isLoading, setIsLoading] = useState(true)
 
   // URL 쿼리 파라미터에서 초기 탭 설정
   useEffect(() => {
@@ -27,6 +30,34 @@ function ArchiveContent() {
     setActiveTab(tab)
     const tabParam = tab === 'project' ? 'projects' : 'news'
     router.push(`/archive?tab=${tabParam}`, { scroll: false })
+  }
+
+  // 데이터 로드
+  useEffect(() => {
+    fetchArchiveData()
+  }, [])
+
+  const fetchArchiveData = async () => {
+    setIsLoading(true)
+    try {
+      // 프로젝트 조회
+      const projectsRes = await fetch('/api/archive/projects')
+      const projectsData = await projectsRes.json()
+      if (projectsData.success) {
+        setProjects(projectsData.byYear)
+      }
+
+      // 뉴스 조회
+      const newsRes = await fetch('/api/archive/news')
+      const newsData = await newsRes.json()
+      if (newsData.success) {
+        setNews(newsData.byYear)
+      }
+    } catch (error) {
+      console.error('Archive 데이터 조회 오류:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -98,134 +129,104 @@ function ArchiveContent() {
 
           {/* 컨텐츠 영역 */}
           <div className="bg-white min-h-screen px-4 py-8">
-            {activeTab === 'project' ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                <p className="text-gray-600">데이터를 불러오는 중...</p>
+              </div>
+            ) : activeTab === 'project' ? (
               <div>
-                {/* 2025 프로젝트 섹션 */}
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">2025</h2>
-                      <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                  </div>
-                    <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                      More
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                    {/* DB에서 가져온 프로젝트 데이터가 여기에 표시됩니다 */}
-                    {/* 예시 구조:
-                    <div className="bg-white">
-                      <div className="w-full aspect-[4/3] bg-gray-200 rounded-lg mb-3">
-                        <img src={project.image} alt={project.title} className="w-full h-full object-cover rounded-lg" />
+                {Object.keys(projects).length > 0 ? (
+                  Object.keys(projects).sort((a, b) => parseInt(b) - parseInt(a)).map((year) => (
+                    <div key={year} className="mb-16">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h2 className="text-2xl font-bold text-black">{year}</h2>
+                          <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
+                        </div>
+                        <Link href={`/archive?tab=projects&year=${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
+                          More
+                        </Link>
                       </div>
-                      <h3 className="text-[#f57520] font-bold text-base mb-2">{project.title} {project.members}</h3>
-                      <p className="text-gray-600 text-sm">{project.description}</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                        {projects[year].slice(0, 4).map((project: any) => (
+                          <div key={project.id} className="bg-white hover:shadow-md transition-shadow rounded-lg overflow-hidden">
+                            <div className="w-full aspect-[4/3] bg-gray-200 rounded-lg mb-3 overflow-hidden">
+                              {project.images && project.images[0] ? (
+                                <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
+                                  e.currentTarget.src = '/images/placeholder-project.jpg'
+                                }} />
+                              ) : (
+                                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+                            <h3 className="text-[#f57520] font-bold text-base mb-2">
+                              {project.title} 
+                              {project.teamMembers && project.teamMembers.length > 0 && ` (${project.teamMembers.join(', ')})`}
+                            </h3>
+                            <p className="text-gray-600 text-sm line-clamp-2">{project.description}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    */}
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">등록된 프로젝트가 없습니다.</p>
                   </div>
-                </div>
-
-                {/* 2024 프로젝트 섹션 */}
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">2024</h2>
-                      <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                  </div>
-                    <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                      More
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                    {/* DB에서 가져온 프로젝트 데이터가 여기에 표시됩니다 */}
-                  </div>
-                </div>
-
-                {/* 2023 프로젝트 섹션 */}
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">2023</h2>
-                      <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                  </div>
-                    <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                      More
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                    {/* DB에서 가져온 프로젝트 데이터가 여기에 표시됩니다 */}
-                  </div>
-                </div>
+                )}
               </div>
             ) : (
               <div>
-                {/* 2025 뉴스 섹션 */}
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">2025</h2>
-                      <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                    </div>
-                    <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                      More
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-6 mt-6">
-                    {/* DB에서 가져온 뉴스 데이터가 여기에 표시됩니다 */}
-                    {/* 예시 구조:
-                    <div className="bg-white border-b border-gray-200 pb-6">
-                      <div className="flex gap-4">
-                        <div className="w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0">
-                          <img src={news.image} alt={news.title} className="w-full h-full object-cover rounded-lg" />
-                        </div>
+                {Object.keys(news).length > 0 ? (
+                  Object.keys(news).sort((a, b) => parseInt(b) - parseInt(a)).map((year) => (
+                    <div key={year} className="mb-16">
+                      <div className="flex items-center justify-between mb-2">
                         <div>
-                          <h3 className="text-[#f57520] font-bold text-base mb-2">{news.title}</h3>
-                          <p className="text-gray-600 text-sm mb-2">{news.description}</p>
-                          <span className="text-gray-400 text-xs">{news.date}</span>
+                          <h2 className="text-2xl font-bold text-black">{year}</h2>
+                          <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
                         </div>
+                        <Link href={`/archive?tab=news&year=${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
+                          More
+                        </Link>
+                      </div>
+                      
+                      <div className="space-y-6 mt-6">
+                        {news[year].slice(0, 5).map((item: any) => (
+                          <div key={item.id} className="bg-white border-b border-gray-200 pb-6 hover:bg-gray-50 transition-colors rounded-lg px-4">
+                            <div className="flex gap-4">
+                              <div className="w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                                {item.images && item.images[0] ? (
+                                  <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" onError={(e) => {
+                                    e.currentTarget.src = '/images/placeholder-news.jpg'
+                                  }} />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                                    No Image
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-[#f57520] font-bold text-base mb-2">{item.title}</h3>
+                                <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.summary || item.content.substring(0, 100)}</p>
+                                <span className="text-gray-400 text-xs">
+                                  {new Date(item.createdAt).toLocaleDateString('ko-KR')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    */}
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">등록된 뉴스가 없습니다.</p>
                   </div>
-                </div>
-
-                {/* 2024 뉴스 섹션 */}
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">2024</h2>
-                      <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                    </div>
-                    <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                      More
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-6 mt-6">
-                    {/* DB에서 가져온 뉴스 데이터가 여기에 표시됩니다 */}
-                  </div>
-                </div>
-
-                {/* 2023 뉴스 섹션 */}
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h2 className="text-2xl font-bold text-black">2023</h2>
-                      <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                    </div>
-                    <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                      More
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-6 mt-6">
-                    {/* DB에서 가져온 뉴스 데이터가 여기에 표시됩니다 */}
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>

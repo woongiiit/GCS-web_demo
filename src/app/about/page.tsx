@@ -15,16 +15,16 @@ export default function AboutPage() {
             <div className="text-center">
               <h1 className="text-4xl font-bold text-white mb-4">About GCS</h1>
               <p className="text-white text-sm mb-8">GCS 연계 전공을 소개하는 공간입니다.</p>
-              
-              {/* 홈 아이콘 */}
+            
+            {/* 홈 아이콘 */}
               <Link href="/" className="inline-block">
                 <div className="w-6 h-6 mx-auto">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9,22 9,12 15,12 15,22"/>
-                  </svg>
-                </div>
-              </Link>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+            </Link>
             </div>
           </div>
         </div>
@@ -33,48 +33,48 @@ export default function AboutPage() {
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-6xl mx-auto px-4 sm:px-0">
             <div className="flex flex-wrap justify-center gap-4 md:gap-8 py-4">
-              <button
-                onClick={() => setActiveTab('gcsweb')}
+                <button
+                  onClick={() => setActiveTab('gcsweb')}
                 className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
-                  activeTab === 'gcsweb'
+                    activeTab === 'gcsweb'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
-                }`}
-              >
-                GCS:Web
-              </button>
-              <button
-                onClick={() => setActiveTab('intro')}
+                  }`}
+                >
+                  GCS:Web
+                </button>
+                <button
+                  onClick={() => setActiveTab('intro')}
                 className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
-                  activeTab === 'intro'
+                    activeTab === 'intro'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
-                }`}
-              >
-                전공 소개
-              </button>
-              <button
-                onClick={() => setActiveTab('lectures')}
+                  }`}
+                >
+                  전공 소개
+                </button>
+                <button
+                  onClick={() => setActiveTab('lectures')}
                 className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
-                  activeTab === 'lectures'
+                    activeTab === 'lectures'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
-                }`}
-              >
-                개설 과목
-              </button>
-              <button
-                onClick={() => setActiveTab('professor')}
+                  }`}
+                >
+                  개설 과목
+                </button>
+                <button
+                  onClick={() => setActiveTab('professor')}
                 className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
-                  activeTab === 'professor'
+                    activeTab === 'professor'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
-                }`}
-              >
-                교수진
-              </button>
+                  }`}
+                >
+                  교수진
+                </button>
+              </div>
             </div>
-          </div>
         </div>
 
         {/* 컨텐츠 영역 */}
@@ -211,7 +211,7 @@ export default function AboutPage() {
                       <p>
                         관련 부서 현장 실습, 인턴 및 취업 지원
                       </p>
-                    </div>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -223,8 +223,8 @@ export default function AboutPage() {
                 <div className="mb-12">
                   <h2 className="text-xl md:text-2xl font-bold text-white mb-2">GCS 개설과목</h2>
                   <div className="w-24 h-1 bg-[#f57520]"></div>
-                </div>
-                
+                  </div>
+                  
                 {/* 3개 컬럼 */}
                 <div className="grid grid-cols-3 gap-4 md:gap-8 mb-8">
                   {/* 예술 Art */}
@@ -256,7 +256,7 @@ export default function AboutPage() {
                       <p>기계로봇에너지공학</p>
                       <p>식품생물공학</p>
                       <p>화학생물공학</p>
-                    </div>
+                  </div>
                   </div>
                 </div>
                 
@@ -403,8 +403,8 @@ export default function AboutPage() {
                         <p>프린팅플랫폼(주) 대표이사</p>
                         <p className="pt-3">그래픽커뮤니케이션사이언스입문</p>
                         <p>캡스톤디자인</p>
-                      </div>
-                      
+                    </div>
+                    
                       {/* 오른쪽: 사진 */}
                       <div className="w-[120px] h-[150px] bg-gray-700 rounded overflow-hidden flex-shrink-0">
                         <img 
@@ -435,9 +435,9 @@ export default function AboutPage() {
                         <p>HP Asia Pacific Graphic Industrial Strategic Biz 상무</p>
                         <p className="pt-3">4차산업과 패키징</p>
                       </div>
+                      </div>
                     </div>
-                  </div>
-
+                    
                   {/* 김정욱 교수님 - 사진 오른쪽 */}
                   <div className="border-b border-white py-4">
                     <div className="flex items-start gap-4">
@@ -459,7 +459,7 @@ export default function AboutPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* 김승용 교수님 - 사진 왼쪽 */}
                   <div className="border-b border-white py-4">
                     <div className="flex items-start gap-4">
@@ -477,9 +477,9 @@ export default function AboutPage() {
                         <h3 className="text-white font-bold text-xl mb-2">김승용 교수님</h3>
                         <p>동국대학교 경영대학 GCS연계전공 교수</p>
                       </div>
+                      </div>
                     </div>
-                  </div>
-                  
+                    
                   {/* 정구현 교수님 - 사진 오른쪽 */}
                   <div className="border-b border-white py-4">
                     <div className="flex items-start gap-4">
@@ -496,8 +496,8 @@ export default function AboutPage() {
                           alt="정구현 교수님" 
                           className="w-full h-full object-cover"
                         />
+                        </div>
                       </div>
-                    </div>
                   </div>
                   
                   {/* 정승원 교수님 - 사진 왼쪽 */}
@@ -517,10 +517,10 @@ export default function AboutPage() {
                         <h3 className="text-white font-bold text-xl mb-2">정승원 교수님</h3>
                         <p>동국대학교 경영대학 GCS연계전공 교수</p>
                         <p className="pt-3">식품포장특론</p>
-                      </div>
                     </div>
                   </div>
-                  
+                </div>
+
                   {/* DB에서 불러온 다른 교수진 정보가 여기에 표시됩니다 */}
                 </div>
               </div>

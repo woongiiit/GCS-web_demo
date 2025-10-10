@@ -1,8 +1,46 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
 export default function Home() {
+  const [projects, setProjects] = useState<any[]>([])
+  const [news, setNews] = useState<any[]>([])
+  const [bestProducts, setBestProducts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchHomeData()
+  }, [])
+
+  const fetchHomeData = async () => {
+    try {
+      // 프로젝트 조회 (최신 1개, featured)
+      const projectsRes = await fetch('/api/archive/projects?featured=true')
+      const projectsData = await projectsRes.json()
+      if (projectsData.success) {
+        setProjects(projectsData.data.slice(0, 1))
+      }
+
+      // 뉴스 조회 (최신 3개, featured)
+      const newsRes = await fetch('/api/archive/news?featured=true')
+      const newsData = await newsRes.json()
+      if (newsData.success) {
+        setNews(newsData.data.slice(0, 3))
+      }
+
+      // Best Item 상품 조회
+      const productsRes = await fetch('/api/shop/products?bestItem=true')
+      const productsData = await productsRes.json()
+      if (productsData.success) {
+        setBestProducts(productsData.data.slice(0, 3))
+      }
+    } catch (error) {
+      console.error('홈 데이터 조회 오류:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
   return (
     <>
       {/* 모바일 전용 레이아웃 */}
@@ -44,26 +82,46 @@ export default function Home() {
                 Project Archive
               </h2>
               <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
-              <div className="bg-gray-50 rounded-lg p-4 flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-bold text-base mb-2">2025 유랑 : NFC Welcome-kit</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    태깅 한 번으로 연계에 필사이트에 접속하는 뷰 연동된 웰컴키트 굿즈 
-                    NFC 태깅을 통해 신입생을 위한 교내 홍보페이지 Link-tree로 접속해 보세요!
-                  </p>
+              
+              {isLoading ? (
+                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
                 </div>
-                <div className="ml-4 flex-shrink-0">
-                  <div className="w-16 h-16 bg-[#f57520] rounded flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold">동국</span>
+              ) : projects.length > 0 ? (
+                <>
+                  {projects.map((project) => (
+                    <Link key={project.id} href={`/archive?tab=projects`}>
+                      <div className="bg-gray-50 rounded-lg p-4 flex items-start justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-base mb-2">{project.year} {project.title}</h3>
+                          <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+                            {project.description}
+                          </p>
+                        </div>
+                        {project.images && project.images[0] && (
+                          <div className="ml-4 flex-shrink-0">
+                            <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
+                              <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                                e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-[#f57520] text-white text-2xl font-bold">GCS</span>'
+                              }} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                  <div className="flex justify-center mt-3 space-x-1">
+                    {projects.slice(0, 4).map((_, index) => (
+                      <span key={index} className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-[#f57520]' : 'bg-gray-300'}`}></span>
+                    ))}
                   </div>
+                </>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
+                  등록된 프로젝트가 없습니다.
                 </div>
-              </div>
-              <div className="flex justify-center mt-3 space-x-1">
-                <span className="w-2 h-2 rounded-full bg-[#f57520]"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-              </div>
+              )}
             </div>
 
             {/* News 섹션 */}
@@ -72,57 +130,47 @@ export default function Home() {
                 News
               </h2>
               <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <div className="h-20 bg-gray-300"></div>
-                  <div className="p-2">
-                    <p className="text-xs font-semibold">2021 해외연수</p>
-                    <p className="text-xs text-gray-500">— Singapore</p>
-                  </div>
+              
+              {isLoading ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-100 rounded-lg overflow-hidden h-32 animate-pulse"></div>
+                  ))}
                 </div>
-                <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <div className="h-20 bg-gray-300"></div>
-                  <div className="p-2">
-                    <p className="text-xs font-semibold">2023 전공견학</p>
-                    <p className="text-xs text-gray-500">— The Paper Lab</p>
+              ) : news.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-3 gap-2">
+                    {news.slice(0, 3).map((item) => (
+                      <Link key={item.id} href={`/archive?tab=news`}>
+                        <div className="bg-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                          <div className="h-20 bg-gray-300 overflow-hidden">
+                            {item.images && item.images[0] ? (
+                              <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-news.jpg'
+                              }} />
+                            ) : (
+                              <div className="w-full h-full bg-gray-300"></div>
+                            )}
+                          </div>
+                          <div className="p-2">
+                            <p className="text-xs font-semibold line-clamp-1">{item.title}</p>
+                            <p className="text-xs text-gray-500 line-clamp-1">— {item.year}년</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                </div>
-                <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <div className="h-20 bg-gray-300"></div>
-                  <div className="p-2">
-                    <p className="text-xs font-semibold">2024 해외탐방</p>
-                    <p className="text-xs text-gray-500">— 대만</p>
+                  <div className="flex justify-center mt-3 space-x-1">
+                    {news.slice(0, 4).map((_, index) => (
+                      <span key={index} className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-[#f57520]' : 'bg-gray-300'}`}></span>
+                    ))}
                   </div>
+                </>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
+                  등록된 뉴스가 없습니다.
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <div className="h-20 bg-gray-300"></div>
-                  <div className="p-2">
-                    <p className="text-xs font-semibold">2024 전공견학</p>
-                    <p className="text-xs text-gray-500">— WEBLING</p>
-                  </div>
-                </div>
-                <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <div className="h-20 bg-gray-300"></div>
-                  <div className="p-2">
-                    <p className="text-xs font-semibold">2024 전공견학</p>
-                    <p className="text-xs text-gray-500">— AMORE ...</p>
-                  </div>
-                </div>
-                <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <div className="h-20 bg-gray-300"></div>
-                  <div className="p-2">
-                    <p className="text-xs font-semibold">2025 하계 워크샵</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-center mt-3 space-x-1">
-                <span className="w-2 h-2 rounded-full bg-[#f57520]"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-              </div>
+              )}
             </div>
 
             {/* Shop 섹션 */}
@@ -131,29 +179,47 @@ export default function Home() {
                 Shop
               </h2>
               <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="text-center">
-                  <div className="bg-gray-100 rounded-lg h-24 mb-2"></div>
-                  <p className="text-xs font-semibold">동등(動等) 키링</p>
-                  <p className="text-xs text-gray-500">2025 어랩</p>
+              
+              {isLoading ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="text-center">
+                      <div className="bg-gray-100 rounded-lg h-24 mb-2 animate-pulse"></div>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-center">
-                  <div className="bg-gray-100 rounded-lg h-24 mb-2"></div>
-                  <p className="text-xs font-semibold">USB</p>
-                  <p className="text-xs text-gray-500">2025 Kitty</p>
+              ) : bestProducts.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-3 gap-3">
+                    {bestProducts.slice(0, 3).map((product) => (
+                      <Link key={product.id} href={`/shop/${product.id}`}>
+                        <div className="text-center cursor-pointer hover:opacity-80 transition-opacity">
+                          <div className="bg-gray-100 rounded-lg h-24 mb-2 overflow-hidden">
+                            {product.images && product.images[0] ? (
+                              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-product.jpg'
+                              }} />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200"></div>
+                            )}
+                          </div>
+                          <p className="text-xs font-semibold line-clamp-1">{product.name}</p>
+                          <p className="text-xs text-gray-500 line-clamp-1">{product.brand || 'GCS'}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="flex justify-center mt-3 space-x-1">
+                    {bestProducts.slice(0, 4).map((_, index) => (
+                      <span key={index} className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-[#f57520]' : 'bg-gray-300'}`}></span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
+                  등록된 상품이 없습니다.
                 </div>
-                <div className="text-center">
-                  <div className="bg-gray-100 rounded-lg h-24 mb-2"></div>
-                  <p className="text-xs font-semibold">볼첨 도트 반팔</p>
-                  <p className="text-xs text-gray-500">2025 MUA</p>
-                </div>
-              </div>
-              <div className="flex justify-center mt-3 space-x-1">
-                <span className="w-2 h-2 rounded-full bg-[#f57520]"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-                <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-              </div>
+              )}
             </div>
 
         </div>
