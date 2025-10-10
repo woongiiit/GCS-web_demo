@@ -372,7 +372,10 @@ async function main() {
 
   console.log('✅ 상품 카테고리 생성 완료')
 
-  // 샘플 상품 데이터 생성
+  // 상품은 관리자가 직접 등록하도록 빈 상태로 둠
+  console.log('ℹ️  상품 데이터: 빈 상태 (관리자가 직접 등록)')
+
+  /* 샘플 상품 데이터는 주석 처리 - 필요시 아래 주석 해제
   const products = await Promise.all([
     // Apparel
     prisma.product.create({
@@ -555,6 +558,7 @@ async function main() {
   ])
 
   console.log('✅ 샘플 상품 데이터 생성 완료')
+  */
 
   // 비밀번호 해시 생성 (더 안전한 비밀번호 사용)
   const adminPassword = await bcrypt.hash('GCS_Admin_2024!', 10)
@@ -608,102 +612,9 @@ async function main() {
     }
   })
 
-  // 프로젝트 데이터 생성
-  const projects = await Promise.all([
-    prisma.project.create({
-      data: {
-        title: 'GCS 웹 포트폴리오 플랫폼',
-        description: '학생들의 프로젝트를 전시하고 공유할 수 있는 웹 플랫폼',
-        content: 'React와 Next.js를 활용하여 개발한 포트폴리오 플랫폼입니다. 학생들이 자신의 프로젝트를 업로드하고 다른 학생들과 공유할 수 있는 기능을 제공합니다.',
-        year: 2024,
-        semester: '1학기',
-        teamMembers: ['김학생', '이학생', '박학생'],
-        technologies: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS'],
-        githubUrl: 'https://github.com/gcs-demo/portfolio-platform',
-        demoUrl: 'https://gcs-demo.vercel.app',
-        imageUrl: '/images/projects/portfolio-platform.jpg',
-        images: ['/images/projects/portfolio-platform.jpg', '/images/projects/portfolio-platform-2.jpg'],
-        isFeatured: true,
-        authorId: adminUser.id
-      }
-    }),
-    prisma.project.create({
-      data: {
-        title: 'AR 브랜딩 앱',
-        description: 'AR 기술을 활용한 브랜드 경험 앱',
-        content: 'Unity와 ARCore를 사용하여 개발한 AR 브랜딩 앱입니다. 사용자가 제품을 스캔하면 3D 모델과 브랜드 정보를 확인할 수 있습니다.',
-        year: 2024,
-        semester: '2학기',
-        teamMembers: ['최학생', '정학생'],
-        technologies: ['Unity', 'ARCore', 'C#', 'Android'],
-        githubUrl: 'https://github.com/gcs-demo/ar-branding-app',
-        imageUrl: '/images/projects/ar-branding.jpg',
-        images: ['/images/projects/ar-branding.jpg'],
-        isFeatured: true,
-        authorId: adminUser.id
-      }
-    }),
-    prisma.project.create({
-      data: {
-        title: 'AI 컬러 팔레트 생성기',
-        description: 'AI를 활용한 자동 컬러 팔레트 생성 도구',
-        content: 'Python과 TensorFlow를 사용하여 개발한 AI 기반 컬러 팔레트 생성기입니다. 이미지를 분석하여 최적의 컬러 조합을 제안합니다.',
-        year: 2023,
-        semester: '2학기',
-        teamMembers: ['한학생', '윤학생', '강학생'],
-        technologies: ['Python', 'TensorFlow', 'OpenCV', 'Flask'],
-        githubUrl: 'https://github.com/gcs-demo/ai-color-palette',
-        imageUrl: '/images/projects/ai-color-palette.jpg',
-        images: ['/images/projects/ai-color-palette.jpg'],
-        isFeatured: false,
-        authorId: studentUser.id
-      }
-    })
-  ])
-
-  console.log('✅ 프로젝트 데이터 생성 완료')
-
-  // 뉴스 데이터 생성
-  const news = await Promise.all([
-    prisma.news.create({
-      data: {
-        title: 'GCS:Web 전공 신설 5주년 기념 행사 개최',
-        content: '동국대학교 글로벌커뮤니케이션학부 GCS:Web 전공이 신설 5주년을 맞아 다양한 기념 행사를 개최합니다. 학생들의 작품 전시회와 산업체 전문가 초청 세미나가 열릴 예정입니다.',
-        summary: 'GCS:Web 전공 신설 5주년 기념 행사 개최',
-        year: 2024,
-        imageUrl: '/images/news/5th-anniversary.jpg',
-        images: ['/images/news/5th-anniversary.jpg'],
-        isFeatured: true,
-        authorId: adminUser.id
-      }
-    }),
-    prisma.news.create({
-      data: {
-        title: '2024년 하계 인턴십 프로그램 모집',
-        content: 'GCS:Web 전공 학생들을 대상으로 하는 하계 인턴십 프로그램을 모집합니다. 다양한 IT 기업과 디자인 스튜디오에서 실무 경험을 쌓을 수 있는 기회입니다.',
-        summary: '2024년 하계 인턴십 프로그램 모집',
-        year: 2024,
-        imageUrl: '/images/news/internship-2024.jpg',
-        images: ['/images/news/internship-2024.jpg'],
-        isFeatured: true,
-        authorId: adminUser.id
-      }
-    }),
-    prisma.news.create({
-      data: {
-        title: '졸업생 취업률 95% 달성',
-        content: 'GCS:Web 전공 2023년 졸업생들의 취업률이 95%를 달성했습니다. 대부분의 졸업생들이 IT 기업과 디자인 에이전시에 성공적으로 취업했습니다.',
-        summary: '졸업생 취업률 95% 달성',
-        year: 2024,
-        imageUrl: '/images/news/employment-rate.jpg',
-        images: ['/images/news/employment-rate.jpg'],
-        isFeatured: false,
-        authorId: adminUser.id
-      }
-    })
-  ])
-
-  console.log('✅ 뉴스 데이터 생성 완료')
+  // 프로젝트와 뉴스는 관리자/학생회원이 직접 등록하도록 빈 상태로 둠
+  console.log('ℹ️  프로젝트 데이터: 빈 상태 (관리자/학생회원이 직접 등록)')
+  console.log('ℹ️  뉴스 데이터: 빈 상태 (관리자/학생회원이 직접 등록)')
 
   console.log('✅ 사용자 데이터 생성 완료')
   console.log('👤 관리자 계정: admin@gcs-demo.com / GCS_Admin_2024!')
@@ -715,9 +626,9 @@ async function main() {
   console.log(`   - 교수진: ${professors.length}명`)
   console.log(`   - 과목: ${subjects.length}개`)
   console.log(`   - 상품 카테고리: ${categories.length}개`)
-  console.log(`   - 상품: ${products.length}개`)
-  console.log(`   - 프로젝트: ${projects.length}개`)
-  console.log(`   - 뉴스: ${news.length}개`)
+  console.log(`   - 상품: 0개 (빈 상태)`)
+  console.log(`   - 프로젝트: 0개 (빈 상태)`)
+  console.log(`   - 뉴스: 0개 (빈 상태)`)
 
   console.log('🎉 데이터베이스 시드 작업 완료!')
 }
