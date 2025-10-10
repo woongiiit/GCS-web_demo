@@ -231,15 +231,6 @@ export default function ShopPage() {
               </div>
             )}
 
-            {/* More 버튼 */}
-            <div className="text-right">
-              <Link 
-                href={`/shop/${activeTab}`}
-                className="inline-block px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                More
-              </Link>
-            </div>
 
           </div>
         </div>
