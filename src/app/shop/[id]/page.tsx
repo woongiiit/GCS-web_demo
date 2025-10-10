@@ -282,29 +282,23 @@ export default function ProductDetailPage() {
                   {product.description}
                 </div>
                 
-                {/* 제품 예시 사진 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src="/images/shop/product-detail-1.jpg"
-                      alt="제품 예시 1"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E제품 예시 1%3C/text%3E%3C/svg%3E'
-                      }}
-                    />
+                {/* 제품 추가 이미지 (첫 번째 이미지를 제외한 나머지 이미지들) */}
+                {product.images && product.images.length > 1 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    {product.images.slice(1).map((image: string, index: number) => (
+                      <div key={index} className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                        <img 
+                          src={image}
+                          alt={`${product.name} 상세 이미지 ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E상세 이미지 ' + (index + 1) + '%3C/text%3E%3C/svg%3E'
+                          }}
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <div className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src="/images/shop/product-detail-2.jpg"
-                      alt="제품 예시 2"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E제품 예시 2%3C/text%3E%3C/svg%3E'
-                      }}
-                    />
-                  </div>
-                </div>
+                )}
                 
                 {/* 상품 정보 고시 내용 */}
                 {product.productDetails && product.productDetails.length > 0 && (
