@@ -34,20 +34,20 @@ function ArchiveContent() {
         {/* 상단 검은색 영역 */}
         <div className="bg-black pt-32 pb-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            {/* 페이지 제목 */}
+          {/* 페이지 제목 */}
             <div className="text-center">
               <h1 className="text-4xl font-bold text-white mb-4">Archive</h1>
               <p className="text-white text-sm mb-8">GCS의 모든 활동과 기록을 모아둔 아카이브입니다.</p>
-              
-              {/* 홈 아이콘 */}
+            
+            {/* 홈 아이콘 */}
               <Link href="/" className="inline-block">
-                <div className="w-6 h-6 mx-auto">
+              <div className="w-6 h-6 mx-auto">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9,22 9,12 15,12 15,22"/>
-                  </svg>
-                </div>
-              </Link>
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+            </Link>
             </div>
           </div>
         </div>
@@ -58,26 +58,26 @@ function ArchiveContent() {
             <div className="flex justify-between items-center py-4">
               {/* 탭 버튼들 */}
               <div className="flex justify-center space-x-8 flex-1">
-                <button
+              <button
                   onClick={() => handleTabChange('project')}
-                  className={`pb-2 border-b-2 font-medium transition-colors ${
-                    activeTab === 'project'
-                      ? 'text-black border-black'
-                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                  }`}
-                >
-                  Project
-                </button>
-                <button
+                className={`pb-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'project'
+                    ? 'text-black border-black'
+                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                }`}
+              >
+                Project
+              </button>
+              <button
                   onClick={() => handleTabChange('news')}
-                  className={`pb-2 border-b-2 font-medium transition-colors ${
-                    activeTab === 'news'
-                      ? 'text-black border-black'
-                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                  }`}
-                >
-                  News
-                </button>
+                className={`pb-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'news'
+                    ? 'text-black border-black'
+                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                }`}
+              >
+                News
+              </button>
               </div>
               
               {/* 관리자 전용 글 작성 버튼 */}
@@ -90,8 +90,8 @@ function ArchiveContent() {
                 </Link>
               )}
             </div>
+            </div>
           </div>
-        </div>
 
         <div className="max-w-6xl mx-auto px-4 py-6 sm:px-0">
 
@@ -105,7 +105,7 @@ function ArchiveContent() {
                     <div>
                       <h2 className="text-2xl font-bold text-black">2025</h2>
                       <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                    </div>
+                  </div>
                     <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
                       More
                     </button>
@@ -131,7 +131,7 @@ function ArchiveContent() {
                     <div>
                       <h2 className="text-2xl font-bold text-black">2024</h2>
                       <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                    </div>
+                  </div>
                     <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
                       More
                     </button>
@@ -148,7 +148,7 @@ function ArchiveContent() {
                     <div>
                       <h2 className="text-2xl font-bold text-black">2023</h2>
                       <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
-                    </div>
+                  </div>
                     <button className="text-black font-bold underline hover:text-[#f57520] transition-colors">
                       More
                     </button>

@@ -8,31 +8,31 @@ export default function Home() {
       {/* 모바일 전용 레이아웃 */}
       <div className="md:hidden min-h-screen bg-[#f57520] -mt-4">
         {/* 모바일 주황색 섹션 - 텍스트만 포함 */}
-        <div className="relative h-[280px] bg-[#f57520] pt-16">
+        <div className="relative h-[clamp(240px,35vh,280px)] bg-[#f57520] pt-16">
           {/* GCS:Web 텍스트 - 주황색 영역의 왼쪽 아래 끝에 맞닿게 배치 */}
-          <div className="absolute bottom-0 left-2 text-white text-6xl font-bold z-10">
+          <div className="absolute bottom-0 left-[2vw] text-white text-[clamp(2.5rem,12vw,3.75rem)] font-bold z-10">
             GCS:Web
           </div>
           
           {/* 동국대학교 텍스트 */}
-          <div className="absolute bottom-[88px] right-[76px] text-white italic text-[15px] transform rotate-[23deg]">
+          <div className="absolute bottom-[31%] right-[20%] text-white italic text-[clamp(12px,3.5vw,15px)] transform rotate-[23deg]">
             Dongguk University
           </div>
           
           {/* 흰색 직사각형 바 */}
-          <div className="absolute bottom-[93px] right-[60px] w-56 h-1 bg-white transform rotate-[23deg]"></div>
-          <div className="absolute bottom-[77px] right-[64px] w-56 h-4 bg-white transform rotate-[20deg]"></div>
+          <div className="absolute bottom-[33%] right-[16%] w-[clamp(160px,60vw,224px)] h-1 bg-white transform rotate-[23deg]"></div>
+          <div className="absolute bottom-[27.5%] right-[17%] w-[clamp(160px,60vw,224px)] h-[clamp(12px,3.5vw,16px)] bg-white transform rotate-[20deg]"></div>
         </div>
 
         {/* 주황색 직사각형들을 위한 영역 */}
-        <div className="relative h-[220px] bg-white">
-          <div className="absolute top-[0px] left-[10px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-7deg]"></div>
-          <div className="absolute top-[40px] left-[20px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0deg]"></div>
-          <div className="absolute top-[57px] left-[19px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-1.5deg]"></div>
-          <div className="absolute top-[76px] left-[10px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-2deg]"></div>
-          <div className="absolute top-[98px] left-[24px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0deg]"></div>
-          <div className="absolute top-[115px] left-[30px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0deg]"></div>
-          <div className="absolute top-[134px] left-[20px] w-[290px] h-[18px] bg-[#f57520] z-0 transform rotate-[-0.5deg]"></div>
+        <div className="relative h-[clamp(180px,28vh,220px)] bg-white">
+          <div className="absolute top-0 left-[2.5vw] w-[clamp(180px,70vw,300px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-7deg]"></div>
+          <div className="absolute top-[18%] left-[5vw] w-[clamp(190px,75vw,310px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[0deg]"></div>
+          <div className="absolute top-[26%] left-[4.5vw] w-[clamp(185px,72vw,305px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-1.5deg]"></div>
+          <div className="absolute top-[34.5%] left-[2.5vw] w-[clamp(180px,70vw,300px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-2deg]"></div>
+          <div className="absolute top-[44.5%] left-[6vw] w-[clamp(195px,75vw,310px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[0deg]"></div>
+          <div className="absolute top-[52%] left-[7.5vw] w-[clamp(200px,75vw,310px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[0deg]"></div>
+          <div className="absolute top-[61%] left-[5vw] w-[clamp(190px,73vw,308px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-0.5deg]"></div>
         </div>
 
         {/* 콘텐츠 영역 */}

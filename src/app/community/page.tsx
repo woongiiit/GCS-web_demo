@@ -32,19 +32,19 @@ function CommunityContent() {
         <div className="bg-black pt-32 pb-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-0">
             {/* 페이지 제목 */}
-            <div className="text-center">
+          <div className="text-center">
               <h1 className="text-4xl font-bold text-white mb-4">Community</h1>
               <p className="text-white text-sm mb-8">GCS 전공생과 교수님, 졸업생 모두가 함께 소통하는 커뮤니티입니다.</p>
-              
-              {/* 홈 아이콘 */}
+            
+            {/* 홈 아이콘 */}
               <Link href="/" className="inline-block">
-                <div className="w-6 h-6 mx-auto">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9,22 9,12 15,12 15,22"/>
-                  </svg>
-                </div>
-              </Link>
+              <div className="w-6 h-6 mx-auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+            </Link>
             </div>
           </div>
         </div>
@@ -136,12 +136,12 @@ function CommunityContent() {
                   </div>
                 </div>
                 */}
-              </div>
-            </div>
+                  </div>
+                </div>
           )}
 
-          </div>
-        </div>
+                  </div>
+                </div>
 
         {/* 하단 배너 */}
         <div className="bg-white py-6 border-t border-gray-200">
@@ -152,8 +152,8 @@ function CommunityContent() {
               <h3 className="text-sm font-bold text-black">
                 GCS<span className="text-[#f57520]">:</span>Web
               </h3>
-            </div>
-            
+              </div>
+
             {/* 오른쪽: 회사 정보 */}
             <div className="flex-1 text-right space-y-1 min-w-0">
               <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
@@ -167,10 +167,10 @@ function CommunityContent() {
                 <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
                 <span className="text-[10px] text-gray-400">|</span>
                 <span className="text-[10px] text-gray-500">site by 제작담</span>
-              </div>
-            </div>
           </div>
         </div>
+      </div>
+    </div>
       </div>
     </div>
   )
