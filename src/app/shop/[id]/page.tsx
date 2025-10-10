@@ -11,6 +11,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<any>(null)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   useEffect(() => {
     if (productId) {
@@ -119,29 +120,105 @@ export default function ProductDetailPage() {
       {/* 제품 상세 정보 */}
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
-          {/* 왼쪽: 제품 이미지 */}
+          {/* 왼쪽: 제품 이미지 슬라이더 */}
           <div className="w-full">
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-              {product.images && product.images.length > 0 ? (
-                <img 
-                  src={product.images[0]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/placeholder-product.jpg'
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <div className="text-center text-gray-400">
-                    <svg className="w-24 h-24 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm">이미지 없음</p>
+            <div className="relative">
+              {/* 메인 이미지 */}
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+                {product.images && product.images.length > 0 ? (
+                  <img 
+                    src={product.images[currentImageIndex]}
+                    alt={`${product.name} ${currentImageIndex + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/images/placeholder-product.jpg'
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <div className="text-center text-gray-400">
+                      <svg className="w-24 h-24 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm">이미지 없음</p>
+                    </div>
                   </div>
-                </div>
+                )}
+              </div>
+
+              {/* 이미지 네비게이션 버튼 (이미지가 2개 이상일 때만) */}
+              {product.images && product.images.length > 1 && (
+                <>
+                  {/* 이전 버튼 */}
+                  <button
+                    onClick={() => setCurrentImageIndex((prev) => 
+                      prev === 0 ? product.images.length - 1 : prev - 1
+                    )}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 hover:bg-opacity-75 text-white rounded-full flex items-center justify-center transition-all"
+                    title="이전 이미지"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  {/* 다음 버튼 */}
+                  <button
+                    onClick={() => setCurrentImageIndex((prev) => 
+                      prev === product.images.length - 1 ? 0 : prev + 1
+                    )}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 hover:bg-opacity-75 text-white rounded-full flex items-center justify-center transition-all"
+                    title="다음 이미지"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+
+                  {/* 이미지 인디케이터 */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                    {product.images.map((_: any, index: number) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          index === currentImageIndex 
+                            ? 'bg-white w-6' 
+                            : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                        }`}
+                        title={`이미지 ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
+
+            {/* 썸네일 이미지들 (이미지가 2개 이상일 때만) */}
+            {product.images && product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {product.images.map((image: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-all ${
+                      index === currentImageIndex 
+                        ? 'border-black' 
+                        : 'border-transparent hover:border-gray-300'
+                    }`}
+                  >
+                    <img 
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/placeholder-product.jpg'
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 오른쪽: 제품 정보 */}
