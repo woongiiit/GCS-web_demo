@@ -20,7 +20,16 @@ model User {
   studentId   String   @unique
   major       String
   phone       String
-  role        UserRole @default(USER)
+  role        UserRole @default(GENERAL)
+  
+  // 학생 인증 관련 필드
+  verificationStatus VerificationStatus @default(PENDING)
+  verificationImageUrl String?  // 학생 인증 이미지 URL
+  verificationRequestedAt DateTime?  // 인증 요청 시간
+  verificationApprovedAt DateTime?   // 인증 승인 시간
+  verificationRejectedAt DateTime?   // 인증 거부 시간
+  verificationNote String?            // 운영자 메모 (거부 사유 등)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -273,8 +282,16 @@ model Professor {
 
 // Enums
 enum UserRole {
-  USER
-  ADMIN
+  GENERAL   // 일반회원 (상품 구매만 가능)
+  STUDENT   // 학생회원 (상품 구매 + 글쓰기 가능)
+  ADMIN     // 운영자 (모든 권한)
+}
+
+enum VerificationStatus {
+  PENDING    // 인증 대기 (아직 요청하지 않음)
+  REQUESTED  // 인증 요청됨 (운영자 승인 대기)
+  APPROVED   // 승인됨 (학생 회원으로 전환됨)
+  REJECTED   // 거부됨
 }
 
 enum PostCategory {

@@ -575,18 +575,36 @@ async function main() {
     }
   })
 
-  // 일반 사용자 계정 생성
-  const normalUser = await prisma.user.upsert({
-    where: { email: 'user@gcs-demo.com' },
+  // 일반회원 계정 생성 (상품 구매만 가능)
+  const generalUser = await prisma.user.upsert({
+    where: { email: 'general@gcs-demo.com' },
     update: {},
     create: {
-      email: 'user@gcs-demo.com',
+      email: 'general@gcs-demo.com',
       password: userPassword,
-      name: '일반사용자',
-      studentId: 'USER001',
+      name: '일반회원',
+      studentId: 'GENERAL001',
       major: 'GCS:Web',
       phone: '010-1111-1111',
-      role: 'USER'
+      role: 'GENERAL',
+      verificationStatus: 'PENDING'
+    }
+  })
+
+  // 학생회원 계정 생성 (상품 구매 + 글쓰기 가능)
+  const studentUser = await prisma.user.upsert({
+    where: { email: 'student@gcs-demo.com' },
+    update: {},
+    create: {
+      email: 'student@gcs-demo.com',
+      password: userPassword,
+      name: '학생회원',
+      studentId: 'STUDENT001',
+      major: 'GCS:Web',
+      phone: '010-2222-2222',
+      role: 'STUDENT',
+      verificationStatus: 'APPROVED',
+      verificationApprovedAt: new Date()
     }
   })
 
@@ -638,7 +656,7 @@ async function main() {
         imageUrl: '/images/projects/ai-color-palette.jpg',
         images: ['/images/projects/ai-color-palette.jpg'],
         isFeatured: false,
-        authorId: normalUser.id
+        authorId: studentUser.id
       }
     })
   ])
@@ -689,7 +707,8 @@ async function main() {
 
   console.log('✅ 사용자 데이터 생성 완료')
   console.log('👤 관리자 계정: admin@gcs-demo.com / GCS_Admin_2024!')
-  console.log('👤 일반 사용자: user@gcs-demo.com / GCS_User_2024!')
+  console.log('👤 일반회원 (구매만 가능): general@gcs-demo.com / GCS_User_2024!')
+  console.log('👤 학생회원 (구매+글쓰기): student@gcs-demo.com / GCS_User_2024!')
 
   console.log('📊 생성된 데이터 요약:')
   console.log(`   - 전공: ${majors.length}개`)
