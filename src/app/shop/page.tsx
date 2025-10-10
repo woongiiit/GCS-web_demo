@@ -2,8 +2,11 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { usePermissions } from '@/contexts/AuthContext'
+import { permissions } from '@/lib/permissions'
 
 export default function ShopPage() {
+  const { role } = usePermissions()
   const [activeTab, setActiveTab] = useState<'apparel' | 'stationary' | 'bag' | 'life' | 'accessory'>('apparel')
 
   // 샘플 상품 데이터 (실제로는 API에서 가져올 데이터)
@@ -174,20 +177,33 @@ export default function ShopPage() {
         {/* 탭 메뉴 - 흰색 배경 영역 */}
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            <div className="flex flex-wrap justify-center gap-4 md:gap-8 py-4">
-              {['apparel', 'stationary', 'bag', 'life', 'accessory'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as any)}
-                  className={`pb-2 border-b-2 font-medium transition-colors text-sm md:text-base ${
-                    activeTab === tab
-                      ? 'text-black border-black'
-                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                  }`}
+            <div className="flex justify-between items-center py-4">
+              {/* 카테고리 탭들 */}
+              <div className="flex flex-wrap justify-center gap-4 md:gap-8 flex-1">
+                {['apparel', 'stationary', 'bag', 'life', 'accessory'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab as any)}
+                    className={`pb-2 border-b-2 font-medium transition-colors text-sm md:text-base ${
+                      activeTab === tab
+                        ? 'text-black border-black'
+                        : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                    }`}
+                  >
+                    {getCategoryName(tab)}
+                  </button>
+                ))}
+              </div>
+              
+              {/* 상품 등록 버튼 (관리자만) */}
+              {permissions.canAddProduct(role) && (
+                <Link 
+                  href="/shop/add"
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium whitespace-nowrap ml-4"
                 >
-                  {getCategoryName(tab)}
-                </button>
-              ))}
+                  상품 등록
+                </Link>
+              )}
             </div>
             </div>
           </div>

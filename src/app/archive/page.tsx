@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { usePermissions } from '@/contexts/AuthContext'
+import { permissions } from '@/lib/permissions'
 
 function ArchiveContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { role } = usePermissions()
   const [activeTab, setActiveTab] = useState<'project' | 'news'>('project')
 
   // URL 쿼리 파라미터에서 초기 탭 설정
@@ -80,8 +81,8 @@ function ArchiveContent() {
               </button>
               </div>
               
-              {/* 관리자 전용 글 작성 버튼 */}
-              {user && user.role === 'ADMIN' && (
+              {/* 글 작성 버튼 (학생회원, 운영자만) */}
+              {permissions.canWritePost(role) && (
                 <Link 
                   href={`/archive/write?type=${activeTab}`}
                   className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"

@@ -3,10 +3,13 @@
 import Link from 'next/link'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { usePermissions } from '@/contexts/AuthContext'
+import { permissions } from '@/lib/permissions'
 
 function CommunityContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { role } = usePermissions()
   const [activeTab, setActiveTab] = useState<'board' | 'lounge'>('board')
 
   // URL 쿼리 파라미터에서 초기 탭 설정
@@ -84,12 +87,14 @@ function CommunityContent() {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-black">Board</h2>
-                <Link 
-                  href="/community/write?category=board"
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-                >
-                  글 작성
-                </Link>
+                {permissions.canWritePost(role) && (
+                  <Link 
+                    href="/community/write?category=board"
+                    className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                  >
+                    글 작성
+                  </Link>
+                )}
               </div>
 
               {/* 게시글 목록 */}
@@ -113,12 +118,14 @@ function CommunityContent() {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-black">Lounge</h2>
-                <Link 
-                  href="/community/write?category=lounge"
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-                >
-                  글 작성
-                </Link>
+                {permissions.canWritePost(role) && (
+                  <Link 
+                    href="/community/write?category=lounge"
+                    className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                  >
+                    글 작성
+                  </Link>
+                )}
               </div>
 
               {/* 게시글 목록 */}
