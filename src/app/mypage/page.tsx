@@ -18,7 +18,7 @@ interface UserInfo {
 export default function MyPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'profile' | 'cart'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'cart' | 'verification'>('profile')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,6 +34,11 @@ export default function MyPage() {
     newPassword: '',
     confirmPassword: ''
   })
+
+  // 학생 인증 관련 상태
+  const [verificationImage, setVerificationImage] = useState<File | null>(null)
+  const [verificationImagePreview, setVerificationImagePreview] = useState<string>('')
+  const [isVerificationSubmitting, setIsVerificationSubmitting] = useState(false)
 
   // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
   useEffect(() => {
@@ -117,6 +122,70 @@ export default function MyPage() {
     }
   }
 
+  // 학생 인증 이미지 업로드 핸들러
+  const handleVerificationImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      setVerificationImage(file)
+      
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setVerificationImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // 학생 인증 요청 제출
+  const handleVerificationSubmit = async () => {
+    if (!verificationImage) {
+      setMessage('학생증 또는 재학증명서 이미지를 업로드해주세요.')
+      setMessageType('error')
+      return
+    }
+
+    setIsVerificationSubmitting(true)
+    setMessage('')
+
+    try {
+      // TODO: 실제로는 이미지를 서버에 업로드하고 URL을 받아와야 함
+      // 여기서는 임시로 base64를 사용
+      const imageUrl = verificationImagePreview
+
+      const response = await fetch('/api/verification/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ imageUrl })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage('학생 인증 요청이 제출되었습니다. 운영자 승인을 기다려주세요.')
+        setMessageType('success')
+        setVerificationImage(null)
+        setVerificationImagePreview('')
+        
+        // 사용자 정보 새로고침
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      } else {
+        setMessage(data.error || '학생 인증 요청 중 오류가 발생했습니다.')
+        setMessageType('error')
+      }
+    } catch (error) {
+      console.error('학생 인증 요청 오류:', error)
+      setMessage('서버 오류가 발생했습니다. 다시 시도해주세요.')
+      setMessageType('error')
+    } finally {
+      setIsVerificationSubmitting(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-white flex items-center justify-center">
@@ -180,6 +249,20 @@ export default function MyPage() {
               >
                 장바구니
               </button>
+              
+              {/* 학생 인증 탭 (일반회원만 보임) */}
+              {user.role === 'GENERAL' && (
+                <button
+                  onClick={() => setActiveTab('verification')}
+                  className={`pb-2 border-b-2 font-medium transition-colors ${
+                    activeTab === 'verification'
+                      ? 'text-black border-black'
+                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                  }`}
+                >
+                  학생 인증
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -307,7 +390,7 @@ export default function MyPage() {
                     </form>
                   </div>
                 </div>
-              ) : (
+              ) : activeTab === 'cart' ? (
                 <div>
                   {/* 장바구니 탭 */}
                   <h2 className="text-2xl font-bold text-black mb-6">장바구니</h2>
@@ -358,6 +441,152 @@ export default function MyPage() {
                     </div>
                   </div>
                   */}
+                </div>
+              ) : (
+                <div>
+                  {/* 학생 인증 탭 */}
+                  <h2 className="text-2xl font-bold text-black mb-6">학생 인증</h2>
+                  
+                  {/* 인증 상태 표시 */}
+                  <div className="mb-8">
+                    <div className={`p-4 rounded-lg border ${
+                      user.verificationStatus === 'PENDING' ? 'bg-gray-50 border-gray-200' :
+                      user.verificationStatus === 'REQUESTED' ? 'bg-blue-50 border-blue-200' :
+                      user.verificationStatus === 'APPROVED' ? 'bg-green-50 border-green-200' :
+                      'bg-red-50 border-red-200'
+                    }`}>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="font-semibold">현재 인증 상태:</span>
+                        <span className={`font-bold ${
+                          user.verificationStatus === 'PENDING' ? 'text-gray-600' :
+                          user.verificationStatus === 'REQUESTED' ? 'text-blue-600' :
+                          user.verificationStatus === 'APPROVED' ? 'text-green-600' :
+                          'text-red-600'
+                        }`}>
+                          {user.verificationStatus === 'PENDING' && '인증 대기'}
+                          {user.verificationStatus === 'REQUESTED' && '인증 요청됨 (승인 대기 중)'}
+                          {user.verificationStatus === 'APPROVED' && '승인 완료'}
+                          {user.verificationStatus === 'REJECTED' && '인증 거부됨'}
+                        </span>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600">
+                        {user.verificationStatus === 'PENDING' && 
+                          '학생증 또는 재학증명서를 업로드하여 학생 인증을 요청하세요. 승인되면 게시글 작성 권한이 부여됩니다.'}
+                        {user.verificationStatus === 'REQUESTED' && 
+                          '운영자가 인증을 검토 중입니다. 잠시만 기다려주세요.'}
+                        {user.verificationStatus === 'APPROVED' && 
+                          '학생 인증이 완료되었습니다. 이제 게시글을 작성할 수 있습니다.'}
+                        {user.verificationStatus === 'REJECTED' && 
+                          `인증이 거부되었습니다. ${user.verificationNote ? `사유: ${user.verificationNote}` : '운영자에게 문의해주세요.'}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 인증 요청 폼 (PENDING 또는 REJECTED 상태일 때만) */}
+                  {(user.verificationStatus === 'PENDING' || user.verificationStatus === 'REJECTED') && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-black mb-4">
+                        학생 인증 요청
+                      </h3>
+                      
+                      <div className="mb-6">
+                        <p className="text-sm text-gray-600 mb-4">
+                          학생증 또는 재학증명서 이미지를 업로드해주세요. 운영자가 확인 후 승인합니다.
+                        </p>
+                        
+                        <div className="space-y-4">
+                          {/* 이미지 업로드 */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              인증 이미지 *
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleVerificationImageUpload}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              학생증 또는 재학증명서 사진을 업로드하세요. (JPG, PNG, 최대 5MB)
+                            </p>
+                          </div>
+
+                          {/* 이미지 미리보기 */}
+                          {verificationImagePreview && (
+                            <div className="mt-4">
+                              <p className="text-sm font-medium text-gray-700 mb-2">미리보기</p>
+                              <div className="relative w-full max-w-md mx-auto">
+                                <img
+                                  src={verificationImagePreview}
+                                  alt="인증 이미지 미리보기"
+                                  className="w-full h-auto border border-gray-200 rounded-lg"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setVerificationImage(null)
+                                    setVerificationImagePreview('')
+                                  }}
+                                  className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 제출 버튼 */}
+                          <button
+                            onClick={handleVerificationSubmit}
+                            disabled={!verificationImage || isVerificationSubmitting}
+                            className={`w-full py-4 px-6 rounded-lg font-medium text-white transition-colors ${
+                              !verificationImage || isVerificationSubmitting
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2'
+                            }`}
+                          >
+                            {isVerificationSubmitting ? '제출 중...' : '인증 요청하기'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 안내 사항 */}
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 className="text-sm font-semibold text-gray-800 mb-2">📌 안내사항</h4>
+                        <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                          <li>학생증 또는 재학증명서가 명확히 보이도록 촬영해주세요.</li>
+                          <li>개인정보(주민번호 등)는 가려서 업로드해주세요.</li>
+                          <li>인증 요청 후 1~3일 이내에 승인 여부가 결정됩니다.</li>
+                          <li>승인되면 Archive와 Community에서 글 작성이 가능합니다.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 인증 요청 완료 (REQUESTED 상태) */}
+                  {user.verificationStatus === 'REQUESTED' && (
+                    <div className="text-center py-12">
+                      <div className="w-24 h-24 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">인증 요청이 제출되었습니다</h3>
+                      <p className="text-gray-500 mb-6">운영자가 검토 중입니다. 승인될 때까지 기다려주세요.</p>
+                      
+                      {user.verificationImageUrl && (
+                        <div className="max-w-md mx-auto">
+                          <p className="text-sm font-medium text-gray-700 mb-2">제출한 인증 이미지</p>
+                          <img
+                            src={user.verificationImageUrl}
+                            alt="제출한 인증 이미지"
+                            className="w-full h-auto border border-gray-200 rounded-lg"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -128,6 +128,22 @@ export default function AdminPage() {
                     </div>
                   </div>
 
+                  {/* 학생 인증 관리 */}
+                  <Link href="/admin/verifications" className="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                    <div className="text-center">
+                      <div className="w-12 h-12 mx-auto mb-4 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">학생 인증 관리</h3>
+                      <p className="text-gray-600 text-sm mb-4">학생 인증 요청 승인/거부</p>
+                      <div className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                        관리하기
+                      </div>
+                    </div>
+                  </Link>
+
                 </div>
               </div>
 
