@@ -11,6 +11,8 @@ function CommunityContent() {
   const router = useRouter()
   const { role } = usePermissions()
   const [activeTab, setActiveTab] = useState<'board' | 'lounge'>('board')
+  const [posts, setPosts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // URL 쿼리 파라미터에서 초기 탭 설정
   useEffect(() => {
@@ -26,6 +28,27 @@ function CommunityContent() {
   const handleTabChange = (tab: 'board' | 'lounge') => {
     setActiveTab(tab)
     router.push(`/community?tab=${tab}`, { scroll: false })
+  }
+
+  // 게시글 데이터 로드
+  useEffect(() => {
+    fetchPosts()
+  }, [activeTab])
+
+  const fetchPosts = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/community/posts?category=${activeTab}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setPosts(data.data)
+      }
+    } catch (error) {
+      console.error('게시글 조회 오류:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -99,19 +122,33 @@ function CommunityContent() {
 
               {/* 게시글 목록 */}
               <div className="space-y-4 mb-8">
-                {/* DB에서 가져온 Board 게시글 데이터가 여기에 표시됩니다 */}
-                {/* 예시 구조:
-                <div className="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
-                  <div className="flex-1 pr-4">
-                    <h3 className="text-sm font-semibold text-black mb-1">{post.title}</h3>
-                    <p className="text-xs text-gray-600 mb-2">{post.excerpt}</p>
-                    <p className="text-xs text-gray-400">{post.author} {post.date}</p>
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                    <p className="text-gray-600">게시글을 불러오는 중...</p>
                   </div>
-                  <div className="w-16 h-16 bg-gray-200 rounded-md flex-shrink-0 overflow-hidden">
-                    <img src={post.thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
+                ) : posts.length > 0 ? (
+                  posts.map((post) => (
+                    <div key={post.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.content.substring(0, 100)}...</p>
+                          <div className="flex items-center space-x-4 text-xs text-gray-400">
+                            <span>{post.author.name}</span>
+                            <span>조회 {post.views}</span>
+                            <span>댓글 {post.commentCount}</span>
+                            <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    작성된 게시글이 없습니다.
                   </div>
-                </div>
-                */}
+                )}
               </div>
             </div>
           ) : (
@@ -130,19 +167,33 @@ function CommunityContent() {
 
               {/* 게시글 목록 */}
               <div className="space-y-4 mb-8">
-                {/* DB에서 가져온 Lounge 게시글 데이터가 여기에 표시됩니다 */}
-                {/* 예시 구조:
-                <div className="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
-                  <div className="flex-1 pr-4">
-                    <h3 className="text-sm font-semibold text-black mb-1">{post.title}</h3>
-                    <p className="text-xs text-gray-600 mb-2">{post.excerpt}</p>
-                    <p className="text-xs text-gray-400">{post.author} {post.date}</p>
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                    <p className="text-gray-600">게시글을 불러오는 중...</p>
                   </div>
-                  <div className="w-16 h-16 bg-gray-200 rounded-md flex-shrink-0 overflow-hidden">
-                    <img src={post.thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
+                ) : posts.length > 0 ? (
+                  posts.map((post) => (
+                    <div key={post.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.content.substring(0, 100)}...</p>
+                          <div className="flex items-center space-x-4 text-xs text-gray-400">
+                            <span>{post.author.name}</span>
+                            <span>조회 {post.views}</span>
+                            <span>댓글 {post.commentCount}</span>
+                            <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    작성된 게시글이 없습니다.
                   </div>
-                </div>
-                */}
+                )}
                   </div>
                 </div>
           )}

@@ -111,24 +111,35 @@ function WriteContent() {
     setIsUploading(true)
     
     try {
-      // TODO: 실제 API 호출로 게시글 작성
-      // 1. 이미지 파일들을 서버에 업로드
-      // 2. 업로드된 이미지 URL들을 받아옴
-      // 3. 게시글 데이터와 함께 저장
+      // TODO: 실제로는 이미지를 먼저 서버에 업로드하고 URL을 받아와야 함
+      // 현재는 이미지 없이 텍스트만 저장
       
-      console.log('게시글 작성:', {
-        ...formData,
-        images: images.map(file => file.name)
+      const response = await fetch('/api/community/write', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: formData.title,
+          content: formData.content,
+          category: category
+        })
       })
-      
-      // 임시로 2초 대기 (실제 업로드 시뮬레이션)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // 작성 완료 후 해당 카테고리로 이동
-      router.push(`/community?tab=${category}`)
+
+      const data = await response.json()
+
+      if (response.ok) {
+        console.log('게시글 작성 성공:', data)
+        // 작성 완료 후 해당 카테고리로 이동
+        router.push(`/community?tab=${category}`)
+      } else {
+        console.error('게시글 작성 실패:', data.error)
+        alert(data.error || '게시글 작성에 실패했습니다. 다시 시도해주세요.')
+      }
     } catch (error) {
-      console.error('게시글 작성 실패:', error)
-      alert('게시글 작성에 실패했습니다. 다시 시도해주세요.')
+      console.error('게시글 작성 오류:', error)
+      alert('서버 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
       setIsUploading(false)
     }

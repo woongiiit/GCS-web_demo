@@ -78,20 +78,44 @@ function ArchiveWriteContent() {
     setMessage('')
 
     try {
-      // TODO: 실제 API 호출로 변경
-      // 이미지 업로드 및 글 작성 로직
-      await new Promise(resolve => setTimeout(resolve, 2000)) // 시뮬레이션
+      // TODO: 실제로는 이미지를 먼저 서버에 업로드하고 URL을 받아와야 함
+      // 현재는 이미지 없이 텍스트만 저장
       
-      setMessage('글이 성공적으로 작성되었습니다.')
-      setMessageType('success')
-      
-      // 성공 후 Archive 페이지로 이동
-      setTimeout(() => {
-        router.push('/archive')
-      }, 1500)
+      const response = await fetch('/api/archive/write', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: formData.title,
+          content: formData.content,
+          type: formData.type,
+          year: formData.year,
+          members: formData.members,
+          images: [], // TODO: 실제 업로드된 이미지 URL
+          isFeatured: formData.isFeatured
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage('글이 성공적으로 작성되었습니다.')
+        setMessageType('success')
+        
+        // 성공 후 Archive 페이지로 이동
+        setTimeout(() => {
+          router.push('/archive')
+        }, 1500)
+      } else {
+        console.error('글 작성 실패:', data.error)
+        setMessage(data.error || '글 작성에 실패했습니다. 다시 시도해주세요.')
+        setMessageType('error')
+      }
     } catch (error) {
       console.error('글 작성 오류:', error)
-      setMessage('글 작성 중 오류가 발생했습니다. 다시 시도해주세요.')
+      setMessage('서버 오류가 발생했습니다. 다시 시도해주세요.')
       setMessageType('error')
     } finally {
       setIsSubmitting(false)
