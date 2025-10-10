@@ -22,8 +22,8 @@ export default function Home() {
         setProjects(projectsData.data.slice(0, 1))
       }
 
-      // Community 게시글 조회 (최신 3개, Board와 Lounge 구분 없이)
-      const newsRes = await fetch('/api/community/posts')
+      // Archive 뉴스 조회 (최신 3개)
+      const newsRes = await fetch('/api/archive/news')
       const newsData = await newsRes.json()
       if (newsData.success) {
         setNews(newsData.data.slice(0, 3))
@@ -140,19 +140,23 @@ export default function Home() {
               ) : news.length > 0 ? (
                 <>
                   <div className="grid grid-cols-3 gap-2">
-                    {news.slice(0, 3).map((post) => (
-                      <Link key={post.id} href={`/community?tab=${post.category.toLowerCase()}`}>
+                    {news.slice(0, 3).map((item) => (
+                      <Link key={item.id} href={`/archive?tab=news`}>
                         <div className="bg-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-                          <div className="h-20 bg-gray-300 overflow-hidden flex items-center justify-center">
-                            <div className="text-center px-2">
-                              <p className="text-xs font-semibold text-gray-700 line-clamp-2">{post.title}</p>
-                            </div>
+                          <div className="h-20 bg-gray-300 overflow-hidden">
+                            {item.images && item.images[0] ? (
+                              <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-news.jpg'
+                              }} />
+                            ) : (
+                              <div className="w-full h-full bg-gray-300 flex items-center justify-center px-2">
+                                <p className="text-xs font-semibold text-gray-700 line-clamp-2 text-center">{item.title}</p>
+                              </div>
+                            )}
                           </div>
                           <div className="p-2">
-                            <p className="text-xs font-semibold line-clamp-1">{post.author.name}</p>
-                            <p className="text-xs text-gray-500 line-clamp-1">
-                              {post.category === 'BOARD' ? 'Board' : 'Lounge'} · {new Date(post.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
-                            </p>
+                            <p className="text-xs font-semibold line-clamp-1">{item.title}</p>
+                            <p className="text-xs text-gray-500 line-clamp-1">— {item.year}년</p>
                           </div>
                         </div>
                       </Link>
@@ -166,7 +170,7 @@ export default function Home() {
                 </>
               ) : (
                 <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
-                  작성된 게시글이 없습니다.
+                  등록된 뉴스가 없습니다.
                 </div>
               )}
             </div>
