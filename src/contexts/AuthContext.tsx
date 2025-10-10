@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { UserRole, VerificationStatus } from '@/lib/permissions'
 
 interface User {
   id: string
@@ -9,7 +10,13 @@ interface User {
   studentId: string
   major: string
   phone: string
-  role: string
+  role: UserRole
+  verificationStatus?: VerificationStatus
+  verificationImageUrl?: string
+  verificationRequestedAt?: string
+  verificationApprovedAt?: string
+  verificationRejectedAt?: string
+  verificationNote?: string
 }
 
 interface AuthContextType {
@@ -77,4 +84,26 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
+}
+
+/**
+ * 권한 체크 커스텀 훅
+ * permissions 유틸리티와 함께 사용
+ */
+export function usePermissions() {
+  const { user } = useAuth()
+  
+  return {
+    user,
+    role: user?.role,
+    verificationStatus: user?.verificationStatus,
+    isGuest: !user,
+    isGeneral: user?.role === 'GENERAL',
+    isStudent: user?.role === 'STUDENT',
+    isAdmin: user?.role === 'ADMIN',
+    isVerified: user?.verificationStatus === 'APPROVED',
+    isVerificationPending: user?.verificationStatus === 'PENDING',
+    isVerificationRequested: user?.verificationStatus === 'REQUESTED',
+    isVerificationRejected: user?.verificationStatus === 'REJECTED',
+  }
 }
