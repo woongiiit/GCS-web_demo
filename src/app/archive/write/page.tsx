@@ -78,8 +78,20 @@ function ArchiveWriteContent() {
     setMessage('')
 
     try {
-      // TODO: 실제로는 이미지를 먼저 서버에 업로드하고 URL을 받아와야 함
-      // 현재는 이미지 없이 텍스트만 저장
+      // 이미지를 Base64로 인코딩
+      const imageUrls: string[] = []
+      
+      for (const file of formData.images) {
+        const reader = new FileReader()
+        const base64String = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            resolve(reader.result as string)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        imageUrls.push(base64String)
+      }
       
       const response = await fetch('/api/archive/write', {
         method: 'POST',
@@ -93,7 +105,7 @@ function ArchiveWriteContent() {
           type: formData.type,
           year: formData.year,
           members: formData.members,
-          images: [], // TODO: 실제 업로드된 이미지 URL
+          images: imageUrls,
           isFeatured: formData.isFeatured
         })
       })
