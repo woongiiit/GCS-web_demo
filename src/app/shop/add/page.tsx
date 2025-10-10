@@ -99,8 +99,20 @@ export default function ShopAddPage() {
     setMessage('')
 
     try {
-      // TODO: 실제로는 이미지를 먼저 서버에 업로드하고 URL을 받아와야 함
-      const imageUrls = imagePreviews
+      // 이미지를 Base64로 인코딩
+      const imageUrls: string[] = []
+      
+      for (const file of images) {
+        const reader = new FileReader()
+        const base64String = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            resolve(reader.result as string)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        imageUrls.push(base64String)
+      }
 
       const response = await fetch('/api/shop/products', {
         method: 'POST',
