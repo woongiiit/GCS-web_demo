@@ -41,7 +41,8 @@ export async function GET(request: Request) {
         orderBy: [
           { year: 'desc' },
           { createdAt: 'desc' }
-        ]
+        ],
+        take: featured ? 5 : 50 // featured는 최대 5개, 전체는 최대 50개로 제한
       })
 
       // 연도별로 그룹화

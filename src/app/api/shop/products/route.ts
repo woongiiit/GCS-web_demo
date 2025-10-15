@@ -155,11 +155,18 @@ export async function GET(request: Request) {
       const products = await prisma.product.findMany({
         where: whereClause,
         include: {
-          category: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            }
+          },
         },
         orderBy: {
           createdAt: 'desc',
-        }
+        },
+        take: isBestItem ? 10 : 100 // bestItem은 최대 10개, 전체는 최대 100개로 제한
       })
 
       return {

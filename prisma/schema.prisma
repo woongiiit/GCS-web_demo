@@ -40,6 +40,8 @@ model User {
   projects    Project[]
   news        News[]
 
+  @@index([role])
+  @@index([verificationStatus, createdAt])
   @@map("users")
 }
 
@@ -59,6 +61,8 @@ model Post {
   // 관계
   comments    Comment[]
 
+  @@index([category, createdAt])
+  @@index([authorId, createdAt])
   @@map("posts")
 }
 
@@ -73,6 +77,8 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([postId, createdAt])
+  @@index([authorId, createdAt])
   @@map("comments")
 }
 
@@ -88,6 +94,7 @@ model Category {
   // 관계
   products    Product[]
 
+  @@index([slug])
   @@map("categories")
 }
 
@@ -119,6 +126,10 @@ model Product {
   orderItems  OrderItem[]
   productDetails ProductDetail[]
 
+  @@index([categoryId, isActive])
+  @@index([isBestItem], map: "idx_products_best_item")
+  @@index([isActive, createdAt])
+  @@index([isActive, isBestItem, createdAt])
   @@map("products")
 }
 
@@ -159,6 +170,8 @@ model Order {
   // 관계
   orderItems  OrderItem[]
 
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
   @@map("orders")
 }
 
@@ -172,6 +185,8 @@ model OrderItem {
   quantity  Int
   price     Int     // 주문 당시 가격
 
+  @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
@@ -195,6 +210,10 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([isFeatured, year])
+  @@index([createdAt])
+  @@index([authorId, isFeatured])
+  @@index([isFeatured, year, createdAt])
   @@map("projects")
 }
 
@@ -213,6 +232,9 @@ model News {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([year, createdAt])
+  @@index([isFeatured, createdAt])
+  @@index([authorId, createdAt])
   @@map("news")
 }
 
