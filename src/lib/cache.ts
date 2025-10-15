@@ -44,11 +44,19 @@ class MemoryCache {
   // 패턴으로 캐시 삭제 (예: 특정 카테고리의 모든 상품 캐시 삭제)
   deletePattern(pattern: string): void {
     const regex = new RegExp(pattern);
-    for (const key of this.cache.keys()) {
+    const keysToDelete: string[] = [];
+    
+    // 먼저 삭제할 키들을 수집
+    this.cache.forEach((_, key) => {
       if (regex.test(key)) {
-        this.cache.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    
+    // 수집된 키들을 삭제
+    keysToDelete.forEach(key => {
+      this.cache.delete(key);
+    });
   }
 
   // 캐시 상태 확인
