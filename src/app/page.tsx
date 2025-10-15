@@ -139,7 +139,7 @@ export default function Home() {
                     >
                       {projects.map((project) => (
                         <div key={project.id} className="w-full flex-shrink-0">
-                          <Link href={`/archive?tab=projects`}>
+                          <Link href={`/archive/projects/${project.id}`}>
                             <div className="p-4 flex items-start justify-between hover:bg-gray-100 transition-colors cursor-pointer">
                               <div className="flex-1">
                                 <h3 className="font-bold text-base mb-2">{project.year} {project.title}</h3>
