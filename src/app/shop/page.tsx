@@ -88,19 +88,20 @@ export default function ShopPage() {
 
         {/* 탭 메뉴 - 흰색 배경 영역 */}
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-0">
+          <div className="max-w-6xl mx-auto px-2 sm:px-0">
             <div className="flex justify-between items-center py-4">
               {/* 카테고리 탭들 */}
-              <div className="flex flex-wrap justify-center gap-4 md:gap-8 flex-1">
+              <div className="flex justify-center gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex-1">
               {['apparel', 'stationary', 'bag', 'life', 'accessory'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                    className={`pb-2 border-b-2 font-medium transition-colors text-sm md:text-base ${
+                    className={`pb-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
                     activeTab === tab
                       ? 'text-black border-black'
                       : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
                   }`}
+                    style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
                 >
                   {getCategoryName(tab)}
                 </button>
@@ -119,6 +120,9 @@ export default function ShopPage() {
             </div>
             </div>
           </div>
+
+        {/* 구분선 */}
+        <div className="bg-gray-100 h-px"></div>
 
           {/* 컨텐츠 영역 */}
         <div className="bg-white min-h-screen">

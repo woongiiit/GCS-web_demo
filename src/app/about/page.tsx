@@ -31,45 +31,49 @@ export default function AboutPage() {
 
         {/* 서브 메뉴 띠 - 흰색 배경 */}
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            <div className="flex flex-wrap justify-center gap-4 md:gap-8 py-4">
+          <div className="max-w-6xl mx-auto px-2 sm:px-0">
+                <div className="flex justify-center gap-4 sm:gap-5 md:gap-6 lg:gap-8 py-4">
                 <button
                   onClick={() => setActiveTab('gcsweb')}
-                className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
                     activeTab === 'gcsweb'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
                   }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
                 >
                   GCS:Web
                 </button>
                 <button
                   onClick={() => setActiveTab('intro')}
-                className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
                     activeTab === 'intro'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
                   }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
                 >
                   전공 소개
                 </button>
                 <button
                   onClick={() => setActiveTab('lectures')}
-                className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
                     activeTab === 'lectures'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
                   }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
                 >
                   개설 과목
                 </button>
                 <button
                   onClick={() => setActiveTab('professor')}
-                className={`pb-2 border-b-2 font-bold transition-colors text-sm md:text-base text-black ${
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
                     activeTab === 'professor'
                     ? 'border-black'
                     : 'border-transparent hover:border-gray-300'
                   }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
                 >
                   교수진
                 </button>
