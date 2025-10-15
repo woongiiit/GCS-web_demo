@@ -139,11 +139,6 @@ export default function ProjectsByYearPage() {
                             
                             <div className="mt-4 flex items-center text-gray-400 text-xs">
                               <span>작성일: {new Date(project.createdAt).toLocaleDateString('ko-KR')}</span>
-                              {project.isFeatured && (
-                                <span className="ml-4 bg-[#f57520] text-white px-2 py-1 rounded text-xs">
-                                  주요 프로젝트
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
