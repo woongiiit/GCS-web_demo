@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { permissions, permissionErrors } from '@/lib/permissions'
+import { withCache, generateCacheKey, invalidateCache } from '@/lib/cache'
 
 export async function POST(request: Request) {
   try {
@@ -80,6 +81,10 @@ export async function POST(request: Request) {
       }
     })
 
+    // 상품 등록 후 관련 캐시 무효화
+    invalidateCache('products:.*');
+    invalidateCache('products:bestItem:true');
+
     return NextResponse.json(
       { 
         success: true, 
@@ -120,41 +125,60 @@ export async function GET(request: Request) {
     const categorySlug = searchParams.get('category')
     const isBestItem = searchParams.get('bestItem') === 'true'
 
-    const whereClause: any = {
-      isActive: true,
-    }
+    // 캐시 키 생성
+    const cacheKey = generateCacheKey(
+      'products',
+      categorySlug || 'all',
+      isBestItem ? 'bestItem' : 'all'
+    )
 
-    if (categorySlug) {
-      const category = await prisma.category.findUnique({
-        where: { slug: categorySlug }
+    // 캐시와 함께 데이터 가져오기
+    const result = await withCache(cacheKey, async () => {
+      const whereClause: any = {
+        isActive: true,
+      }
+
+      if (categorySlug) {
+        const category = await prisma.category.findUnique({
+          where: { slug: categorySlug }
+        })
+        
+        if (category) {
+          whereClause.categoryId = category.id
+        }
+      }
+
+      if (isBestItem) {
+        whereClause.isBestItem = true
+      }
+
+      const products = await prisma.product.findMany({
+        where: whereClause,
+        include: {
+          category: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        }
       })
-      
-      if (category) {
-        whereClause.categoryId = category.id
-      }
-    }
 
-    if (isBestItem) {
-      whereClause.isBestItem = true
-    }
-
-    const products = await prisma.product.findMany({
-      where: whereClause,
-      include: {
-        category: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
+      return {
+        success: true,
+        data: products,
+        count: products.length
       }
-    })
+    }, 300000) // 5분 캐시
 
     return NextResponse.json(
+      result,
       { 
-        success: true, 
-        data: products,
-        count: products.length 
-      },
-      { status: 200 }
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+          'CDN-Cache-Control': 'max-age=300',
+          'Vercel-CDN-Cache-Control': 'max-age=300'
+        }
+      }
     )
 
   } catch (error: any) {

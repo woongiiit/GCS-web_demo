@@ -48,7 +48,7 @@ export default function Home() {
         {/* 모바일 주황색 섹션 - 텍스트만 포함 */}
         <div className="relative h-[clamp(240px,35vh,280px)] bg-[#f57520] pt-16">
           {/* GCS:Web 텍스트 - 주황색 영역의 왼쪽 아래 끝에 맞닿게 배치 */}
-          <div className="absolute bottom-0 left-[2vw] text-white text-[clamp(2.5rem,12vw,3.75rem)] font-bold z-10">
+          <div className="absolute bottom-0 left-[2vw] text-white text-[clamp(3rem,14vw,4.25rem)] font-bold z-10">
             GCS:Web
           </div>
           

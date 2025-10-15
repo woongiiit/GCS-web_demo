@@ -15,7 +15,14 @@ export async function GET(request: Request) {
         data: categories,
         count: categories.length 
       },
-      { status: 200 }
+      { 
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=3600, stale-while-revalidate=7200',
+          'CDN-Cache-Control': 'max-age=3600',
+          'Vercel-CDN-Cache-Control': 'max-age=3600'
+        }
+      }
     )
 
   } catch (error: any) {

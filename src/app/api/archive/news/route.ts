@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withCache, generateCacheKey } from '@/lib/cache'
 
 export async function GET(request: Request) {
   try {
@@ -7,50 +8,69 @@ export async function GET(request: Request) {
     const year = searchParams.get('year')
     const featured = searchParams.get('featured') === 'true'
 
-    const whereClause: any = {}
-    
-    if (year) {
-      whereClause.year = parseInt(year)
-    }
-    
-    if (featured) {
-      whereClause.isFeatured = true
-    }
+    // 캐시 키 생성
+    const cacheKey = generateCacheKey(
+      'news',
+      year || 'all',
+      featured ? 'featured' : 'all'
+    )
 
-    const news = await prisma.news.findMany({
-      where: whereClause,
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          }
-        }
-      },
-      orderBy: [
-        { year: 'desc' },
-        { createdAt: 'desc' }
-      ]
-    })
-
-    // 연도별로 그룹화
-    const newsByYear: { [key: number]: any[] } = {}
-    news.forEach(item => {
-      if (!newsByYear[item.year]) {
-        newsByYear[item.year] = []
+    // 캐시와 함께 데이터 가져오기
+    const result = await withCache(cacheKey, async () => {
+      const whereClause: any = {}
+      
+      if (year) {
+        whereClause.year = parseInt(year)
       }
-      newsByYear[item.year].push(item)
-    })
+      
+      if (featured) {
+        whereClause.isFeatured = true
+      }
 
-    return NextResponse.json(
-      { 
-        success: true, 
+      const news = await prisma.news.findMany({
+        where: whereClause,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            }
+          }
+        },
+        orderBy: [
+          { year: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      })
+
+      // 연도별로 그룹화
+      const newsByYear: { [key: number]: any[] } = {}
+      news.forEach(item => {
+        if (!newsByYear[item.year]) {
+          newsByYear[item.year] = []
+        }
+        newsByYear[item.year].push(item)
+      })
+
+      return {
+        success: true,
         data: news,
         byYear: newsByYear,
-        count: news.length 
-      },
-      { status: 200 }
+        count: news.length
+      }
+    }, 300000) // 5분 캐시
+
+    return NextResponse.json(
+      result,
+      { 
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+          'CDN-Cache-Control': 'max-age=300',
+          'Vercel-CDN-Cache-Control': 'max-age=300'
+        }
+      }
     )
 
   } catch (error: any) {

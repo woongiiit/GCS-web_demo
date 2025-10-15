@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withCache, generateCacheKey } from '@/lib/cache'
 
 export async function GET(request: Request) {
   try {
@@ -7,50 +8,69 @@ export async function GET(request: Request) {
     const year = searchParams.get('year')
     const featured = searchParams.get('featured') === 'true'
 
-    const whereClause: any = {}
-    
-    if (year) {
-      whereClause.year = parseInt(year)
-    }
-    
-    if (featured) {
-      whereClause.isFeatured = true
-    }
+    // 캐시 키 생성
+    const cacheKey = generateCacheKey(
+      'projects',
+      year || 'all',
+      featured ? 'featured' : 'all'
+    )
 
-    const projects = await prisma.project.findMany({
-      where: whereClause,
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          }
-        }
-      },
-      orderBy: [
-        { year: 'desc' },
-        { createdAt: 'desc' }
-      ]
-    })
-
-    // 연도별로 그룹화
-    const projectsByYear: { [key: number]: any[] } = {}
-    projects.forEach(project => {
-      if (!projectsByYear[project.year]) {
-        projectsByYear[project.year] = []
+    // 캐시와 함께 데이터 가져오기
+    const result = await withCache(cacheKey, async () => {
+      const whereClause: any = {}
+      
+      if (year) {
+        whereClause.year = parseInt(year)
       }
-      projectsByYear[project.year].push(project)
-    })
+      
+      if (featured) {
+        whereClause.isFeatured = true
+      }
 
-    return NextResponse.json(
-      { 
-        success: true, 
+      const projects = await prisma.project.findMany({
+        where: whereClause,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            }
+          }
+        },
+        orderBy: [
+          { year: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      })
+
+      // 연도별로 그룹화
+      const projectsByYear: { [key: number]: any[] } = {}
+      projects.forEach(project => {
+        if (!projectsByYear[project.year]) {
+          projectsByYear[project.year] = []
+        }
+        projectsByYear[project.year].push(project)
+      })
+
+      return {
+        success: true,
         data: projects,
         byYear: projectsByYear,
-        count: projects.length 
-      },
-      { status: 200 }
+        count: projects.length
+      }
+    }, 600000) // 10분 캐시
+
+    return NextResponse.json(
+      result,
+      { 
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200',
+          'CDN-Cache-Control': 'max-age=600',
+          'Vercel-CDN-Cache-Control': 'max-age=600'
+        }
+      }
     )
 
   } catch (error: any) {
