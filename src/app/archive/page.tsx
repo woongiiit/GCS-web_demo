@@ -217,35 +217,39 @@ function ArchiveContent() {
                             <div className="w-24 h-px bg-[#f57520] mt-2"></div>
                           </div>
                         </div>
-                        <Link href={`/archive?tab=news&year=${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
+                        <Link href={`/archive/news/year/${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
                           More
                         </Link>
                       </div>
                       
-                      <div className="space-y-6 mt-6">
-                        {news[year].slice(0, 5).map((item: any) => (
-                          <div key={item.id} className="bg-white border-b border-gray-200 pb-6 hover:bg-gray-50 transition-colors rounded-lg px-4">
-                            <div className="flex gap-4">
-                              <div className="w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
-                                {item.images && item.images[0] ? (
-                                  <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" onError={(e) => {
-                                    e.currentTarget.src = '/images/placeholder-news.jpg'
-                                  }} />
-                                ) : (
-                                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
-                                    No Image
+                      <div className="space-y-4 mt-6">
+                        {news[year].slice(0, 4).map((item: any) => (
+                          <Link key={item.id} href={`/archive/news/${item.id}`}>
+                            <div className="bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg p-4 cursor-pointer border-l-4 border-[#f57520]">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h3 className="text-[#f57520] font-bold text-base mb-1">
+                                    {item.title}
+                                  </h3>
+                                  <p className="text-gray-600 text-sm line-clamp-2">
+                                    {item.summary || item.content.substring(0, 150)}
+                                  </p>
+                                  <p className="text-gray-400 text-xs mt-2">
+                                    {new Date(item.createdAt).toLocaleDateString('ko-KR')}
+                                  </p>
+                                </div>
+                                {item.images && item.images[0] && (
+                                  <div className="ml-4 flex-shrink-0">
+                                    <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
+                                      <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" onError={(e) => {
+                                        e.currentTarget.src = '/images/placeholder-news.jpg'
+                                      }} />
+                                    </div>
                                   </div>
                                 )}
                               </div>
-                              <div className="flex-1">
-                                <h3 className="text-[#f57520] font-bold text-base mb-2">{item.title}</h3>
-                                <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.summary || item.content.substring(0, 100)}</p>
-                                <span className="text-gray-400 text-xs">
-                                  {new Date(item.createdAt).toLocaleDateString('ko-KR')}
-                                </span>
-                              </div>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     </div>

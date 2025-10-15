@@ -206,7 +206,7 @@ export default function Home() {
                 <>
                   <div className="grid grid-cols-3 gap-2">
                     {news.slice(0, 3).map((item) => (
-                      <Link key={item.id} href={`/archive?tab=news`}>
+                      <Link key={item.id} href={`/archive/news/${item.id}`}>
                         <div className="bg-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                           <div className="h-20 bg-gray-300 overflow-hidden">
                             {item.images && item.images[0] ? (
