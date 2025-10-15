@@ -141,8 +141,17 @@ function ArchiveContent() {
                     <div key={year} className="mb-16">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <h2 className="text-2xl font-bold text-black">{year}</h2>
-                          <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
+                          {/* 연도 구분선 */}
+                          <div className="flex flex-col items-start">
+                            {/* 위쪽 검은색 구분선 */}
+                            <div className="w-48 h-px bg-black mb-2"></div>
+                            
+                            {/* 연도 텍스트 */}
+                            <h2 className="text-2xl font-bold text-black">{year}</h2>
+                            
+                            {/* 아래쪽 주황색 구분선 */}
+                            <div className="w-24 h-px bg-[#f57520] mt-2"></div>
+                          </div>
                         </div>
                         <Link href={`/archive?tab=projects&year=${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
                           More
@@ -186,8 +195,17 @@ function ArchiveContent() {
                     <div key={year} className="mb-16">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <h2 className="text-2xl font-bold text-black">{year}</h2>
-                          <div className="w-12 h-1 bg-[#f57520] mt-1"></div>
+                          {/* 연도 구분선 */}
+                          <div className="flex flex-col items-start">
+                            {/* 위쪽 검은색 구분선 */}
+                            <div className="w-48 h-px bg-black mb-2"></div>
+                            
+                            {/* 연도 텍스트 */}
+                            <h2 className="text-2xl font-bold text-black">{year}</h2>
+                            
+                            {/* 아래쪽 주황색 구분선 */}
+                            <div className="w-24 h-px bg-[#f57520] mt-2"></div>
+                          </div>
                         </div>
                         <Link href={`/archive?tab=news&year=${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
                           More

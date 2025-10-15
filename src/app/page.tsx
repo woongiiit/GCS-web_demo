@@ -1,25 +1,67 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([])
   const [news, setNews] = useState<any[]>([])
   const [bestProducts, setBestProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
+  const slideIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     fetchHomeData()
   }, [])
 
+  // 자동 슬라이드 기능
+  useEffect(() => {
+    if (projects.length > 1) {
+      slideIntervalRef.current = setInterval(() => {
+        setCurrentProjectIndex((prevIndex) => 
+          prevIndex === projects.length - 1 ? 0 : prevIndex + 1
+        )
+      }, 5000) // 5초마다 자동 슬라이드
+    }
+
+    return () => {
+      if (slideIntervalRef.current) {
+        clearInterval(slideIntervalRef.current)
+      }
+    }
+  }, [projects.length])
+
+  // 컴포넌트 언마운트 시 cleanup
+  useEffect(() => {
+    return () => {
+      if (slideIntervalRef.current) {
+        clearInterval(slideIntervalRef.current)
+      }
+    }
+  }, [])
+
+  // 수동 슬라이드 함수
+  const goToSlide = (index: number) => {
+    setCurrentProjectIndex(index)
+    // 수동 클릭 시 자동 슬라이드 재시작
+    if (slideIntervalRef.current) {
+      clearInterval(slideIntervalRef.current)
+    }
+    slideIntervalRef.current = setInterval(() => {
+      setCurrentProjectIndex((prevIndex) => 
+        prevIndex === projects.length - 1 ? 0 : prevIndex + 1
+      )
+    }, 5000)
+  }
+
   const fetchHomeData = async () => {
     try {
-      // 프로젝트 조회 (최신 1개, featured)
+      // 프로젝트 조회 (모든 featured 프로젝트)
       const projectsRes = await fetch('/api/archive/projects?featured=true')
       const projectsData = await projectsRes.json()
       if (projectsData.success) {
-        setProjects(projectsData.data.slice(0, 1))
+        setProjects(projectsData.data)
       }
 
       // Archive 뉴스 조회 (최신 3개)
@@ -89,33 +131,56 @@ export default function Home() {
                 </div>
               ) : projects.length > 0 ? (
                 <>
-                  {projects.map((project) => (
-                    <Link key={project.id} href={`/archive?tab=projects`}>
-                      <div className="bg-gray-50 rounded-lg p-4 flex items-start justify-between hover:bg-gray-100 transition-colors cursor-pointer">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-base mb-2">{project.year} {project.title}</h3>
-                          <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
-                            {project.description}
-                          </p>
-                        </div>
-                        {project.images && project.images[0] && (
-                          <div className="ml-4 flex-shrink-0">
-                            <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
-                              <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
-                                e.currentTarget.style.display = 'none'
-                                e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-[#f57520] text-white text-2xl font-bold">GCS</span>'
-                              }} />
+                  {/* 슬라이드 컨테이너 */}
+                  <div className="relative overflow-hidden bg-gray-50 rounded-lg">
+                    <div 
+                      className="flex transition-transform duration-500 ease-in-out"
+                      style={{ transform: `translateX(-${currentProjectIndex * 100}%)` }}
+                    >
+                      {projects.map((project) => (
+                        <div key={project.id} className="w-full flex-shrink-0">
+                          <Link href={`/archive?tab=projects`}>
+                            <div className="p-4 flex items-start justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+                              <div className="flex-1">
+                                <h3 className="font-bold text-base mb-2">{project.year} {project.title}</h3>
+                                <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+                                  {project.description}
+                                </p>
+                              </div>
+                              {project.images && project.images[0] && (
+                                <div className="ml-4 flex-shrink-0">
+                                  <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
+                                    <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                      e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-[#f57520] text-white text-2xl font-bold">GCS</span>'
+                                    }} />
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                  <div className="flex justify-center mt-3 space-x-1">
-                    {projects.slice(0, 4).map((_, index) => (
-                      <span key={index} className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-[#f57520]' : 'bg-gray-300'}`}></span>
-                    ))}
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
                   </div>
+
+                  {/* 슬라이드 인디케이터 */}
+                  {projects.length > 1 && (
+                    <div className="flex justify-center mt-3 space-x-2">
+                      {projects.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => goToSlide(index)}
+                          className={`w-3 h-3 rounded-full transition-colors ${
+                            index === currentProjectIndex 
+                              ? 'bg-[#f57520]' 
+                              : 'bg-gray-300 hover:bg-gray-400'
+                          }`}
+                          aria-label={`슬라이드 ${index + 1}로 이동`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
