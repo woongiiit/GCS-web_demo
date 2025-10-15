@@ -153,31 +153,41 @@ function ArchiveContent() {
                             <div className="w-24 h-px bg-[#f57520] mt-2"></div>
                           </div>
                         </div>
-                        <Link href={`/archive?tab=projects&year=${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
+                        <Link href={`/archive/projects/year/${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
                           More
                         </Link>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                      <div className="space-y-4 mt-6">
                         {projects[year].slice(0, 4).map((project: any) => (
-                          <div key={project.id} className="bg-white hover:shadow-md transition-shadow rounded-lg overflow-hidden">
-                            <div className="w-full aspect-[4/3] bg-gray-200 rounded-lg mb-3 overflow-hidden">
-                              {project.images && project.images[0] ? (
-                                <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
-                                  e.currentTarget.src = '/images/placeholder-project.jpg'
-                                }} />
-                              ) : (
-                                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                                  No Image
+                          <Link key={project.id} href={`/archive/projects/${project.id}`}>
+                            <div className="bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg p-4 cursor-pointer border-l-4 border-[#f57520]">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h3 className="text-[#f57520] font-bold text-base mb-1">
+                                    {project.title}
+                                  </h3>
+                                  {project.teamMembers && project.teamMembers.length > 0 && (
+                                    <p className="text-gray-500 text-xs mb-2">
+                                      {project.teamMembers.join(', ')}
+                                    </p>
+                                  )}
+                                  <p className="text-gray-600 text-sm line-clamp-2">
+                                    {project.description}
+                                  </p>
                                 </div>
-                              )}
+                                {project.images && project.images[0] && (
+                                  <div className="ml-4 flex-shrink-0">
+                                    <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
+                                      <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
+                                        e.currentTarget.src = '/images/placeholder-project.jpg'
+                                      }} />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <h3 className="text-[#f57520] font-bold text-base mb-2">
-                              {project.title} 
-                              {project.teamMembers && project.teamMembers.length > 0 && ` (${project.teamMembers.join(', ')})`}
-                            </h3>
-                            <p className="text-gray-600 text-sm line-clamp-2">{project.description}</p>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     </div>
