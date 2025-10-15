@@ -5,11 +5,11 @@ import { requireAuth } from '@/lib/auth'
 export async function GET(request: NextRequest) {
   try {
     // 관리자 권한 확인
-    const user = await requireAuth(request)
-    if (user.role !== 'ADMIN') {
+    const user = await requireAuth(['ADMIN'])
+    if (!user) {
       return NextResponse.json(
-        { error: '관리자 권한이 필요합니다.' },
-        { status: 403 }
+        { error: '로그인이 필요합니다.' },
+        { status: 401 }
       )
     }
 
