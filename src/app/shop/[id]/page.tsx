@@ -278,8 +278,37 @@ export default function ProductDetailPage() {
           <div className="py-8">
             {activeTab === 'details' && (
               <div>
-                <div className="text-sm text-gray-700 whitespace-pre-line mb-8">
-                  {product.description}
+                <div className="text-sm text-gray-700 mb-8">
+                  {product.description.split('\n').map((paragraph: string, index: number) => {
+                    // 이미지 태그 파싱
+                    const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
+                    if (imageMatch) {
+                      return (
+                        <div key={index} className="my-6">
+                          <img
+                            src={imageMatch[1]}
+                            alt="상품 상세 이미지"
+                            className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
+                            onError={(e) => {
+                              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+UHJvZHVjdCBJbWFnZTwvdGV4dD4KPC9zdmc+'
+                            }}
+                          />
+                        </div>
+                      )
+                    }
+                    
+                    // 빈 줄 처리
+                    if (paragraph.trim() === '') {
+                      return <br key={index} />
+                    }
+                    
+                    // 일반 텍스트
+                    return (
+                      <p key={index} className="mb-4">
+                        {paragraph}
+                      </p>
+                    )
+                  })}
                 </div>
                 
                 {/* 제품 추가 이미지 (첫 번째 이미지를 제외한 나머지 이미지들) */}

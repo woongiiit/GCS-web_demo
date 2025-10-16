@@ -129,20 +129,33 @@ function CommunityContent() {
                   </div>
                 ) : posts.length > 0 ? (
                   posts.map((post) => (
-                    <div key={post.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.content.substring(0, 100)}...</p>
-                          <div className="flex items-center space-x-4 text-xs text-gray-400">
-                            <span>{post.author.name}</span>
-                            <span>조회 {post.views}</span>
-                            <span>댓글 {post.commentCount}</span>
-                            <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                    <Link key={post.id} href={`/community/${post.id}`}>
+                      <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
+                            <div className="text-sm text-gray-600 mb-3 line-clamp-2">
+                              {post.content.split('\n').map((paragraph: string, index: number) => {
+                                // 이미지 태그 파싱
+                                const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
+                                if (imageMatch) {
+                                  return (
+                                    <span key={index} className="text-blue-500">[이미지]</span>
+                                  )
+                                }
+                                return paragraph
+                              }).join(' ').substring(0, 100)}...
+                            </div>
+                            <div className="flex items-center space-x-4 text-xs text-gray-400">
+                              <span>{post.author.name}</span>
+                              <span>조회 {post.views}</span>
+                              <span>댓글 {post.commentCount}</span>
+                              <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))
                 ) : (
                   <div className="text-center py-12 text-gray-500">
@@ -174,20 +187,33 @@ function CommunityContent() {
                   </div>
                 ) : posts.length > 0 ? (
                   posts.map((post) => (
-                    <div key={post.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.content.substring(0, 100)}...</p>
-                          <div className="flex items-center space-x-4 text-xs text-gray-400">
-                            <span>{post.author.name}</span>
-                            <span>조회 {post.views}</span>
-                            <span>댓글 {post.commentCount}</span>
-                            <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                    <Link key={post.id} href={`/community/${post.id}`}>
+                      <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
+                            <div className="text-sm text-gray-600 mb-3 line-clamp-2">
+                              {post.content.split('\n').map((paragraph: string, index: number) => {
+                                // 이미지 태그 파싱
+                                const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
+                                if (imageMatch) {
+                                  return (
+                                    <span key={index} className="text-blue-500">[이미지]</span>
+                                  )
+                                }
+                                return paragraph
+                              }).join(' ').substring(0, 100)}...
+                            </div>
+                            <div className="flex items-center space-x-4 text-xs text-gray-400">
+                              <span>{post.author.name}</span>
+                              <span>조회 {post.views}</span>
+                              <span>댓글 {post.commentCount}</span>
+                              <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))
                 ) : (
                   <div className="text-center py-12 text-gray-500">

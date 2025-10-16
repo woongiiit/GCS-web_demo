@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         discount: discount ? parseInt(discount) : null,
         stock: stock ? parseInt(stock) : 0,
         categoryId,
-        images: images || [],
+        images: images || [], // 갤러리용 이미지만 저장
         brand: brand || null,
         tags: tags || [],
         features: features || [],

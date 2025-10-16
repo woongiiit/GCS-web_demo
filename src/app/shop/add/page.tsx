@@ -27,6 +27,10 @@ export default function ShopAddPage() {
   })
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imageOptions, setImageOptions] = useState<Array<{
+    showInGallery: boolean
+    insertToContent: boolean
+  }>>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
@@ -72,8 +76,8 @@ export default function ShopAddPage() {
     const files = Array.from(e.target.files || [])
     const imageFiles = files.filter(file => file.type.startsWith('image/'))
     
-    if (images.length + imageFiles.length > 5) {
-      setMessage('최대 5개의 이미지만 업로드할 수 있습니다.')
+    if (images.length + imageFiles.length > 10) {
+      setMessage('최대 10개의 이미지를 업로드할 수 있습니다.')
       setMessageType('error')
       return
     }
@@ -84,13 +88,50 @@ export default function ShopAddPage() {
     // 미리보기 생성
     const newPreviews = imageFiles.map(file => URL.createObjectURL(file))
     setImagePreviews([...imagePreviews, ...newPreviews])
+
+    // 기본 옵션 설정 (갤러리와 본문 삽입 모두 가능)
+    const newOptions = imageFiles.map(() => ({
+      showInGallery: true,
+      insertToContent: true
+    }))
+    setImageOptions([...imageOptions, ...newOptions])
+  }
+
+  const insertImageAtCursor = (imageUrl: string) => {
+    const textarea = document.getElementById('description') as HTMLTextAreaElement
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const before = formData.description.substring(0, start)
+    const after = formData.description.substring(end)
+    
+    const imageTag = `\n\n[IMAGE:${imageUrl}]\n\n`
+    const newContent = before + imageTag + after
+    
+    setFormData(prev => ({ ...prev, description: newContent }))
+    
+    // 커서 위치 업데이트
+    setTimeout(() => {
+      const newCursorPos = start + imageTag.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+      textarea.focus()
+    }, 0)
   }
 
   const removeImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index)
     const newPreviews = imagePreviews.filter((_, i) => i !== index)
+    const newOptions = imageOptions.filter((_, i) => i !== index)
     setImages(newImages)
     setImagePreviews(newPreviews)
+    setImageOptions(newOptions)
+  }
+
+  const updateImageOption = (index: number, option: 'showInGallery' | 'insertToContent', value: boolean) => {
+    const newOptions = [...imageOptions]
+    newOptions[index] = { ...newOptions[index], [option]: value }
+    setImageOptions(newOptions)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,19 +140,25 @@ export default function ShopAddPage() {
     setMessage('')
 
     try {
-      // 이미지를 Base64로 인코딩
-      const imageUrls: string[] = []
+      // 갤러리용 이미지만 Base64로 인코딩
+      const galleryImages: string[] = []
       
-      for (const file of images) {
-        const reader = new FileReader()
-        const base64String = await new Promise<string>((resolve, reject) => {
-          reader.onloadend = () => {
-            resolve(reader.result as string)
-          }
-          reader.onerror = reject
-          reader.readAsDataURL(file)
-        })
-        imageUrls.push(base64String)
+      for (let i = 0; i < images.length; i++) {
+        const file = images[i]
+        const options = imageOptions[i]
+        
+        // 갤러리용 이미지만 처리
+        if (options.showInGallery) {
+          const reader = new FileReader()
+          const base64String = await new Promise<string>((resolve, reject) => {
+            reader.onloadend = () => {
+              resolve(reader.result as string)
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          })
+          galleryImages.push(base64String)
+        }
       }
 
       const response = await fetch('/api/shop/products', {
@@ -130,7 +177,7 @@ export default function ShopAddPage() {
           features: formData.features ? formData.features.split(',').map(f => f.trim()) : [],
           sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()) : [],
           colors: formData.colors ? formData.colors.split(',').map(c => c.trim()) : [],
-          images: imageUrls,
+          images: galleryImages, // 상단 갤러리용 이미지만
         })
       })
 
@@ -371,7 +418,7 @@ export default function ShopAddPage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이미지 (최대 5개)
+                      이미지 (최대 10개)
                     </label>
                     <input
                       type="file"
@@ -381,25 +428,71 @@ export default function ShopAddPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
                     />
                     
-                    {/* 이미지 미리보기 */}
+                    {/* 이미지 미리보기 및 옵션 설정 */}
                     {imagePreviews.length > 0 && (
-                      <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {imagePreviews.map((preview, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={preview}
-                              alt={`미리보기 ${index + 1}`}
-                              className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeImage(index)}
-                              className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-600 mb-3">
+                          각 이미지의 용도를 선택하세요. 이미지를 클릭하면 상세 설명에 삽입됩니다.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                              <div className="relative group mb-3">
+                                <img
+                                  src={preview}
+                                  alt={`미리보기 ${index + 1}`}
+                                  className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:border-[#f57520] transition-colors"
+                                  onClick={() => {
+                                    if (imageOptions[index]?.insertToContent) {
+                                      insertImageAtCursor(preview)
+                                    }
+                                  }}
+                                  title={imageOptions[index]?.insertToContent ? "클릭하여 상세 설명에 삽입" : "본문 삽입이 비활성화됨"}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                                >
+                                  ×
+                                </button>
+                                {imageOptions[index]?.insertToContent && (
+                                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                    삽입 가능
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* 이미지 용도 선택 */}
+                              <div className="space-y-2">
+                                <div className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    id={`gallery-${index}`}
+                                    checked={imageOptions[index]?.showInGallery || false}
+                                    onChange={(e) => updateImageOption(index, 'showInGallery', e.target.checked)}
+                                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                                  />
+                                  <label htmlFor={`gallery-${index}`} className="ml-2 text-sm text-gray-700">
+                                    상단 갤러리에 표시
+                                  </label>
+                                </div>
+                                <div className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    id={`content-${index}`}
+                                    checked={imageOptions[index]?.insertToContent || false}
+                                    onChange={(e) => updateImageOption(index, 'insertToContent', e.target.checked)}
+                                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                                  />
+                                  <label htmlFor={`content-${index}`} className="ml-2 text-sm text-gray-700">
+                                    본문에 삽입 가능
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

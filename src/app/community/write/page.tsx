@@ -17,6 +17,10 @@ function WriteContent() {
   
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imageOptions, setImageOptions] = useState<Array<{
+    showInGallery: boolean
+    insertToContent: boolean
+  }>>([])
   const [isUploading, setIsUploading] = useState(false)
   const [cursorPosition, setCursorPosition] = useState(0)
 
@@ -42,11 +46,11 @@ function WriteContent() {
     const files = e.target.files
     if (!files) return
 
-    const maxImages = 5
+    const maxImages = 10
     const remainingSlots = maxImages - images.length
     
     if (remainingSlots <= 0) {
-      alert('최대 5개의 이미지만 업로드할 수 있습니다.')
+      alert('최대 10개의 이미지를 업로드할 수 있습니다.')
       return
     }
 
@@ -69,17 +73,32 @@ function WriteContent() {
     })
 
     setImages(prev => [...prev, ...newImages])
+
+    // 기본 옵션 설정 (갤러리와 본문 삽입 모두 가능)
+    const newOptions = newImages.map(() => ({
+      showInGallery: true,
+      insertToContent: true
+    }))
+    setImageOptions([...imageOptions, ...newOptions])
   }
 
   const removeImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index)
     const newPreviews = imagePreviews.filter((_, i) => i !== index)
+    const newOptions = imageOptions.filter((_, i) => i !== index)
     setImages(newImages)
     setImagePreviews(newPreviews)
+    setImageOptions(newOptions)
+  }
+
+  const updateImageOption = (index: number, option: 'showInGallery' | 'insertToContent', value: boolean) => {
+    const newOptions = [...imageOptions]
+    newOptions[index] = { ...newOptions[index], [option]: value }
+    setImageOptions(newOptions)
   }
 
   const insertImageToContent = (imageUrl: string) => {
-    const imageTag = `\n![이미지](${imageUrl})\n`
+    const imageTag = `\n[IMAGE:${imageUrl}]\n`
     const beforeCursor = formData.content.substring(0, cursorPosition)
     const afterCursor = formData.content.substring(cursorPosition)
     
@@ -111,8 +130,26 @@ function WriteContent() {
     setIsUploading(true)
     
     try {
-      // TODO: 실제로는 이미지를 먼저 서버에 업로드하고 URL을 받아와야 함
-      // 현재는 이미지 없이 텍스트만 저장
+      // 갤러리용 이미지만 Base64로 인코딩
+      const galleryImages: string[] = []
+      
+      for (let i = 0; i < images.length; i++) {
+        const file = images[i]
+        const options = imageOptions[i]
+        
+        // 갤러리용 이미지만 처리
+        if (options.showInGallery) {
+          const reader = new FileReader()
+          const base64String = await new Promise<string>((resolve, reject) => {
+            reader.onloadend = () => {
+              resolve(reader.result as string)
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          })
+          galleryImages.push(base64String)
+        }
+      }
       
       const response = await fetch('/api/community/write', {
         method: 'POST',
@@ -123,7 +160,8 @@ function WriteContent() {
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
-          category: category
+          category: category,
+          images: galleryImages // 갤러리용 이미지만
         })
       })
 
@@ -222,44 +260,76 @@ function WriteContent() {
                         />
                       </label>
                       <span className="text-sm text-gray-500">
-                        {images.length}/5 이미지 업로드됨
+                        {images.length}/10 이미지 업로드됨
                       </span>
                     </div>
 
-                    {/* 이미지 미리보기 */}
+                    {/* 이미지 미리보기 및 옵션 설정 */}
                     {imagePreviews.length > 0 && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium text-gray-700">업로드된 이미지</h4>
-                          <span className="text-xs text-gray-500">클릭하여 본문에 삽입</span>
+                          <span className="text-xs text-gray-500">각 이미지의 용도를 선택하세요</span>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {imagePreviews.map((preview, index) => (
-                            <div key={index} className="relative group border-2 border-dashed border-gray-200 rounded-lg p-2 hover:border-gray-300 transition-colors">
-                              <img
-                                src={preview}
-                                alt={`미리보기 ${index + 1}`}
-                                className="w-full h-20 object-cover rounded cursor-pointer"
-                                onClick={() => insertImageToContent(preview)}
-                                title="클릭하여 본문에 삽입"
-                              />
-                              <div className="absolute -top-2 -right-2">
+                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                              <div className="relative group mb-3">
+                                <img
+                                  src={preview}
+                                  alt={`미리보기 ${index + 1}`}
+                                  className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:border-[#f57520] transition-colors"
+                                  onClick={() => {
+                                    if (imageOptions[index]?.insertToContent) {
+                                      insertImageToContent(preview)
+                                    }
+                                  }}
+                                  title={imageOptions[index]?.insertToContent ? "클릭하여 본문에 삽입" : "본문 삽입이 비활성화됨"}
+                                />
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     removeImage(index)
                                   }}
-                                  className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition-colors"
+                                  className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
                                   title="이미지 삭제"
                                 >
                                   ×
                                 </button>
+                                {imageOptions[index]?.insertToContent && (
+                                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                    삽입 가능
+                                  </div>
+                                )}
                               </div>
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded flex items-center justify-center">
-                                <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                  클릭하여 삽입
-                                </span>
+                              
+                              {/* 이미지 용도 선택 */}
+                              <div className="space-y-2">
+                                <div className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    id={`gallery-${index}`}
+                                    checked={imageOptions[index]?.showInGallery || false}
+                                    onChange={(e) => updateImageOption(index, 'showInGallery', e.target.checked)}
+                                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                                  />
+                                  <label htmlFor={`gallery-${index}`} className="ml-2 text-sm text-gray-700">
+                                    상단 갤러리에 표시
+                                  </label>
+                                </div>
+                                <div className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    id={`content-${index}`}
+                                    checked={imageOptions[index]?.insertToContent || false}
+                                    onChange={(e) => updateImageOption(index, 'insertToContent', e.target.checked)}
+                                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                                  />
+                                  <label htmlFor={`content-${index}`} className="ml-2 text-sm text-gray-700">
+                                    본문에 삽입 가능
+                                  </label>
+                                </div>
                               </div>
                             </div>
                           ))}

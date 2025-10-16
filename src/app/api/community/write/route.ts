@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, content, category } = body
+    const { title, content, category, images } = body
 
     // 유효성 검사
     if (!title || !content || !category) {
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
         content,
         category: upperCategory as 'BOARD' | 'LOUNGE',
         authorId: user.id,
+        images: images || [], // 갤러리용 이미지
       },
       include: {
         author: {
