@@ -20,10 +20,38 @@ export default function SignupPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // 전화번호 자동 포맷팅
+    if (name === 'phone') {
+      // 숫자만 추출
+      const numbers = value.replace(/\D/g, '')
+      
+      // 3-4-4 형식으로 포맷팅
+      let formatted = numbers
+      if (numbers.length >= 3) {
+        formatted = numbers.slice(0, 3)
+        if (numbers.length >= 7) {
+          formatted += '-' + numbers.slice(3, 7)
+          if (numbers.length >= 11) {
+            formatted += '-' + numbers.slice(7, 11)
+          } else if (numbers.length > 7) {
+            formatted += '-' + numbers.slice(7)
+          }
+        } else if (numbers.length > 3) {
+          formatted += '-' + numbers.slice(3)
+        }
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: formatted
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
     
     // 입력 시 해당 필드의 에러 메시지 제거
     if (errors[name]) {
@@ -197,7 +225,7 @@ export default function SignupPage() {
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
                       errors.studentId ? 'border-red-500' : 'border-gray-300 focus:border-black'
                     }`}
-                    placeholder="20241234"
+                    placeholder="예: 2020112008"
                     maxLength={8}
                   />
                   {errors.studentId && (
@@ -219,7 +247,7 @@ export default function SignupPage() {
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
                       errors.major ? 'border-red-500' : 'border-gray-300 focus:border-black'
                     }`}
-                    placeholder="예: GCS:Web, 글로벌커뮤니케이션학, 디지털미디어학 등"
+                    placeholder="예: 산업시스템공학과"
                   />
                   {errors.major && (
                     <p className="mt-1 text-sm text-red-500">{errors.major}</p>
