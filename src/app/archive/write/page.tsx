@@ -52,8 +52,8 @@ function ArchiveWriteContent() {
     const files = Array.from(e.target.files || [])
     const imageFiles = files.filter(file => file.type.startsWith('image/'))
     
-    if (formData.images.length + imageFiles.length > 5) {
-      setMessage('최대 5개의 이미지만 업로드할 수 있습니다.')
+    if (formData.images.length + imageFiles.length > 10) {
+      setMessage('최대 10개의 이미지를 업로드할 수 있습니다.')
       setMessageType('error')
       return
     }
@@ -64,6 +64,28 @@ function ArchiveWriteContent() {
     // 미리보기 생성
     const newPreviews = imageFiles.map(file => URL.createObjectURL(file))
     setFormData(prev => ({ ...prev, imagePreviews: [...prev.imagePreviews, ...newPreviews] }))
+  }
+
+  const insertImageAtCursor = (imageUrl: string) => {
+    const textarea = document.getElementById('content') as HTMLTextAreaElement
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const before = formData.content.substring(0, start)
+    const after = formData.content.substring(end)
+    
+    const imageTag = `\n\n[IMAGE:${imageUrl}]\n\n`
+    const newContent = before + imageTag + after
+    
+    setFormData(prev => ({ ...prev, content: newContent }))
+    
+    // 커서 위치 업데이트
+    setTimeout(() => {
+      const newCursorPos = start + imageTag.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+      textarea.focus()
+    }, 0)
   }
 
   const removeImage = (index: number) => {
@@ -261,7 +283,7 @@ function ArchiveWriteContent() {
                 {/* 이미지 업로드 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    이미지 (최대 5개)
+                    이미지 (최대 10개)
                   </label>
                   <input
                     type="file"
@@ -271,25 +293,35 @@ function ArchiveWriteContent() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
                   />
                   
-                  {/* 이미지 미리보기 */}
+                  {/* 이미지 미리보기 및 삽입 버튼 */}
                   {formData.imagePreviews.length > 0 && (
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {formData.imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={preview}
-                            alt={`미리보기 ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-3">
+                        이미지를 클릭하면 글 내용에 삽입됩니다. 커서 위치에 이미지가 삽입됩니다.
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {formData.imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={preview}
+                              alt={`미리보기 ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:border-[#f57520] transition-colors"
+                              onClick={() => insertImageAtCursor(preview)}
+                              title="클릭하여 글에 삽입"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                            >
+                              ×
+                            </button>
+                            <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                              삽입
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

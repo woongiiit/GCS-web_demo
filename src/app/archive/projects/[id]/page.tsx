@@ -118,7 +118,7 @@ export default function ProjectDetailPage() {
                         alt={`${project.title} - 이미지 ${currentImageIndex + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.currentTarget.src = '/images/placeholder-project.jpg'
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+UHJvamVjdCBJbWFnZTwvdGV4dD4KPC9zdmc+'
                         }}
                       />
                     </div>
@@ -222,11 +222,36 @@ export default function ProjectDetailPage() {
                     <h2 className="text-2xl font-bold text-black mb-4">프로젝트 상세</h2>
                     <div className="bg-gray-50 rounded-lg p-6">
                       <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-                        {project.content.split('\n').map((paragraph: string, index: number) => (
-                          <p key={index} className="mb-4">
-                            {paragraph}
-                          </p>
-                        ))}
+                        {project.content.split('\n').map((paragraph: string, index: number) => {
+                          // 이미지 태그 파싱
+                          const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
+                          if (imageMatch) {
+                            return (
+                              <div key={index} className="my-6">
+                                <img
+                                  src={imageMatch[1]}
+                                  alt="프로젝트 이미지"
+                                  className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
+                                  onError={(e) => {
+                                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+UHJvamVjdCBJbWFnZTwvdGV4dD4KPC9zdmc+'
+                                  }}
+                                />
+                              </div>
+                            )
+                          }
+                          
+                          // 빈 줄 처리
+                          if (paragraph.trim() === '') {
+                            return <br key={index} />
+                          }
+                          
+                          // 일반 텍스트
+                          return (
+                            <p key={index} className="mb-4">
+                              {paragraph}
+                            </p>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
