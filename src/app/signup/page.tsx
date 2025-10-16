@@ -75,8 +75,8 @@ export default function SignupPage() {
     // 학번 검증
     if (!formData.studentId.trim()) {
       newErrors.studentId = '학번을 입력해주세요.'
-    } else if (!/^\d{8}$/.test(formData.studentId.trim())) {
-      newErrors.studentId = '학번은 8자리 숫자여야 합니다.'
+    } else if (!/^\d{10}$/.test(formData.studentId.trim())) {
+      newErrors.studentId = '학번은 10자리 숫자여야 합니다.'
     }
 
     // 주전공 검증
@@ -226,7 +226,7 @@ export default function SignupPage() {
                       errors.studentId ? 'border-red-500' : 'border-gray-300 focus:border-black'
                     }`}
                     placeholder="예: 2020112008"
-                    maxLength={8}
+                    maxLength={10}
                   />
                   {errors.studentId && (
                     <p className="mt-1 text-sm text-red-500">{errors.studentId}</p>

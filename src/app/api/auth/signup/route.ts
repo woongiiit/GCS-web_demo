@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 학번 형식 검증 (8자리 숫자)
-    if (!/^\d{8}$/.test(studentId)) {
+    // 학번 형식 검증 (10자리 숫자)
+    if (!/^\d{10}$/.test(studentId)) {
       return NextResponse.json(
-        { error: '학번은 8자리 숫자여야 합니다.' },
+        { error: '학번은 10자리 숫자여야 합니다.' },
         { status: 400 }
       )
     }
