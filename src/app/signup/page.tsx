@@ -106,18 +106,36 @@ export default function SignupPage() {
     setIsSubmitting(true)
     
     try {
-      // 실제 회원가입 API 호출 로직
-      console.log('회원가입 데이터:', formData)
-      
-      // 임시로 2초 대기 (실제 API 호출 시뮬레이션)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // 성공 시 로그인 페이지로 이동하거나 성공 메시지 표시
-      alert('회원가입이 완료되었습니다!')
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name,
+          studentId: formData.studentId,
+          major: formData.major,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // 성공 시 로그인 페이지로 이동
+        alert('회원가입이 완료되었습니다! 자동으로 로그인되었습니다.')
+        window.location.href = '/'
+      } else {
+        // 서버에서 반환된 에러 메시지 표시
+        alert(data.error || '회원가입 중 오류가 발생했습니다.')
+      }
       
     } catch (error) {
       console.error('회원가입 오류:', error)
-      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.')
+      alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
       setIsSubmitting(false)
     }
