@@ -17,12 +17,6 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const majors = [
-    'GCS:Web',
-    '글로벌커뮤니케이션학',
-    '디지털미디어학',
-    '국제통상학'
-  ]
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -58,8 +52,10 @@ export default function SignupPage() {
     }
 
     // 주전공 검증
-    if (!formData.major) {
-      newErrors.major = '주전공을 선택해주세요.'
+    if (!formData.major.trim()) {
+      newErrors.major = '주전공을 입력해주세요.'
+    } else if (formData.major.trim().length < 2) {
+      newErrors.major = '주전공은 2글자 이상이어야 합니다.'
     }
 
     // 이메일 검증
@@ -214,7 +210,8 @@ export default function SignupPage() {
                   <label htmlFor="major" className="block text-sm font-medium text-black mb-2">
                     주전공 *
                   </label>
-                  <select
+                  <input
+                    type="text"
                     id="major"
                     name="major"
                     value={formData.major}
@@ -222,14 +219,8 @@ export default function SignupPage() {
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
                       errors.major ? 'border-red-500' : 'border-gray-300 focus:border-black'
                     }`}
-                  >
-                    <option value="">주전공을 선택하세요</option>
-                    {majors.map((major) => (
-                      <option key={major} value={major}>
-                        {major}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="예: GCS:Web, 글로벌커뮤니케이션학, 디지털미디어학 등"
+                  />
                   {errors.major && (
                     <p className="mt-1 text-sm text-red-500">{errors.major}</p>
                   )}
