@@ -164,7 +164,7 @@ function CommunityDetailContent() {
                   </div>
                   
                   {/* 관리자/작성자 액션 버튼 */}
-                  {(permissions.canDeletePost(role) || post.authorId === post.author.id) && (
+                  {permissions.canEditPost(role, post.authorId, post.author.id) && (
                     <div className="flex space-x-2">
                       <button
                         onClick={handleDelete}
