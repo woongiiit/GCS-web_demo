@@ -85,8 +85,8 @@ export default function Home() {
   }
   return (
     <>
-      {/* 모바일 전용 레이아웃 */}
-      <div className="md:hidden min-h-screen bg-[#f57520] -mt-4">
+      {/* 통합 레이아웃 - 모든 화면 크기에서 동일 */}
+      <div className="min-h-screen bg-[#f57520] -mt-4">
         {/* 모바일 주황색 섹션 - 텍스트만 포함 */}
         <div className="relative h-[clamp(240px,35vh,280px)] bg-[#f57520] pt-16">
           {/* GCS:Web 텍스트 - 주황색 영역의 왼쪽 아래 끝에 맞닿게 배치 */}
@@ -321,8 +321,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 데스크톱 전용 레이아웃 */}
-      <div className="hidden md:block">
+      {/* 데스크톱 전용 레이아웃 - 제거됨 */}
+      <div className="hidden">
         <div className="max-w-6xl mx-auto pt-32">
           {/* 페이지 제목 */}
           <div className="text-center mb-8">
