@@ -358,84 +358,10 @@ export default function ShopAddPage() {
                         placeholder="한 줄 소개"
                       />
                     </div>
-
-                    {/* 상세 설명 */}
-                    <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                        상세 설명 *
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        rows={6}
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors resize-none"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="상품에 대한 자세한 설명을 입력하세요"
-                      />
-                    </div>
                   </div>
                 </div>
 
-                {/* 가격 정보 */}
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold text-black mb-4">가격 정보</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* 판매가 */}
-                    <div>
-                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
-                        판매가 *
-                      </label>
-                      <input
-                        id="price"
-                        name="price"
-                        type="number"
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.price}
-                        onChange={handleInputChange}
-                        placeholder="25000"
-                      />
-                    </div>
-
-                    {/* 정가 */}
-                    <div>
-                      <label htmlFor="originalPrice" className="block text-sm font-medium text-gray-700 mb-2">
-                        정가
-                      </label>
-                      <input
-                        id="originalPrice"
-                        name="originalPrice"
-                        type="number"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.originalPrice}
-                        onChange={handleInputChange}
-                        placeholder="30000"
-                      />
-                    </div>
-
-                    {/* 할인율 (자동 계산) */}
-                    <div>
-                      <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-2">
-                        할인율 (%) - 자동 계산
-                      </label>
-                      <input
-                        id="discount"
-                        name="discount"
-                        type="number"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                        value={formData.discount}
-                        readOnly
-                        placeholder="정가와 판매가를 입력하면 자동으로 계산됩니다"
-                      />
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* 이미지 업로드 */}
+                {/* 상품 이미지 */}
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <h3 className="text-lg font-semibold text-black mb-4">상품 이미지</h3>
                   
@@ -519,6 +445,84 @@ export default function ShopAddPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* 상세 설명 */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold text-black mb-4">상세 설명</h3>
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                      상세 설명 *
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows={6}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors resize-none"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        placeholder="상품에 대한 자세한 설명을 입력하세요"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 가격 정보 */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold text-black mb-4">가격 정보</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* 판매가 */}
+                    <div>
+                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+                        판매가 *
+                      </label>
+                      <input
+                        id="price"
+                        name="price"
+                        type="number"
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                        value={formData.price}
+                        onChange={handleInputChange}
+                        placeholder="25000"
+                      />
+                    </div>
+
+                    {/* 정가 */}
+                    <div>
+                      <label htmlFor="originalPrice" className="block text-sm font-medium text-gray-700 mb-2">
+                        정가
+                      </label>
+                      <input
+                        id="originalPrice"
+                        name="originalPrice"
+                        type="number"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                        value={formData.originalPrice}
+                        onChange={handleInputChange}
+                        placeholder="30000"
+                      />
+                    </div>
+
+                    {/* 할인율 (자동 계산) */}
+                    <div>
+                      <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-2">
+                        할인율 (%) - 자동 계산
+                      </label>
+                      <input
+                        id="discount"
+                        name="discount"
+                        type="number"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                        value={formData.discount}
+                        readOnly
+                        placeholder="정가와 판매가를 입력하면 자동으로 계산됩니다"
+                      />
+                    </div>
+                  </div>
+
                 </div>
 
                 {/* 상품 옵션 */}
