@@ -65,7 +65,6 @@ model Post {
   @@index([category, createdAt])
   @@index([authorId, createdAt])
   @@index([createdAt, category])
-  @@index([category, isFeatured])
   @@map("posts")
 }
 
