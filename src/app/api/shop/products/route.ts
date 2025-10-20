@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { permissions, permissionErrors } from '@/lib/permissions'
 import { withCache, generateCacheKey, invalidateCache } from '@/lib/cache'
 
+// 동적 렌더링 강제 설정
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   try {
     // 인증 확인 및 사용자 정보 가져오기

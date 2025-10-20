@@ -13,7 +13,7 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Railway에서 critters 모듈 오류로 인해 비활성화
   },
   compress: true,
 }

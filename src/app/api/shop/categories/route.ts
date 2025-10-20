@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// 동적 렌더링 강제 설정
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     const categories = await prisma.category.findMany({
