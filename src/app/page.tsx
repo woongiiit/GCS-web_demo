@@ -94,14 +94,14 @@ export default function Home() {
             GCS:Web
           </div>
           
-          {/* 동국대학교 텍스트 */}
-          <div className="absolute bottom-[31%] right-[20%] text-white italic text-[clamp(12px,3.5vw,15px)] transform rotate-[23deg]">
-            Dongguk University
+          {/* 동국대학교 텍스트와 흰색 바들을 통합 컨테이너로 관리 - 모든 환경에서 적절한 간격 */}
+          <div className="absolute bottom-[clamp(18vh,28%,40vh)] md:bottom-[clamp(18vh,28%,38vh)] left-[clamp(3vw,5vw,8vw)] transform rotate-[23deg] origin-bottom-left">
+            <div className="text-white italic text-[clamp(12px,3.5vw,15px)] mb-[clamp(4px,1vw,6px)]">
+              Dongguk University
+            </div>
+            <div className="w-[clamp(160px,60vw,224px)] h-[clamp(1px,0.3vw,2px)] bg-white mb-[clamp(2px,0.5vw,4px)]"></div>
+            <div className="w-[clamp(160px,60vw,224px)] h-[clamp(12px,3.5vw,16px)] bg-white"></div>
           </div>
-          
-          {/* 흰색 직사각형 바 */}
-          <div className="absolute bottom-[33%] right-[16%] w-[clamp(160px,60vw,224px)] h-1 bg-white transform rotate-[23deg]"></div>
-          <div className="absolute bottom-[27.5%] right-[17%] w-[clamp(160px,60vw,224px)] h-[clamp(12px,3.5vw,16px)] bg-white transform rotate-[20deg]"></div>
         </div>
 
         {/* 주황색 직사각형들을 위한 영역 */}
