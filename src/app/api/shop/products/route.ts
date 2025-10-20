@@ -28,7 +28,6 @@ export async function POST(request: Request) {
       price,
       originalPrice,
       discount,
-      stock,
       categoryId,
       images,
       brand,
@@ -68,7 +67,7 @@ export async function POST(request: Request) {
         price: parseInt(price),
         originalPrice: originalPrice ? parseInt(originalPrice) : null,
         discount: discount ? parseInt(discount) : null,
-        stock: stock ? parseInt(stock) : 0,
+        stock: 0, // 재고 수량은 항상 0으로 설정
         categoryId,
         images: images || [], // 갤러리용 이미지만 저장
         brand: brand || null,

@@ -16,9 +16,8 @@ export default function ShopAddPage() {
     price: '',
     originalPrice: '',
     discount: '',
-    stock: '',
     categoryId: '',
-    brand: '',
+    project: '',
     tags: '',
     features: '',
     sizes: '',
@@ -46,6 +45,32 @@ export default function ShopAddPage() {
   useEffect(() => {
     fetchCategories()
   }, [])
+
+  // 할인율 자동 계산
+  useEffect(() => {
+    if (formData.price && formData.originalPrice) {
+      const price = parseInt(formData.price)
+      const originalPrice = parseInt(formData.originalPrice)
+      
+      if (originalPrice > price && originalPrice > 0) {
+        const discount = Math.round(((originalPrice - price) / originalPrice) * 100)
+        setFormData(prev => ({
+          ...prev,
+          discount: discount.toString()
+        }))
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          discount: ''
+        }))
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        discount: ''
+      }))
+    }
+  }, [formData.price, formData.originalPrice])
 
   const fetchCategories = async () => {
     try {
@@ -185,7 +210,7 @@ export default function ShopAddPage() {
           price: parseInt(formData.price),
           originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : null,
           discount: formData.discount ? parseInt(formData.discount) : null,
-          stock: formData.stock ? parseInt(formData.stock) : 0,
+          brand: formData.project, // project를 brand로 매핑
           tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
           features: formData.features ? formData.features.split(',').map(f => f.trim()) : [],
           sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()) : [],
@@ -302,19 +327,19 @@ export default function ShopAddPage() {
                       />
                     </div>
 
-                    {/* 브랜드 */}
+                    {/* 프로젝트 */}
                     <div>
-                      <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-2">
-                        브랜드
+                      <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
+                        프로젝트
                       </label>
                       <input
-                        id="brand"
-                        name="brand"
+                        id="project"
+                        name="project"
                         type="text"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.brand}
+                        value={formData.project}
                         onChange={handleInputChange}
-                        placeholder="DEUX"
+                        placeholder="프로젝트명을 입력하세요"
                       />
                     </div>
 
@@ -391,38 +416,23 @@ export default function ShopAddPage() {
                       />
                     </div>
 
-                    {/* 할인율 */}
+                    {/* 할인율 (자동 계산) */}
                     <div>
                       <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-2">
-                        할인율 (%)
+                        할인율 (%) - 자동 계산
                       </label>
                       <input
                         id="discount"
                         name="discount"
                         type="number"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                         value={formData.discount}
-                        onChange={handleInputChange}
-                        placeholder="20"
+                        readOnly
+                        placeholder="정가와 판매가를 입력하면 자동으로 계산됩니다"
                       />
                     </div>
                   </div>
 
-                  {/* 재고 */}
-                  <div className="mt-4">
-                    <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
-                      재고 수량
-                    </label>
-                    <input
-                      id="stock"
-                      name="stock"
-                      type="number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                      value={formData.stock}
-                      onChange={handleInputChange}
-                      placeholder="100"
-                    />
-                  </div>
                 </div>
 
                 {/* 이미지 업로드 */}
