@@ -29,7 +29,15 @@ export async function GET(request: Request) {
 
       const news = await prisma.news.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          summary: true,
+          year: true,
+          images: true,
+          isFeatured: true,
+          createdAt: true,
           author: {
             select: {
               id: true,
@@ -60,16 +68,16 @@ export async function GET(request: Request) {
         byYear: newsByYear,
         count: news.length
       }
-    }, 300000) // 5분 캐시
+    }, 900000) // 15분 캐시
 
     return NextResponse.json(
       result,
       { 
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
-          'CDN-Cache-Control': 'max-age=300',
-          'Vercel-CDN-Cache-Control': 'max-age=300'
+          'Cache-Control': 'public, max-age=900, stale-while-revalidate=1800',
+          'CDN-Cache-Control': 'max-age=900',
+          'Vercel-CDN-Cache-Control': 'max-age=900'
         }
       }
     )

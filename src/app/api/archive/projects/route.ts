@@ -29,7 +29,15 @@ export async function GET(request: Request) {
 
       const projects = await prisma.project.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          year: true,
+          teamMembers: true,
+          images: true,
+          isFeatured: true,
+          createdAt: true,
           author: {
             select: {
               id: true,
@@ -60,16 +68,16 @@ export async function GET(request: Request) {
         byYear: projectsByYear,
         count: projects.length
       }
-    }, 600000) // 10분 캐시
+    }, 1800000) // 30분 캐시
 
     return NextResponse.json(
       result,
       { 
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200',
-          'CDN-Cache-Control': 'max-age=600',
-          'Vercel-CDN-Cache-Control': 'max-age=600'
+          'Cache-Control': 'public, max-age=1800, stale-while-revalidate=3600',
+          'CDN-Cache-Control': 'max-age=1800',
+          'Vercel-CDN-Cache-Control': 'max-age=1800'
         }
       }
     )

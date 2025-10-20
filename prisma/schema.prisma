@@ -64,6 +64,8 @@ model Post {
 
   @@index([category, createdAt])
   @@index([authorId, createdAt])
+  @@index([createdAt, category])
+  @@index([category, isFeatured])
   @@map("posts")
 }
 
@@ -131,6 +133,8 @@ model Product {
   @@index([isBestItem], map: "idx_products_best_item")
   @@index([isActive, createdAt])
   @@index([isActive, isBestItem, createdAt])
+  @@index([isActive, categoryId, createdAt])
+  @@index([isBestItem, isActive])
   @@map("products")
 }
 
@@ -215,6 +219,8 @@ model Project {
   @@index([createdAt])
   @@index([authorId, isFeatured])
   @@index([isFeatured, year, createdAt])
+  @@index([year, isFeatured, createdAt])
+  @@index([createdAt, isFeatured])
   @@map("projects")
 }
 
@@ -236,6 +242,8 @@ model News {
   @@index([year, createdAt])
   @@index([isFeatured, createdAt])
   @@index([authorId, createdAt])
+  @@index([year, isFeatured, createdAt])
+  @@index([createdAt, isFeatured])
   @@map("news")
 }
 

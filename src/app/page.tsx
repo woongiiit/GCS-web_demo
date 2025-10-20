@@ -57,23 +57,27 @@ export default function Home() {
 
   const fetchHomeData = async () => {
     try {
-      // 프로젝트 조회 (모든 featured 프로젝트)
-      const projectsRes = await fetch('/api/archive/projects?featured=true')
-      const projectsData = await projectsRes.json()
+      // 병렬로 데이터 조회하여 성능 최적화
+      const [projectsRes, newsRes, productsRes] = await Promise.all([
+        fetch('/api/archive/projects?featured=true'),
+        fetch('/api/archive/news'),
+        fetch('/api/shop/products?bestItem=true')
+      ])
+
+      const [projectsData, newsData, productsData] = await Promise.all([
+        projectsRes.json(),
+        newsRes.json(),
+        productsRes.json()
+      ])
+
       if (projectsData.success) {
         setProjects(projectsData.data)
       }
 
-      // Archive 뉴스 조회 (최신 3개)
-      const newsRes = await fetch('/api/archive/news')
-      const newsData = await newsRes.json()
       if (newsData.success) {
         setNews(newsData.data.slice(0, 3))
       }
 
-      // Best Item 상품 조회
-      const productsRes = await fetch('/api/shop/products?bestItem=true')
-      const productsData = await productsRes.json()
       if (productsData.success) {
         setBestProducts(productsData.data.slice(0, 3))
       }

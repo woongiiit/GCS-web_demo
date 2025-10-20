@@ -40,16 +40,21 @@ function ArchiveContent() {
   const fetchArchiveData = async () => {
     setIsLoading(true)
     try {
-      // 프로젝트 조회
-      const projectsRes = await fetch('/api/archive/projects')
-      const projectsData = await projectsRes.json()
+      // 병렬로 데이터 조회하여 성능 최적화
+      const [projectsRes, newsRes] = await Promise.all([
+        fetch('/api/archive/projects'),
+        fetch('/api/archive/news')
+      ])
+
+      const [projectsData, newsData] = await Promise.all([
+        projectsRes.json(),
+        newsRes.json()
+      ])
+
       if (projectsData.success) {
         setProjects(projectsData.byYear)
       }
 
-      // 뉴스 조회
-      const newsRes = await fetch('/api/archive/news')
-      const newsData = await newsRes.json()
       if (newsData.success) {
         setNews(newsData.byYear)
       }
