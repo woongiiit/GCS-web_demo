@@ -77,16 +77,29 @@ function ArchiveWriteContent() {
     setImageOptions([...imageOptions, ...newOptions])
   }
 
-  const insertImageAtCursor = (imageUrl: string) => {
+  const insertImageAtCursor = async (imageIndex: number) => {
     const textarea = document.getElementById('content') as HTMLTextAreaElement
     if (!textarea) return
+
+    const file = formData.images[imageIndex]
+    if (!file) return
+
+    // 파일을 Base64로 변환
+    const reader = new FileReader()
+    const base64String = await new Promise<string>((resolve, reject) => {
+      reader.onloadend = () => {
+        resolve(reader.result as string)
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
 
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
     const before = formData.content.substring(0, start)
     const after = formData.content.substring(end)
     
-    const imageTag = `\n\n[IMAGE:${imageUrl}]\n\n`
+    const imageTag = `\n\n[IMAGE:${base64String}]\n\n`
     const newContent = before + imageTag + after
     
     setFormData(prev => ({ ...prev, content: newContent }))
@@ -334,7 +347,7 @@ function ArchiveWriteContent() {
                                 className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:border-[#f57520] transition-colors"
                                 onClick={() => {
                                   if (imageOptions[index]?.insertToContent) {
-                                    insertImageAtCursor(preview)
+                                    insertImageAtCursor(index)
                                   }
                                 }}
                                 title={imageOptions[index]?.insertToContent ? "클릭하여 글에 삽입" : "본문 삽입이 비활성화됨"}
