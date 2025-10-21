@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
@@ -15,14 +15,20 @@ function ArchiveWriteContent() {
     type: 'project', // 'project' 또는 'news'
     year: new Date().getFullYear().toString(),
     members: '', // 프로젝트의 경우
-    images: [] as File[],
-    imagePreviews: [] as string[],
     isFeatured: false
   })
-  const [imageOptions, setImageOptions] = useState<Array<{
-    showInGallery: boolean
-    insertToContent: boolean
-  }>>([])
+  
+  // 리치 텍스트 에디터 관련 상태
+  const [editorContent, setEditorContent] = useState('')
+  const [isEditorFocused, setIsEditorFocused] = useState(false)
+  const [selectedText, setSelectedText] = useState('')
+  const [lastCursorPosition, setLastCursorPosition] = useState<Range | null>(null)
+  const editorRef = useRef<HTMLDivElement>(null)
+  
+  // 대표 이미지 관련 상태
+  const [coverImages, setCoverImages] = useState<File[]>([])
+  const [coverImagePreviews, setCoverImagePreviews] = useState<string[]>([])
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
@@ -52,78 +58,175 @@ function ArchiveWriteContent() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 대표 이미지 업로드
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     const imageFiles = files.filter(file => file.type.startsWith('image/'))
     
-    if (formData.images.length + imageFiles.length > 10) {
-      setMessage('최대 10개의 이미지를 업로드할 수 있습니다.')
+    if (coverImages.length + imageFiles.length > 5) {
+      setMessage('최대 5개의 대표 이미지를 업로드할 수 있습니다.')
       setMessageType('error')
       return
     }
 
-    const newImages = [...formData.images, ...imageFiles]
-    setFormData(prev => ({ ...prev, images: newImages }))
+    const newImages = [...coverImages, ...imageFiles]
+    setCoverImages(newImages)
 
     // 미리보기 생성
     const newPreviews = imageFiles.map(file => URL.createObjectURL(file))
-    setFormData(prev => ({ ...prev, imagePreviews: [...prev.imagePreviews, ...newPreviews] }))
+    setCoverImagePreviews(prev => [...prev, ...newPreviews])
 
-    // 기본 옵션 설정 (갤러리와 본문 삽입 모두 가능)
-    const newOptions = imageFiles.map(() => ({
-      showInGallery: true,
-      insertToContent: true
-    }))
-    setImageOptions([...imageOptions, ...newOptions])
+    // 파일 입력 초기화
+    e.target.value = ''
   }
 
-  const insertImageAtCursor = async (imageIndex: number) => {
-    const textarea = document.getElementById('content') as HTMLTextAreaElement
-    if (!textarea) return
+  const removeCoverImage = (index: number) => {
+    const newImages = coverImages.filter((_, i) => i !== index)
+    const newPreviews = coverImagePreviews.filter((_, i) => i !== index)
+    setCoverImages(newImages)
+    setCoverImagePreviews(newPreviews)
+  }
 
-    const file = formData.images[imageIndex]
-    if (!file) return
+  // 리치 텍스트 에디터 핸들러
+  const handleEditorChange = () => {
+    if (editorRef.current) {
+      const content = editorRef.current.innerHTML
+      setEditorContent(content)
+      setFormData(prev => ({ ...prev, content }))
+    }
+  }
 
-    // 파일을 Base64로 변환
-    const reader = new FileReader()
-    const base64String = await new Promise<string>((resolve, reject) => {
-      reader.onloadend = () => {
-        resolve(reader.result as string)
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const before = formData.content.substring(0, start)
-    const after = formData.content.substring(end)
-    
-    const imageTag = `\n\n[IMAGE:${base64String}]\n\n`
-    const newContent = before + imageTag + after
-    
-    setFormData(prev => ({ ...prev, content: newContent }))
-    
-    // 커서 위치 업데이트
+  const handleEditorFocus = () => {
+    setIsEditorFocused(true)
+    // 포커스 시 마지막 커서 위치 복원
     setTimeout(() => {
-      const newCursorPos = start + imageTag.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-      textarea.focus()
-    }, 0)
+      restoreCursorPosition()
+    }, 10)
   }
 
-  const removeImage = (index: number) => {
-    const newImages = formData.images.filter((_, i) => i !== index)
-    const newPreviews = formData.imagePreviews.filter((_, i) => i !== index)
-    const newOptions = imageOptions.filter((_, i) => i !== index)
-    setFormData(prev => ({ ...prev, images: newImages, imagePreviews: newPreviews }))
-    setImageOptions(newOptions)
+  const handleEditorBlur = () => {
+    setIsEditorFocused(false)
+    saveCursorPosition()
   }
 
-  const updateImageOption = (index: number, option: 'showInGallery' | 'insertToContent', value: boolean) => {
-    const newOptions = [...imageOptions]
-    newOptions[index] = { ...newOptions[index], [option]: value }
-    setImageOptions(newOptions)
+  const handleEditorSelection = () => {
+    const selection = window.getSelection()
+    if (selection) {
+      setSelectedText(selection.toString())
+    }
+  }
+
+  // 커서 위치 관리
+  const saveCursorPosition = () => {
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
+      setLastCursorPosition(selection.getRangeAt(0).cloneRange())
+    }
+  }
+
+  const restoreCursorPosition = () => {
+    if (lastCursorPosition && editorRef) {
+      const selection = window.getSelection()
+      if (selection) {
+        selection.removeAllRanges()
+        selection.addRange(lastCursorPosition)
+      }
+    }
+  }
+
+  // 포맷팅 함수들
+  const applyFormat = (command: string, value?: string) => {
+    document.execCommand(command, false, value)
+    editorRef.current?.focus()
+    handleEditorChange()
+  }
+
+  const handleBold = () => applyFormat('bold')
+  const handleItalic = () => applyFormat('italic')
+  const handleUnderline = () => applyFormat('underline')
+  const handleAlignLeft = () => applyFormat('justifyLeft')
+  const handleAlignCenter = () => applyFormat('justifyCenter')
+  const handleAlignRight = () => applyFormat('justifyRight')
+  const handleUndo = () => applyFormat('undo')
+  const handleRedo = () => applyFormat('redo')
+
+  const handleFontSize = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const size = e.target.value
+    applyFormat('fontSize', size)
+  }
+
+  const handleFontColor = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const color = e.target.value
+    applyFormat('foreColor', color)
+  }
+
+  const handleInsertLink = () => {
+    const url = prompt('링크 URL을 입력하세요:')
+    if (url) {
+      applyFormat('createLink', url)
+    }
+  }
+
+  // 이미지 삽입
+  const handleInsertImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    const file = files[0]
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const img = document.createElement('img')
+      img.src = reader.result as string
+      img.style.maxWidth = '100%'
+      img.style.height = 'auto'
+      img.style.border = '1px solid #e5e7eb'
+      img.style.borderRadius = '8px'
+      img.style.margin = '8px 0'
+
+      // 에디터에 포커스가 없으면 먼저 포커스
+      if (editorRef) {
+        editorRef.focus()
+
+        // 포커스 후 마지막 커서 위치 복원
+        setTimeout(() => {
+          const selection = window.getSelection()
+          let range: Range
+
+          if (lastCursorPosition && editorRef?.contains(lastCursorPosition.startContainer)) {
+            // 마지막 커서 위치가 유효한 경우
+            range = lastCursorPosition.cloneRange()
+            range.deleteContents()
+            range.insertNode(img)
+          } else if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
+            // 현재 선택 영역이 에디터 내부에 있는 경우
+            range = selection.getRangeAt(0)
+            range.deleteContents()
+            range.insertNode(img)
+          } else {
+            // 에디터 끝에 추가
+            range = document.createRange()
+            range.selectNodeContents(editorRef)
+            range.collapse(false) // 끝으로 이동
+            range.insertNode(img)
+          }
+
+          // 커서를 이미지 뒤로 이동
+          range.setStartAfter(img)
+          range.setEndAfter(img)
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+
+          // 새로운 커서 위치 저장
+          setLastCursorPosition(range.cloneRange())
+
+          handleEditorChange()
+        }, 20)
+      }
+
+      // 파일 입력 초기화
+      e.target.value = ''
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,25 +235,19 @@ function ArchiveWriteContent() {
     setMessage('')
 
     try {
-      // 갤러리용 이미지만 Base64로 인코딩
+      // 대표 이미지를 Base64로 인코딩
       const galleryImages: string[] = []
       
-      for (let i = 0; i < formData.images.length; i++) {
-        const file = formData.images[i]
-        const options = imageOptions[i]
-        
-        // 갤러리용 이미지만 처리
-        if (options.showInGallery) {
-          const reader = new FileReader()
-          const base64String = await new Promise<string>((resolve, reject) => {
-            reader.onloadend = () => {
-              resolve(reader.result as string)
-            }
-            reader.onerror = reject
-            reader.readAsDataURL(file)
-          })
-          galleryImages.push(base64String)
-        }
+      for (const file of coverImages) {
+        const reader = new FileReader()
+        const base64String = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            resolve(reader.result as string)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        galleryImages.push(base64String)
       }
       
       const response = await fetch('/api/archive/write', {
@@ -161,11 +258,11 @@ function ArchiveWriteContent() {
         credentials: 'include',
         body: JSON.stringify({
           title: formData.title,
-          content: formData.content,
+          content: editorContent, // 리치 텍스트 에디터 내용 사용
           type: formData.type,
           year: formData.year,
           members: formData.members,
-          images: galleryImages, // 갤러리용 이미지만
+          images: galleryImages, // 대표 이미지들
           isFeatured: formData.isFeatured
         })
       })
@@ -215,6 +312,13 @@ function ArchiveWriteContent() {
 
   return (
     <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
+      <style jsx>{`
+        [contentEditable]:empty:before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
+        }
+      `}</style>
       <div className="relative min-h-screen bg-white">
         {/* 상단 검은색 영역 */}
         <div className="bg-black pt-32 pb-8">
@@ -318,81 +422,37 @@ function ArchiveWriteContent() {
                   </div>
                 )}
 
-                {/* 이미지 업로드 */}
+                {/* 대표 이미지 업로드 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    이미지 (최대 10개)
+                    대표 이미지 (최대 5개)
                   </label>
                   <input
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={handleCoverImageUpload}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
                   />
                   
-                  {/* 이미지 미리보기 및 옵션 설정 */}
-                  {formData.imagePreviews.length > 0 && (
+                  {/* 대표 이미지 미리보기 */}
+                  {coverImagePreviews.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-sm text-gray-600 mb-3">
-                        각 이미지의 용도를 선택하세요. 이미지를 클릭하면 글 내용에 삽입됩니다.
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {formData.imagePreviews.map((preview, index) => (
-                          <div key={index} className="border border-gray-200 rounded-lg p-4">
-                            <div className="relative group mb-3">
-                              <img
-                                src={preview}
-                                alt={`미리보기 ${index + 1}`}
-                                className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:border-[#f57520] transition-colors"
-                                onClick={() => {
-                                  if (imageOptions[index]?.insertToContent) {
-                                    insertImageAtCursor(index)
-                                  }
-                                }}
-                                title={imageOptions[index]?.insertToContent ? "클릭하여 글에 삽입" : "본문 삽입이 비활성화됨"}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
-                              >
-                                ×
-                              </button>
-                              {imageOptions[index]?.insertToContent && (
-                                <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                                  삽입 가능
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* 이미지 용도 선택 */}
-                            <div className="space-y-2">
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  id={`gallery-${index}`}
-                                  checked={imageOptions[index]?.showInGallery || false}
-                                  onChange={(e) => updateImageOption(index, 'showInGallery', e.target.checked)}
-                                  className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
-                                />
-                                <label htmlFor={`gallery-${index}`} className="ml-2 text-sm text-gray-700">
-                                  상단 갤러리에 표시
-                                </label>
-                              </div>
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  id={`content-${index}`}
-                                  checked={imageOptions[index]?.insertToContent || false}
-                                  onChange={(e) => updateImageOption(index, 'insertToContent', e.target.checked)}
-                                  className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
-                                />
-                                <label htmlFor={`content-${index}`} className="ml-2 text-sm text-gray-700">
-                                  본문에 삽입 가능
-                                </label>
-                              </div>
-                            </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {coverImagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={preview}
+                              alt={`대표 이미지 ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeCoverImage(index)}
+                              className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                            >
+                              ×
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -400,21 +460,166 @@ function ArchiveWriteContent() {
                   )}
                 </div>
 
-                {/* 내용 */}
+                {/* 상세 설명 - 리치 텍스트 에디터 */}
                 <div>
-                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-                    내용 *
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    상세 설명 *
                   </label>
-                  <textarea
-                    id="content"
-                    name="content"
-                    rows={12}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors resize-none"
-                    value={formData.content}
-                    onChange={handleInputChange}
-                    placeholder="내용을 입력하세요"
+                  
+                  {/* 툴바 */}
+                  <div className="border border-gray-300 rounded-t-lg bg-gray-50 p-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* 실행 취소/다시 실행 */}
+                      <button
+                        type="button"
+                        onClick={handleUndo}
+                        className="p-2 hover:bg-gray-200 rounded text-sm font-medium"
+                        title="실행 취소"
+                      >
+                        ↶
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRedo}
+                        className="p-2 hover:bg-gray-200 rounded text-sm font-medium"
+                        title="다시 실행"
+                      >
+                        ↷
+                      </button>
+                      
+                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                      
+                      {/* 텍스트 포맷팅 */}
+                      <button
+                        type="button"
+                        onClick={handleBold}
+                        className="p-2 hover:bg-gray-200 rounded font-bold"
+                        title="굵게"
+                      >
+                        B
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleItalic}
+                        className="p-2 hover:bg-gray-200 rounded italic"
+                        title="기울임"
+                      >
+                        I
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleUnderline}
+                        className="p-2 hover:bg-gray-200 rounded underline"
+                        title="밑줄"
+                      >
+                        U
+                      </button>
+                      
+                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                      
+                      {/* 정렬 */}
+                      <button
+                        type="button"
+                        onClick={handleAlignLeft}
+                        className="p-2 hover:bg-gray-200 rounded"
+                        title="왼쪽 정렬"
+                      >
+                        ⬅
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAlignCenter}
+                        className="p-2 hover:bg-gray-200 rounded"
+                        title="가운데 정렬"
+                      >
+                        ↔
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAlignRight}
+                        className="p-2 hover:bg-gray-200 rounded"
+                        title="오른쪽 정렬"
+                      >
+                        ➡
+                      </button>
+                      
+                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                      
+                      {/* 폰트 크기 */}
+                      <select
+                        onChange={handleFontSize}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                        title="폰트 크기"
+                      >
+                        <option value="1">8pt</option>
+                        <option value="2">10pt</option>
+                        <option value="3">12pt</option>
+                        <option value="4">14pt</option>
+                        <option value="5">18pt</option>
+                        <option value="6">24pt</option>
+                        <option value="7">36pt</option>
+                      </select>
+                      
+                      {/* 폰트 색상 */}
+                      <input
+                        type="color"
+                        onChange={handleFontColor}
+                        className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                        title="폰트 색상"
+                      />
+                      
+                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                      
+                      {/* 링크 삽입 */}
+                      <button
+                        type="button"
+                        onClick={handleInsertLink}
+                        className="p-2 hover:bg-gray-200 rounded"
+                        title="링크 삽입"
+                      >
+                        🔗
+                      </button>
+                      
+                      {/* 이미지 삽입 */}
+                      <label className="p-2 hover:bg-gray-200 rounded cursor-pointer" title="이미지 삽입">
+                        📷
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleInsertImage}
+                          className="hidden"
+                          onClick={saveCursorPosition}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {/* 에디터 영역 */}
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={handleEditorChange}
+                    onFocus={handleEditorFocus}
+                    onBlur={handleEditorBlur}
+                    onMouseUp={handleEditorSelection}
+                    onKeyUp={handleEditorSelection}
+                    onKeyDown={saveCursorPosition}
+                    onClick={saveCursorPosition}
+                    suppressContentEditableWarning
+                    data-placeholder="상세 설명을 입력하세요..."
+                    className="w-full min-h-[300px] px-4 py-3 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                    style={{
+                      outline: 'none',
+                      lineHeight: '1.6',
+                    }}
                   />
+                  
+                  {/* 선택된 텍스트 표시 (디버깅용) */}
+                  {selectedText && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      선택된 텍스트: "{selectedText}"
+                    </div>
+                  )}
                 </div>
 
                 {/* 주요 항목 체크박스 */}
