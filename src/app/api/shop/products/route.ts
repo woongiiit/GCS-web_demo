@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         discount: discount ? parseInt(discount) : null,
         stock: 0, // 재고 수량은 항상 0으로 설정
         categoryId,
-        images: images || [], // 갤러리용 이미지만 저장
+        images: images || [], // 상품 대표 이미지들 저장
         brand: brand || null,
         tags: tags || [],
         features: features || [],

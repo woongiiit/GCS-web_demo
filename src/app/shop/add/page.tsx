@@ -24,12 +24,16 @@ export default function ShopAddPage() {
     colors: '',
     isBestItem: false,
   })
-  const [images, setImages] = useState<File[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
-  const [imageOptions, setImageOptions] = useState<Array<{
-    showInGallery: boolean
-    insertToContent: boolean
-  }>>([])
+  // 상품 대표 이미지들 (상단 갤러리용)
+  const [coverImages, setCoverImages] = useState<File[]>([])
+  const [coverImagePreviews, setCoverImagePreviews] = useState<string[]>([])
+  
+  // 리치 텍스트 에디터 상태
+  const [editorContent, setEditorContent] = useState('')
+  const [isEditorFocused, setIsEditorFocused] = useState(false)
+  const [selectedText, setSelectedText] = useState('')
+  const [editorRef, setEditorRef] = useState<HTMLDivElement | null>(null)
+  const [lastCursorPosition, setLastCursorPosition] = useState<Range | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
@@ -87,6 +91,32 @@ export default function ShopAddPage() {
     }
   }
 
+  // 상품 대표 이미지 업로드
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    
+    const newImages = [...coverImages, ...files]
+    setCoverImages(newImages)
+    
+    // 미리보기 생성
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setCoverImagePreviews(prev => [...prev, reader.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  // 상품 대표 이미지 제거
+  const removeCoverImage = (index: number) => {
+    const newImages = coverImages.filter((_, i) => i !== index)
+    const newPreviews = coverImagePreviews.filter((_, i) => i !== index)
+    setCoverImages(newImages)
+    setCoverImagePreviews(newPreviews)
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
     if (type === 'checkbox') {
@@ -97,80 +127,176 @@ export default function ShopAddPage() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const imageFiles = files.filter(file => file.type.startsWith('image/'))
-    
-    if (images.length + imageFiles.length > 10) {
-      setMessage('최대 10개의 이미지를 업로드할 수 있습니다.')
-      setMessageType('error')
-      return
+  // 리치 텍스트 에디터 함수들
+  const handleEditorChange = () => {
+    if (editorRef) {
+      setEditorContent(editorRef.innerHTML)
+      setFormData(prev => ({ ...prev, description: editorRef.innerHTML }))
     }
-
-    const newImages = [...images, ...imageFiles]
-    setImages(newImages)
-
-    // 미리보기 생성
-    const newPreviews = imageFiles.map(file => URL.createObjectURL(file))
-    setImagePreviews([...imagePreviews, ...newPreviews])
-
-    // 기본 옵션 설정 (갤러리와 본문 삽입 모두 가능)
-    const newOptions = imageFiles.map(() => ({
-      showInGallery: true,
-      insertToContent: true
-    }))
-    setImageOptions([...imageOptions, ...newOptions])
   }
 
-  const insertImageAtCursor = async (imageIndex: number) => {
-    const textarea = document.getElementById('description') as HTMLTextAreaElement
-    if (!textarea) return
-
-    const file = images[imageIndex]
-    if (!file) return
-
-    // 파일을 Base64로 변환
-    const reader = new FileReader()
-    const base64String = await new Promise<string>((resolve, reject) => {
-      reader.onloadend = () => {
-        resolve(reader.result as string)
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const before = formData.description.substring(0, start)
-    const after = formData.description.substring(end)
-    
-    const imageTag = `\n\n[IMAGE:${base64String}]\n\n`
-    const newContent = before + imageTag + after
-    
-    setFormData(prev => ({ ...prev, description: newContent }))
-    
-    // 커서 위치 업데이트
+  const handleEditorFocus = () => {
+    setIsEditorFocused(true)
+    // 포커스 시 마지막 커서 위치 복원
     setTimeout(() => {
-      const newCursorPos = start + imageTag.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-      textarea.focus()
-    }, 0)
+      restoreCursorPosition()
+    }, 10)
   }
 
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index)
-    const newPreviews = imagePreviews.filter((_, i) => i !== index)
-    const newOptions = imageOptions.filter((_, i) => i !== index)
-    setImages(newImages)
-    setImagePreviews(newPreviews)
-    setImageOptions(newOptions)
+  const handleEditorBlur = () => {
+    setIsEditorFocused(false)
   }
 
-  const updateImageOption = (index: number, option: 'showInGallery' | 'insertToContent', value: boolean) => {
-    const newOptions = [...imageOptions]
-    newOptions[index] = { ...newOptions[index], [option]: value }
-    setImageOptions(newOptions)
+  const handleEditorSelection = () => {
+    const selection = window.getSelection()
+    if (selection && selection.toString().trim() !== '') {
+      setSelectedText(selection.toString())
+    } else {
+      setSelectedText('')
+    }
+    
+    // 커서 위치 저장
+    if (selection && selection.rangeCount > 0) {
+      setLastCursorPosition(selection.getRangeAt(0).cloneRange())
+    }
   }
+
+  // 커서 위치 저장 함수
+  const saveCursorPosition = () => {
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
+      setLastCursorPosition(selection.getRangeAt(0).cloneRange())
+    }
+  }
+
+  // 커서 위치 복원 함수
+  const restoreCursorPosition = () => {
+    if (lastCursorPosition && editorRef) {
+      const selection = window.getSelection()
+      if (selection) {
+        selection.removeAllRanges()
+        selection.addRange(lastCursorPosition)
+      }
+    }
+  }
+
+  // 텍스트 포맷팅 함수들
+  const applyFormat = (command: string, value?: string) => {
+    document.execCommand(command, false, value)
+    handleEditorChange()
+    editorRef?.focus()
+  }
+
+  const handleBold = () => {
+    applyFormat('bold')
+  }
+
+  const handleItalic = () => {
+    applyFormat('italic')
+  }
+
+  const handleUnderline = () => {
+    applyFormat('underline')
+  }
+
+  const handleFontSize = (size: string) => {
+    applyFormat('fontSize', size)
+  }
+
+  const handleFontColor = (color: string) => {
+    applyFormat('foreColor', color)
+  }
+
+  const handleAlignLeft = () => {
+    applyFormat('justifyLeft')
+  }
+
+  const handleAlignCenter = () => {
+    applyFormat('justifyCenter')
+  }
+
+  const handleAlignRight = () => {
+    applyFormat('justifyRight')
+  }
+
+  const handleInsertImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    const file = files[0]
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const img = document.createElement('img')
+      img.src = reader.result as string
+      img.style.maxWidth = '100%'
+      img.style.height = 'auto'
+      img.style.display = 'block'
+      img.style.margin = '10px 0'
+      img.style.border = '1px solid #e5e7eb'
+      img.style.borderRadius = '4px'
+      
+      // 에디터에 포커스
+      if (editorRef) {
+        editorRef.focus()
+        
+        // 포커스 후 마지막 커서 위치 복원
+        setTimeout(() => {
+          const selection = window.getSelection()
+          let range: Range
+          
+          if (lastCursorPosition && editorRef?.contains(lastCursorPosition.startContainer)) {
+            // 마지막 커서 위치가 유효한 경우
+            range = lastCursorPosition.cloneRange()
+            range.deleteContents()
+            range.insertNode(img)
+          } else if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
+            // 현재 선택 영역이 에디터 내부에 있는 경우
+            range = selection.getRangeAt(0)
+            range.deleteContents()
+            range.insertNode(img)
+          } else {
+            // 에디터 끝에 추가
+            range = document.createRange()
+            range.selectNodeContents(editorRef)
+            range.collapse(false) // 끝으로 이동
+            range.insertNode(img)
+          }
+          
+          // 커서를 이미지 뒤로 이동
+          range.setStartAfter(img)
+          range.setEndAfter(img)
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+          
+          // 새로운 커서 위치 저장
+          setLastCursorPosition(range.cloneRange())
+          
+          handleEditorChange()
+        }, 20)
+      }
+      
+      // 파일 입력 초기화
+      e.target.value = ''
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleInsertLink = () => {
+    const url = prompt('링크 URL을 입력하세요:')
+    if (url) {
+      applyFormat('createLink', url)
+    }
+  }
+
+  const handleUndo = () => {
+    applyFormat('undo')
+  }
+
+  const handleRedo = () => {
+    applyFormat('redo')
+  }
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -178,25 +304,18 @@ export default function ShopAddPage() {
     setMessage('')
 
     try {
-      // 갤러리용 이미지만 Base64로 인코딩
-      const galleryImages: string[] = []
-      
-      for (let i = 0; i < images.length; i++) {
-        const file = images[i]
-        const options = imageOptions[i]
-        
-        // 갤러리용 이미지만 처리
-        if (options.showInGallery) {
-          const reader = new FileReader()
-          const base64String = await new Promise<string>((resolve, reject) => {
-            reader.onloadend = () => {
-              resolve(reader.result as string)
-            }
-            reader.onerror = reject
-            reader.readAsDataURL(file)
-          })
-          galleryImages.push(base64String)
-        }
+      // 상품 대표 이미지들을 Base64로 인코딩
+      const coverImagesBase64: string[] = []
+      for (const file of coverImages) {
+        const reader = new FileReader()
+        const base64String = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            resolve(reader.result as string)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        coverImagesBase64.push(base64String)
       }
 
       const response = await fetch('/api/shop/products', {
@@ -215,7 +334,7 @@ export default function ShopAddPage() {
           features: formData.features ? formData.features.split(',').map(f => f.trim()) : [],
           sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()) : [],
           colors: formData.colors ? formData.colors.split(',').map(c => c.trim()) : [],
-          images: galleryImages, // 상단 갤러리용 이미지만
+          images: coverImagesBase64, // 상품 대표 이미지들
         })
       })
 
@@ -285,6 +404,63 @@ export default function ShopAddPage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* 상품 대표 이미지 */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold text-black mb-4">상품 대표 이미지</h3>
+                  
+                  <div className="space-y-4">
+                    {/* 이미지 업로드 영역 */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleCoverImageUpload}
+                        className="hidden"
+                        id="cover-image-upload"
+                      />
+                      <label htmlFor="cover-image-upload" className="cursor-pointer">
+                        <div className="text-gray-500 mb-2">
+                          <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          클릭하여 상품 대표 이미지들을 업로드하세요
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          여러 이미지를 선택할 수 있습니다 (JPG, PNG, GIF)
+                        </p>
+                      </label>
+                    </div>
+
+                    {/* 업로드된 이미지들 미리보기 */}
+                    {coverImagePreviews.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {coverImagePreviews.map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={preview}
+                              alt={`대표 이미지 ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeCoverImage(index)}
+                              className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                            >
+                              ×
+                            </button>
+                            <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                              대표 이미지
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* 기본 정보 */}
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <h3 className="text-lg font-semibold text-black mb-4">기본 정보</h3>
@@ -361,109 +537,198 @@ export default function ShopAddPage() {
                   </div>
                 </div>
 
-                {/* 상품 이미지 */}
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold text-black mb-4">상품 이미지</h3>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이미지 (최대 10개)
-                    </label>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                    />
-                    
-                    {/* 이미지 미리보기 및 옵션 설정 */}
-                    {imagePreviews.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm text-gray-600 mb-3">
-                          각 이미지의 용도를 선택하세요. 이미지를 클릭하면 상세 설명에 삽입됩니다.
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {imagePreviews.map((preview, index) => (
-                            <div key={index} className="border border-gray-200 rounded-lg p-4">
-                              <div className="relative group mb-3">
-                                <img
-                                  src={preview}
-                                  alt={`미리보기 ${index + 1}`}
-                                  className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:border-[#f57520] transition-colors"
-                                  onClick={() => {
-                                    if (imageOptions[index]?.insertToContent) {
-                                      insertImageAtCursor(index)
-                                    }
-                                  }}
-                                  title={imageOptions[index]?.insertToContent ? "클릭하여 상세 설명에 삽입" : "본문 삽입이 비활성화됨"}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => removeImage(index)}
-                                  className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
-                                >
-                                  ×
-                                </button>
-                                {imageOptions[index]?.insertToContent && (
-                                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                                    삽입 가능
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* 이미지 용도 선택 */}
-                              <div className="space-y-2">
-                                <div className="flex items-center">
-                                  <input
-                                    type="checkbox"
-                                    id={`gallery-${index}`}
-                                    checked={imageOptions[index]?.showInGallery || false}
-                                    onChange={(e) => updateImageOption(index, 'showInGallery', e.target.checked)}
-                                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
-                                  />
-                                  <label htmlFor={`gallery-${index}`} className="ml-2 text-sm text-gray-700">
-                                    상단 갤러리에 표시
-                                  </label>
-                                </div>
-                                <div className="flex items-center">
-                                  <input
-                                    type="checkbox"
-                                    id={`content-${index}`}
-                                    checked={imageOptions[index]?.insertToContent || false}
-                                    onChange={(e) => updateImageOption(index, 'insertToContent', e.target.checked)}
-                                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
-                                  />
-                                  <label htmlFor={`content-${index}`} className="ml-2 text-sm text-gray-700">
-                                    본문에 삽입 가능
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* 상세 설명 */}
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <h3 className="text-lg font-semibold text-black mb-4">상세 설명</h3>
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       상세 설명 *
                     </label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows={6}
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors resize-none"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="상품에 대한 자세한 설명을 입력하세요"
-                      />
+                    
+                    {/* 고급 리치 텍스트 툴바 */}
+                    <div className="border border-gray-300 rounded-t-lg bg-gray-100 p-2">
+                      {/* 첫 번째 줄: 기본 포맷팅 */}
+                      <div className="flex items-center gap-1 mb-2 flex-wrap">
+                        {/* 실행 취소/다시 실행 */}
+                        <button
+                          type="button"
+                          onClick={handleUndo}
+                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
+                          title="실행 취소"
+                        >
+                          ↶
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRedo}
+                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
+                          title="다시 실행"
+                        >
+                          ↷
+                        </button>
+                        
+                        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                        
+                        {/* 텍스트 포맷팅 */}
+                        <button
+                          type="button"
+                          onClick={handleBold}
+                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border font-bold"
+                          title="굵게"
+                        >
+                          B
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={handleItalic}
+                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border italic"
+                          title="기울임"
+                        >
+                          I
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={handleUnderline}
+                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border"
+                          title="밑줄"
+                          style={{ textDecoration: 'underline' }}
+                        >
+                          U
+                        </button>
+                        
+                        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                        
+                        {/* 정렬 */}
+                        <button
+                          type="button"
+                          onClick={handleAlignLeft}
+                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
+                          title="왼쪽 정렬"
+                        >
+                          ⬅
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAlignCenter}
+                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
+                          title="가운데 정렬"
+                        >
+                          ↔
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAlignRight}
+                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
+                          title="오른쪽 정렬"
+                        >
+                          ➡
+                        </button>
+                      </div>
+                      
+                      {/* 두 번째 줄: 고급 기능 */}
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {/* 폰트 크기 */}
+                        <select
+                          onChange={(e) => handleFontSize(e.target.value)}
+                          className="px-2 py-1 text-sm border border-gray-300 rounded bg-white"
+                          title="폰트 크기"
+                          defaultValue="3"
+                        >
+                          <option value="1">8pt</option>
+                          <option value="2">10pt</option>
+                          <option value="3">12pt</option>
+                          <option value="4">14pt</option>
+                          <option value="5">18pt</option>
+                          <option value="6">24pt</option>
+                          <option value="7">36pt</option>
+                        </select>
+                        
+                        {/* 폰트 색상 */}
+                        <input
+                          type="color"
+                          onChange={(e) => handleFontColor(e.target.value)}
+                          className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                          title="폰트 색상"
+                          defaultValue="#000000"
+                        />
+                        
+                        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                        
+                        {/* 링크 삽입 */}
+                        <button
+                          type="button"
+                          onClick={handleInsertLink}
+                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border"
+                          title="링크 삽입"
+                        >
+                          🔗
+                        </button>
+                        
+                        {/* 이미지 삽입 */}
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleInsertImage}
+                            className="hidden"
+                            id="rich-text-image-upload"
+                          />
+                          <label
+                            htmlFor="rich-text-image-upload"
+                            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors cursor-pointer"
+                            title="이미지 삽입"
+                            onClick={() => {
+                              // 이미지 업로드 버튼 클릭 시 현재 커서 위치 저장
+                              saveCursorPosition()
+                            }}
+                          >
+                            📷
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* 리치 텍스트 에디터 */}
+                    <div
+                      ref={setEditorRef}
+                      contentEditable
+                      className="w-full min-h-[200px] px-4 py-3 border border-gray-300 border-t-0 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                      style={{
+                        fontSize: '16px',
+                        lineHeight: '1.6',
+                        fontFamily: 'inherit'
+                      }}
+                      onInput={handleEditorChange}
+                      onFocus={handleEditorFocus}
+                      onBlur={handleEditorBlur}
+                      onMouseUp={handleEditorSelection}
+                      onKeyUp={handleEditorSelection}
+                      onKeyDown={saveCursorPosition}
+                      onClick={saveCursorPosition}
+                      suppressContentEditableWarning={true}
+                      data-placeholder="상품에 대한 자세한 설명을 입력하세요. 텍스트를 선택하고 위 툴바를 사용하여 꾸밀 수 있습니다."
+                    />
+                    
+                    {/* Placeholder 스타일 */}
+                    <style jsx>{`
+                      [contenteditable]:empty:before {
+                        content: attr(data-placeholder);
+                        color: #9ca3af;
+                        pointer-events: none;
+                      }
+                      [contenteditable]:focus:before {
+                        content: none;
+                      }
+                    `}</style>
+                    
+                    {/* 선택된 텍스트 표시 */}
+                    {selectedText && (
+                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                        <span className="text-blue-600 font-medium">선택된 텍스트:</span> "{selectedText}"
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -666,6 +931,7 @@ export default function ShopAddPage() {
         </div>
       </div>
     </div>
+
   )
 }
 

@@ -111,7 +111,8 @@ model Product {
   discount    Int?     // 할인율 (%)
   stock       Int      @default(0)
   imageUrl    String?
-  images      String[] // 제품 이미지 배열 (메인 이미지, 상세 이미지들)
+  images      String[] // 상품 대표 이미지 배열
+  contentImages String[] // 본문용 이미지 배열
   brand       String?  // 브랜드명 (DEUX 등)
   tags        String[] // 태그 배열
   features    String[] // 특징 배열
