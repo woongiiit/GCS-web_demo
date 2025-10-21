@@ -182,7 +182,7 @@ function WriteContent() {
           } else {
             // 에디터 끝에 추가
             range = document.createRange()
-            range.selectNodeContents(editorRef)
+            range.selectNodeContents(editorRef.current!)
             range.collapse(false) // 끝으로 이동
             range.insertNode(img)
           }
