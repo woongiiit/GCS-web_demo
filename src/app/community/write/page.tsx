@@ -161,20 +161,20 @@ function WriteContent() {
       img.style.margin = '8px 0'
 
       // 에디터에 포커스가 없으면 먼저 포커스
-      if (editorRef) {
-        editorRef.focus()
+      if (editorRef?.current) {
+        editorRef.current.focus()
 
         // 포커스 후 마지막 커서 위치 복원
         setTimeout(() => {
           const selection = window.getSelection()
           let range: Range
 
-          if (lastCursorPosition && editorRef?.contains(lastCursorPosition.startContainer)) {
+          if (lastCursorPosition && editorRef?.current?.contains(lastCursorPosition.startContainer)) {
             // 마지막 커서 위치가 유효한 경우
             range = lastCursorPosition.cloneRange()
             range.deleteContents()
             range.insertNode(img)
-          } else if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
+          } else if (selection && selection.rangeCount > 0 && editorRef?.current?.contains(selection.anchorNode)) {
             // 현재 선택 영역이 에디터 내부에 있는 경우
             range = selection.getRangeAt(0)
             range.deleteContents()
