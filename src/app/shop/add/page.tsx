@@ -464,7 +464,6 @@ export default function ShopAddPage() {
                         onChange={handleInputChange}
                         placeholder="상품에 대한 자세한 설명을 입력하세요"
                       />
-                    </div>
                   </div>
                 </div>
 
