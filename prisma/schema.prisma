@@ -39,6 +39,7 @@ model User {
   orders      Order[]
   projects    Project[]
   news        News[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([role])
   @@index([verificationStatus, createdAt])
@@ -309,6 +310,22 @@ model Professor {
   subjects    Subject[]
 
   @@map("professors")
+}
+
+// 비밀번호 재설정 토큰 모델
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 // Enums

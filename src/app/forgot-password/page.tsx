@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 export default function ForgotPasswordPage() {
@@ -11,6 +11,20 @@ export default function ForgotPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEmailSent, setIsEmailSent] = useState(false)
   const [error, setError] = useState('')
+  const [retryAfter, setRetryAfter] = useState<number | null>(null)
+
+  // 카운트다운 타이머
+  useEffect(() => {
+    if (retryAfter && retryAfter > 0) {
+      const timer = setTimeout(() => {
+        setRetryAfter(retryAfter - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else if (retryAfter === 0) {
+      setRetryAfter(null)
+      setError('')
+    }
+  }, [retryAfter])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +46,14 @@ export default function ForgotPasswordPage() {
       if (response.ok) {
         setIsEmailSent(true)
       } else {
-        setError(data.error || '이메일 전송에 실패했습니다.')
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After')
+          const retrySeconds = retryAfter ? parseInt(retryAfter) : 60
+          setRetryAfter(retrySeconds)
+          setError(`요청이 너무 많습니다. ${retrySeconds}초 후에 다시 시도해주세요.`)
+        } else {
+          setError(data.error || '이메일 전송에 실패했습니다.')
+        }
       }
       
     } catch (error) {
@@ -205,9 +226,9 @@ export default function ForgotPasswordPage() {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || retryAfter !== null}
                     className={`w-full py-4 px-6 rounded-lg font-medium text-white transition-colors ${
-                      isSubmitting
+                      isSubmitting || retryAfter !== null
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2'
                     }`}
@@ -220,6 +241,8 @@ export default function ForgotPasswordPage() {
                         </svg>
                         전송 중...
                       </div>
+                    ) : retryAfter !== null ? (
+                      `${retryAfter}초 후 다시 시도`
                     ) : (
                       '재설정 링크 전송'
                     )}

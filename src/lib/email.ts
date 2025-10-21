@@ -1,0 +1,197 @@
+import nodemailer from 'nodemailer'
+
+// 이메일 전송 설정
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false, // true for 465, false for other ports
+  auth: process.env.SMTP_USER && process.env.SMTP_PASS ? {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  } : undefined,
+})
+
+/**
+ * 비밀번호 재설정 이메일을 전송합니다.
+ * @param to 수신자 이메일 주소
+ * @param resetLink 비밀번호 재설정 링크
+ * @param userName 사용자 이름
+ */
+export async function sendPasswordResetEmail(
+  to: string,
+  resetLink: string,
+  userName: string
+): Promise<void> {
+  // 개발 환경에서 이메일 설정이 없는 경우 콘솔에 출력
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('='.repeat(60))
+    console.log('📧 비밀번호 재설정 이메일 (개발 모드)')
+    console.log('='.repeat(60))
+    console.log(`수신자: ${to}`)
+    console.log(`사용자: ${userName}`)
+    console.log(`재설정 링크: ${resetLink}`)
+    console.log('='.repeat(60))
+    console.log('💡 실제 이메일 전송을 위해서는 .env 파일에 SMTP 설정을 추가하세요.')
+    console.log('='.repeat(60))
+    return
+  }
+
+  const mailOptions = {
+    from: `"GCS:Web" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    to,
+    subject: '[GCS:Web] 비밀번호 재설정 요청',
+    html: generatePasswordResetEmailTemplate(userName, resetLink),
+  }
+
+  try {
+    await transporter.sendMail(mailOptions)
+    console.log(`비밀번호 재설정 이메일 전송 완료: ${to}`)
+  } catch (error) {
+    console.error('이메일 전송 실패:', error)
+    throw new Error('이메일 전송에 실패했습니다.')
+  }
+}
+
+/**
+ * 비밀번호 재설정 이메일 HTML 템플릿을 생성합니다.
+ */
+function generatePasswordResetEmailTemplate(userName: string, resetLink: string): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>비밀번호 재설정</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background-color: white;
+          border-radius: 8px;
+          padding: 40px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .logo {
+          font-size: 24px;
+          font-weight: bold;
+          color: #000;
+          margin-bottom: 10px;
+        }
+        .logo .highlight {
+          color: #f57520;
+        }
+        .title {
+          font-size: 20px;
+          font-weight: bold;
+          color: #000;
+          margin-bottom: 20px;
+        }
+        .content {
+          margin-bottom: 30px;
+        }
+        .button {
+          display: inline-block;
+          background-color: #000;
+          color: white;
+          padding: 12px 30px;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: bold;
+          margin: 20px 0;
+        }
+        .button:hover {
+          background-color: #333;
+        }
+        .warning {
+          background-color: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 4px;
+          padding: 15px;
+          margin: 20px 0;
+          color: #856404;
+        }
+        .footer {
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+          font-size: 14px;
+          color: #666;
+          text-align: center;
+        }
+        .link {
+          color: #f57520;
+          text-decoration: none;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">GCS<span class="highlight">:</span>Web</div>
+          <div class="title">비밀번호 재설정 요청</div>
+        </div>
+        
+        <div class="content">
+          <p>안녕하세요, <strong>${userName}</strong>님!</p>
+          
+          <p>GCS:Web에서 비밀번호 재설정을 요청하셨습니다.</p>
+          
+          <p>아래 버튼을 클릭하여 새 비밀번호를 설정해주세요:</p>
+          
+          <div style="text-align: center;">
+            <a href="${resetLink}" class="button">비밀번호 재설정하기</a>
+          </div>
+          
+          <div class="warning">
+            <strong>⚠️ 주의사항:</strong>
+            <ul>
+              <li>이 링크는 1시간 후에 만료됩니다.</li>
+              <li>링크는 한 번만 사용할 수 있습니다.</li>
+              <li>비밀번호 재설정을 요청하지 않으셨다면 이 이메일을 무시해주세요.</li>
+            </ul>
+          </div>
+          
+          <p>버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 붙여넣으세요:</p>
+          <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace;">
+            ${resetLink}
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p>이 이메일은 GCS:Web 시스템에서 자동으로 발송되었습니다.</p>
+          <p>문의사항이 있으시면 관리자에게 연락해주세요.</p>
+          <p>
+            <a href="mailto:admin@gcs-demo.com" class="link">admin@gcs-demo.com</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * 이메일 전송 설정을 테스트합니다.
+ */
+export async function testEmailConnection(): Promise<boolean> {
+  try {
+    await transporter.verify()
+    console.log('이메일 서버 연결 성공')
+    return true
+  } catch (error) {
+    console.error('이메일 서버 연결 실패:', error)
+    return false
+  }
+}

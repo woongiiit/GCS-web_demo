@@ -1,70 +1,99 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { validatePasswordResetToken } from '@/lib/token-validation'
+import { resetUserPassword } from '@/lib/password-update'
+import { rateLimiters, checkRateLimit, getClientIP } from '@/lib/rate-limit'
+import { validateRequest, createErrorResponse, createSuccessResponse } from '@/lib/security'
+import { logger, logSecurityEvent } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
+  const clientIP = getClientIP(request)
+  const userAgent = request.headers.get('user-agent') || 'unknown'
+  
   try {
+    // 1. 요청 검증
+    const validation = validateRequest(request)
+    if (!validation.isValid) {
+      logSecurityEvent('suspicious_activity', 'Invalid request detected', {
+        ip: clientIP,
+        userAgent,
+        error: validation.error
+      })
+      return createErrorResponse(validation.error!, 400)
+    }
+
+    // 2. Rate Limiting
+    const rateLimit = await checkRateLimit(rateLimiters.resetPassword, clientIP)
+    if (!rateLimit.success) {
+      logSecurityEvent('rate_limit_exceeded', 'Rate limit exceeded for reset password', {
+        ip: clientIP,
+        userAgent
+      })
+      return createErrorResponse(rateLimit.error!, 429, {
+        'Retry-After': Math.ceil((rateLimit.reset.getTime() - Date.now()) / 1000).toString()
+      })
+    }
+
     const { token, password } = await request.json()
 
     if (!token || !password) {
-      return NextResponse.json(
-        { error: '토큰과 비밀번호가 필요합니다.' },
-        { status: 400 }
-      )
+      return createErrorResponse('토큰과 비밀번호가 필요합니다.')
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: '비밀번호는 최소 6자 이상이어야 합니다.' },
-        { status: 400 }
-      )
-    }
-
-    // TODO: 실제 토큰 검증 로직 구현
-    // 1. 토큰이 유효한지 확인
-    // 2. 토큰이 만료되지 않았는지 확인
-    // 3. 토큰에 해당하는 사용자 찾기
+    // 3. 토큰 검증
+    const tokenValidation = await validatePasswordResetToken(token)
     
-    // 임시로 토큰 검증 (실제 구현에서는 데이터베이스에서 토큰 확인)
-    if (token === 'invalid-token') {
-      return NextResponse.json(
-        { error: '유효하지 않은 토큰입니다.' },
-        { status: 400 }
-      )
+    if (!tokenValidation.isValid) {
+      logSecurityEvent('invalid_token_attempt', 'Invalid token used for password reset', {
+        ip: clientIP,
+        userAgent,
+        token: token.substring(0, 8) + '...', // 토큰 일부만 로깅
+        error: tokenValidation.error
+      })
+      return createErrorResponse(tokenValidation.error!)
     }
 
-    // 임시로 첫 번째 사용자의 비밀번호를 업데이트 (실제 구현에서는 토큰으로 사용자 찾기)
-    const user = await prisma.user.findFirst()
+    // 4. 비밀번호 재설정
+    const result = await resetUserPassword(token, password)
     
-    if (!user) {
-      return NextResponse.json(
-        { error: '사용자를 찾을 수 없습니다.' },
-        { status: 404 }
-      )
+    if (!result.success) {
+      logSecurityEvent('password_reset_failed', 'Password reset failed', {
+        ip: clientIP,
+        userAgent,
+        userId: tokenValidation.user?.id,
+        email: tokenValidation.user?.email,
+        error: result.error
+      })
+      return createErrorResponse(result.error!, 400, {
+        'X-Validation-Result': JSON.stringify(result.validationResult)
+      })
     }
-
-    // 비밀번호 해시화
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    // 사용자 비밀번호 업데이트
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashedPassword }
+    
+    // 성공 로깅
+    logSecurityEvent('password_reset_completed', 'Password reset completed successfully', {
+      ip: clientIP,
+      userAgent,
+      userId: tokenValidation.user!.id,
+      email: tokenValidation.user!.email
     })
-
-    // TODO: 사용된 토큰을 무효화 (데이터베이스에서 삭제 또는 만료 처리)
     
-    console.log(`비밀번호 재설정 완료: ${user.email}`)
+    logger.info('비밀번호 재설정 완료', {
+      userId: tokenValidation.user!.id,
+      email: tokenValidation.user!.email,
+      ip: clientIP
+    })
     
-    return NextResponse.json({
-      message: '비밀번호가 성공적으로 재설정되었습니다.'
+    return createSuccessResponse({
+      message: '비밀번호가 성공적으로 재설정되었습니다.',
+      validationResult: result.validationResult
     })
 
   } catch (error) {
-    console.error('비밀번호 재설정 오류:', error)
-    return NextResponse.json(
-      { error: '서버 오류가 발생했습니다. 다시 시도해주세요.' },
-      { status: 500 }
-    )
+    logger.error('비밀번호 재설정 오류', {
+      error: error,
+      ip: clientIP,
+      userAgent
+    })
+    
+    return createErrorResponse('서버 오류가 발생했습니다. 다시 시도해주세요.', 500)
   }
 }
