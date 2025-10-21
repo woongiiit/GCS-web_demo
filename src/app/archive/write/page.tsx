@@ -119,7 +119,7 @@ function ArchiveWriteContent() {
   // 커서 위치 관리
   const saveCursorPosition = () => {
     const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
+    if (selection && selection.rangeCount > 0 && editorRef?.current?.contains(selection.anchorNode)) {
       setLastCursorPosition(selection.getRangeAt(0).cloneRange())
     }
   }
