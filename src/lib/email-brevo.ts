@@ -1,104 +1,95 @@
-import nodemailer from 'nodemailer'
-import { sendPasswordResetEmailViaSendGrid } from './email-sendgrid'
-import { sendPasswordResetEmailViaBrevo } from './email-brevo'
+/**
+ * Brevo HTTP API를 사용한 이메일 전송
+ */
 
-// 이메일 전송 방식 선택
-const EMAIL_METHOD = process.env.EMAIL_METHOD || 'smtp' // 'smtp', 'sendgrid', 또는 'brevo'
-
-// SMTP 설정 (기존 방식)
-let transporter: any = null
-if (EMAIL_METHOD === 'smtp') {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465', // 465 포트는 true, 587 포트는 false
-    auth: process.env.SMTP_USER && process.env.SMTP_PASS ? {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    } : undefined,
-    // Railway에서 연결 안정성을 위한 추가 설정
-    connectionTimeout: 60000, // 60초
-    greetingTimeout: 30000,   // 30초
-    socketTimeout: 60000,     // 60초
-  })
+interface BrevoEmailData {
+  to: string
+  resetLink: string
+  userName: string
 }
 
 /**
- * 비밀번호 재설정 이메일을 전송합니다.
- * @param to 수신자 이메일 주소
- * @param resetLink 비밀번호 재설정 링크
- * @param userName 사용자 이름
+ * Brevo HTTP API를 통해 비밀번호 재설정 이메일을 전송합니다.
  */
-export async function sendPasswordResetEmail(
+export async function sendPasswordResetEmailViaBrevo(
   to: string,
   resetLink: string,
   userName: string
 ): Promise<void> {
-  // SendGrid HTTP API 사용
-  if (EMAIL_METHOD === 'sendgrid') {
-    return await sendPasswordResetEmailViaSendGrid(to, resetLink, userName)
-  }
-
-  // Brevo HTTP API 사용
-  if (EMAIL_METHOD === 'brevo') {
-    return await sendPasswordResetEmailViaBrevo(to, resetLink, userName)
-  }
-
-  // SMTP 설정이 없거나 연결 실패 시 개발 모드로 fallback
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  const apiKey = process.env.BREVO_API_KEY
+  
+  if (!apiKey) {
     console.log('='.repeat(60))
-    console.log('📧 비밀번호 재설정 이메일 (개발 모드)')
+    console.log('📧 Brevo API 키가 설정되지 않음 - 개발 모드로 전환')
     console.log('='.repeat(60))
     console.log(`수신자: ${to}`)
     console.log(`사용자: ${userName}`)
     console.log(`재설정 링크: ${resetLink}`)
     console.log('='.repeat(60))
-    console.log('💡 실제 이메일 전송을 위해서는 Railway 환경변수에 설정을 추가하세요.')
-    console.log('💡 SMTP: SMTP_HOST, SMTP_USER, SMTP_PASS 설정')
-    console.log('💡 SendGrid: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL 설정')
-    console.log('💡 Brevo: BREVO_API_KEY, BREVO_FROM_EMAIL 설정')
+    console.log('💡 Brevo API 키를 Railway 환경변수에 추가하세요.')
+    console.log('💡 BREVO_API_KEY=your_api_key_here')
     console.log('='.repeat(60))
     return
   }
 
-  const mailOptions = {
-    from: `"GCS:Web" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-    to,
+  const emailData = {
+    sender: {
+      name: 'GCS:Web',
+      email: process.env.BREVO_FROM_EMAIL || 'noreply@yourdomain.com'
+    },
+    to: [
+      {
+        email: to,
+        name: userName
+      }
+    ],
     subject: '[GCS:Web] 비밀번호 재설정 요청',
-    html: generatePasswordResetEmailTemplate(userName, resetLink),
+    htmlContent: generatePasswordResetEmailTemplate(userName, resetLink)
   }
 
   try {
-    console.log('📧 SMTP 연결 시도 중...')
-    console.log(`Host: ${process.env.SMTP_HOST}`)
-    console.log(`Port: ${process.env.SMTP_PORT}`)
-    console.log(`User: ${process.env.SMTP_USER}`)
-    console.log(`From: ${process.env.SMTP_FROM}`)
+    console.log('📧 Brevo API로 이메일 전송 시도 중...')
+    console.log(`API Key: ${apiKey.substring(0, 10)}...`)
+    console.log(`From: ${emailData.sender.email}`)
+    console.log(`To: ${to}`)
     
-    await transporter.sendMail(mailOptions)
-    console.log(`✅ 비밀번호 재설정 이메일 전송 완료: ${to}`)
-  } catch (error) {
-    console.error('❌ 이메일 전송 실패:', error)
-    console.error('오류 타입:', error instanceof Error ? error.constructor.name : typeof error)
-    console.error('오류 코드:', (error as any).code)
-    console.error('오류 명령:', (error as any).command)
-    
-    // Railway에서 SMTP 연결이 차단된 경우 개발 모드로 fallback
-    if (error instanceof Error && (error.message.includes('timeout') || (error as any).code === 'ETIMEDOUT')) {
-      console.log('='.repeat(60))
-      console.log('⚠️  SMTP 연결 타임아웃 - 개발 모드로 전환')
-      console.log('='.repeat(60))
-      console.log(`수신자: ${to}`)
-      console.log(`사용자: ${userName}`)
-      console.log(`재설정 링크: ${resetLink}`)
-      console.log('='.repeat(60))
-      console.log('💡 Railway에서 SMTP 연결이 차단되었습니다.')
-      console.log('💡 SendGrid 또는 Mailgun 사용을 권장합니다.')
-      console.log('='.repeat(60))
-      return
+    const response = await fetch('https://api.brevo.com/v3/sendEmail', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(emailData)
+    })
+
+    if (response.ok) {
+      const result = await response.json()
+      console.log(`✅ Brevo 이메일 전송 완료: ${to}`)
+      console.log(`Message ID: ${result.messageId}`)
+    } else {
+      const errorData = await response.text()
+      console.error('❌ Brevo 이메일 전송 실패:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      })
+      throw new Error(`Brevo API 오류: ${response.status} - ${errorData}`)
     }
+  } catch (error) {
+    console.error('❌ Brevo 이메일 전송 실패:', error)
+    console.error('오류 타입:', error instanceof Error ? error.constructor.name : typeof error)
     
-    throw new Error('이메일 전송에 실패했습니다.')
+    // Brevo API 실패 시 개발 모드로 fallback
+    console.log('='.repeat(60))
+    console.log('⚠️  Brevo API 실패 - 개발 모드로 전환')
+    console.log('='.repeat(60))
+    console.log(`수신자: ${to}`)
+    console.log(`사용자: ${userName}`)
+    console.log(`재설정 링크: ${resetLink}`)
+    console.log('='.repeat(60))
+    console.log('💡 Brevo API 키를 확인하거나 다른 이메일 서비스를 사용하세요.')
+    console.log('='.repeat(60))
   }
 }
 
@@ -233,30 +224,33 @@ function generatePasswordResetEmailTemplate(userName: string, resetLink: string)
 }
 
 /**
- * 이메일 전송 설정을 테스트합니다.
+ * Brevo API 연결을 테스트합니다.
  */
-export async function testEmailConnection(): Promise<boolean> {
-  if (EMAIL_METHOD === 'sendgrid') {
-    const { testSendGridConnection } = await import('./email-sendgrid')
-    return await testSendGridConnection()
-  }
-
-  if (EMAIL_METHOD === 'brevo') {
-    const { testBrevoConnection } = await import('./email-brevo')
-    return await testBrevoConnection()
-  }
-
-  if (!transporter) {
-    console.log('SMTP 설정이 없습니다.')
+export async function testBrevoConnection(): Promise<boolean> {
+  const apiKey = process.env.BREVO_API_KEY
+  
+  if (!apiKey) {
+    console.log('Brevo API 키가 설정되지 않았습니다.')
     return false
   }
 
   try {
-    await transporter.verify()
-    console.log('이메일 서버 연결 성공')
-    return true
+    const response = await fetch('https://api.brevo.com/v3/account', {
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey
+      }
+    })
+
+    if (response.ok) {
+      console.log('Brevo API 연결 성공')
+      return true
+    } else {
+      console.error('Brevo API 연결 실패:', response.status)
+      return false
+    }
   } catch (error) {
-    console.error('이메일 서버 연결 실패:', error)
+    console.error('Brevo API 연결 실패:', error)
     return false
   }
 }
