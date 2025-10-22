@@ -4,11 +4,15 @@ import nodemailer from 'nodemailer'
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false, // true for 465, false for other ports
+  secure: process.env.SMTP_PORT === '465', // 465 포트는 true, 587 포트는 false
   auth: process.env.SMTP_USER && process.env.SMTP_PASS ? {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   } : undefined,
+  // Railway에서 연결 안정성을 위한 추가 설정
+  connectionTimeout: 60000, // 60초
+  greetingTimeout: 30000,   // 30초
+  socketTimeout: 60000,     // 60초
 })
 
 /**
