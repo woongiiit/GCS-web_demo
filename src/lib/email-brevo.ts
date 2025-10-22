@@ -225,6 +225,216 @@ function generatePasswordResetEmailTemplate(userName: string, resetLink: string)
 }
 
 /**
+ * Brevo HTTP API를 통해 이메일 인증번호를 전송합니다.
+ * @param to 수신자 이메일 주소
+ * @param code 인증번호
+ */
+export async function sendEmailVerificationCodeViaBrevo(
+  to: string,
+  code: string
+): Promise<void> {
+  const apiKey = process.env.BREVO_API_KEY
+  const fromEmail = process.env.BREVO_FROM_EMAIL || 'noreply@yourdomain.com'
+
+  if (!apiKey) {
+    console.log('='.repeat(60))
+    console.log('⚠️  Brevo API Key 누락 - 개발 모드로 전환')
+    console.log('='.repeat(60))
+    console.log(`수신자: ${to}`)
+    console.log(`인증번호: ${code}`)
+    console.log('='.repeat(60))
+    console.log('💡 BREVO_API_KEY=your_api_key_here')
+    console.log('='.repeat(60))
+    return
+  }
+
+  const htmlContent = generateEmailVerificationTemplate(code)
+
+  const emailData = {
+    sender: {
+      name: 'GCS:Web',
+      email: fromEmail
+    },
+    to: [
+      {
+        email: to
+      }
+    ],
+    subject: '[GCS:Web] 이메일 인증번호',
+    htmlContent: htmlContent,
+    textContent: `안녕하세요!\n\nGCS:Web 회원가입을 위한 이메일 인증번호입니다.\n\n인증번호: ${code}\n\n위의 인증번호를 회원가입 페이지에 입력해주세요.\n\n인증번호는 5분 후에 만료됩니다.`
+  }
+
+  try {
+    console.log('📧 Brevo API로 이메일 인증번호 전송 시도 중...')
+    console.log(`API Key: ${apiKey.substring(0, 10)}...`)
+    console.log(`From: ${emailData.sender.email}`)
+    console.log(`To: ${to}`)
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(emailData)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Brevo 이메일 인증번호 전송 실패', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      })
+      throw new Error(`Brevo API 오류: ${response.status} - ${errorText}`)
+    }
+
+    console.log(`✅ Brevo 이메일 인증번호 전송 완료: ${to}`)
+  } catch (error) {
+    console.error('❌ Brevo 이메일 인증번호 전송 실패:', error)
+    console.log('='.repeat(60))
+    console.log('⚠️  Brevo API 실패 - 개발 모드로 전환')
+    console.log('='.repeat(60))
+    console.log(`수신자: ${to}`)
+    console.log(`인증번호: ${code}`)
+    console.log('='.repeat(60))
+    console.log('💡 Brevo API 키를 확인하거나 다른 이메일 서비스를 사용하세요.')
+    console.log('='.repeat(60))
+    return
+  }
+}
+
+/**
+ * 이메일 인증번호 HTML 템플릿을 생성합니다.
+ */
+function generateEmailVerificationTemplate(code: string): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>이메일 인증번호</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background-color: white;
+          border-radius: 8px;
+          padding: 40px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .logo {
+          font-size: 24px;
+          font-weight: bold;
+          color: #000;
+          margin-bottom: 10px;
+        }
+        .logo .highlight {
+          color: #f57520;
+        }
+        .title {
+          font-size: 20px;
+          font-weight: bold;
+          color: #000;
+          margin-bottom: 20px;
+        }
+        .content {
+          margin-bottom: 30px;
+        }
+        .code-container {
+          background-color: #f8f9fa;
+          border: 2px solid #e9ecef;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: center;
+          margin: 20px 0;
+        }
+        .verification-code {
+          font-size: 32px;
+          font-weight: bold;
+          color: #000;
+          letter-spacing: 8px;
+          font-family: 'Courier New', monospace;
+        }
+        .warning {
+          background-color: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 4px;
+          padding: 15px;
+          margin: 20px 0;
+          color: #856404;
+        }
+        .footer {
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+          font-size: 14px;
+          color: #666;
+          text-align: center;
+        }
+        .link {
+          color: #f57520;
+          text-decoration: none;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">GCS<span class="highlight">:</span>Web</div>
+          <div class="title">이메일 인증번호</div>
+        </div>
+
+        <div class="content">
+          <p>안녕하세요!</p>
+
+          <p>GCS:Web 회원가입을 위한 이메일 인증번호입니다.</p>
+
+          <div class="code-container">
+            <div class="verification-code">${code}</div>
+          </div>
+
+          <p>위의 인증번호를 회원가입 페이지에 입력해주세요.</p>
+
+          <div class="warning">
+            <strong>⚠️ 주의사항:</strong>
+            <ul>
+              <li>인증번호는 5분 후에 만료됩니다.</li>
+              <li>인증번호는 한 번만 사용할 수 있습니다.</li>
+              <li>인증번호는 3회까지 시도할 수 있습니다.</li>
+              <li>본인이 요청하지 않은 인증번호라면 이 이메일을 무시해주세요.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>이 이메일은 GCS:Web 시스템에서 자동으로 발송되었습니다.</p>
+          <p>문의사항이 있으시면 관리자에게 연락해주세요.</p>
+          <p>
+            <a href="mailto:admin@gcs-demo.com" class="link">admin@gcs-demo.com</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
  * Brevo API 연결을 테스트합니다.
  */
 export async function testBrevoConnection(): Promise<boolean> {

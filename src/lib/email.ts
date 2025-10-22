@@ -234,6 +234,206 @@ function generatePasswordResetEmailTemplate(userName: string, resetLink: string)
 }
 
 /**
+ * 이메일 인증번호를 전송합니다.
+ * @param to 수신자 이메일 주소
+ * @param code 인증번호
+ */
+export async function sendEmailVerificationCode(
+  to: string,
+  code: string
+): Promise<void> {
+  // SendGrid HTTP API 사용
+  if (EMAIL_METHOD === 'sendgrid') {
+    return await sendEmailVerificationCodeViaSendGrid(to, code)
+  }
+
+  // Brevo HTTP API 사용
+  if (EMAIL_METHOD === 'brevo') {
+    return await sendEmailVerificationCodeViaBrevo(to, code)
+  }
+
+  // SMTP 설정이 없거나 연결 실패 시 개발 모드로 fallback
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('='.repeat(60))
+    console.log('📧 이메일 인증번호 (개발 모드)')
+    console.log('='.repeat(60))
+    console.log(`수신자: ${to}`)
+    console.log(`인증번호: ${code}`)
+    console.log('='.repeat(60))
+    console.log('💡 실제 이메일 전송을 위해서는 Railway 환경변수에 설정을 추가하세요.')
+    console.log('='.repeat(60))
+    return
+  }
+
+  const mailOptions = {
+    from: `"GCS:Web" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    to,
+    subject: '[GCS:Web] 이메일 인증번호',
+    html: generateEmailVerificationTemplate(code),
+  }
+
+  try {
+    console.log('📧 SMTP 연결 시도 중...')
+    console.log(`Host: ${process.env.SMTP_HOST}`)
+    console.log(`Port: ${process.env.SMTP_PORT}`)
+    console.log(`User: ${process.env.SMTP_USER}`)
+    console.log(`From: ${process.env.SMTP_FROM}`)
+
+    await transporter.sendMail(mailOptions)
+    console.log(`✅ 이메일 인증번호 전송 완료: ${to}`)
+  } catch (error) {
+    console.error('❌ 이메일 전송 실패:', error)
+    console.error('오류 타입:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('오류 코드:', (error as any).code)
+    console.error('오류 명령:', (error as any).command)
+
+    // Railway에서 SMTP 연결이 차단된 경우 개발 모드로 fallback
+    if (error instanceof Error && (error.message.includes('timeout') || (error as any).code === 'ETIMEDOUT')) {
+      console.log('='.repeat(60))
+      console.log('⚠️  SMTP 연결 타임아웃 - 개발 모드로 전환')
+      console.log('='.repeat(60))
+      console.log(`수신자: ${to}`)
+      console.log(`인증번호: ${code}`)
+      console.log('='.repeat(60))
+      console.log('💡 Railway에서 SMTP 연결이 차단되었습니다.')
+      console.log('💡 SendGrid 또는 Mailgun 사용을 권장합니다.')
+      console.log('='.repeat(60))
+      return
+    }
+
+    throw new Error('이메일 전송에 실패했습니다.')
+  }
+}
+
+/**
+ * 이메일 인증번호 HTML 템플릿을 생성합니다.
+ */
+function generateEmailVerificationTemplate(code: string): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>이메일 인증번호</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background-color: white;
+          border-radius: 8px;
+          padding: 40px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .logo {
+          font-size: 24px;
+          font-weight: bold;
+          color: #000;
+          margin-bottom: 10px;
+        }
+        .logo .highlight {
+          color: #f57520;
+        }
+        .title {
+          font-size: 20px;
+          font-weight: bold;
+          color: #000;
+          margin-bottom: 20px;
+        }
+        .content {
+          margin-bottom: 30px;
+        }
+        .code-container {
+          background-color: #f8f9fa;
+          border: 2px solid #e9ecef;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: center;
+          margin: 20px 0;
+        }
+        .verification-code {
+          font-size: 32px;
+          font-weight: bold;
+          color: #000;
+          letter-spacing: 8px;
+          font-family: 'Courier New', monospace;
+        }
+        .warning {
+          background-color: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 4px;
+          padding: 15px;
+          margin: 20px 0;
+          color: #856404;
+        }
+        .footer {
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+          font-size: 14px;
+          color: #666;
+          text-align: center;
+        }
+        .link {
+          color: #f57520;
+          text-decoration: none;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">GCS<span class="highlight">:</span>Web</div>
+          <div class="title">이메일 인증번호</div>
+        </div>
+
+        <div class="content">
+          <p>안녕하세요!</p>
+
+          <p>GCS:Web 회원가입을 위한 이메일 인증번호입니다.</p>
+
+          <div class="code-container">
+            <div class="verification-code">${code}</div>
+          </div>
+
+          <p>위의 인증번호를 회원가입 페이지에 입력해주세요.</p>
+
+          <div class="warning">
+            <strong>⚠️ 주의사항:</strong>
+            <ul>
+              <li>인증번호는 5분 후에 만료됩니다.</li>
+              <li>인증번호는 한 번만 사용할 수 있습니다.</li>
+              <li>인증번호는 3회까지 시도할 수 있습니다.</li>
+              <li>본인이 요청하지 않은 인증번호라면 이 이메일을 무시해주세요.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>이 이메일은 GCS:Web 시스템에서 자동으로 발송되었습니다.</p>
+          <p>문의사항이 있으시면 관리자에게 연락해주세요.</p>
+          <p>
+            <a href="mailto:admin@gcs-demo.com" class="link">admin@gcs-demo.com</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
  * 이메일 전송 설정을 테스트합니다.
  */
 export async function testEmailConnection(): Promise<boolean> {
