@@ -203,7 +203,6 @@ function UserManagement() {
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'ADMIN': return '관리자'
-      case 'STUDENT': return '학생'
       case 'MAJOR': return '전공회원'
       case 'GENERAL': return '일반회원'
       default: return '비회원'
@@ -213,7 +212,6 @@ function UserManagement() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'ADMIN': return 'bg-red-100 text-red-800'
-      case 'STUDENT': return 'bg-green-100 text-green-800'
       case 'MAJOR': return 'bg-purple-100 text-purple-800'
       case 'GENERAL': return 'bg-blue-100 text-blue-800'
       default: return 'bg-gray-100 text-gray-800'
@@ -255,7 +253,6 @@ function UserManagement() {
             >
               <option value="ALL">모든 역할</option>
               <option value="ADMIN">관리자</option>
-              <option value="STUDENT">학생</option>
               <option value="MAJOR">전공회원</option>
               <option value="GENERAL">일반회원</option>
             </select>
@@ -336,7 +333,6 @@ function UserManagement() {
                         >
                           <option value="GENERAL">일반회원</option>
                           <option value="MAJOR">전공회원</option>
-                          <option value="STUDENT">학생</option>
                           <option value="ADMIN">관리자</option>
                         </select>
                       </div>

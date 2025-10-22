@@ -349,7 +349,6 @@ model EmailVerificationCode {
 enum UserRole {
   GENERAL   // 일반회원 (상품 구매만 가능)
   MAJOR     // 전공회원 (상품 구매 + 글쓰기 가능)
-  STUDENT   // 학생회원 (상품 구매 + 글쓰기 가능)
   ADMIN     // 운영자 (모든 권한)
 }
 
