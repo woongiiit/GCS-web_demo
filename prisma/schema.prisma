@@ -17,7 +17,7 @@ model User {
   email       String   @unique
   password    String
   name        String
-  studentId   String   @unique
+  studentId   String?  @unique
   major       String
   phone       String
   role        UserRole @default(GENERAL)
@@ -331,6 +331,7 @@ model PasswordResetToken {
 // Enums
 enum UserRole {
   GENERAL   // 일반회원 (상품 구매만 가능)
+  MAJOR     // 전공회원 (상품 구매 + 글쓰기 가능)
   STUDENT   // 학생회원 (상품 구매 + 글쓰기 가능)
   ADMIN     // 운영자 (모든 권한)
 }
