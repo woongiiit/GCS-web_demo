@@ -44,7 +44,8 @@ export async function sendPasswordResetEmailViaBrevo(
       }
     ],
     subject: '[GCS:Web] 비밀번호 재설정 요청',
-    htmlContent: generatePasswordResetEmailTemplate(userName, resetLink)
+    htmlContent: generatePasswordResetEmailTemplate(userName, resetLink),
+    textContent: `안녕하세요, ${userName}님!\n\nGCS:Web에서 비밀번호 재설정을 요청하셨습니다.\n\n재설정 링크: ${resetLink}\n\n이 링크는 1시간 후에 만료됩니다.`
   }
 
   try {
@@ -53,7 +54,7 @@ export async function sendPasswordResetEmailViaBrevo(
     console.log(`From: ${emailData.sender.email}`)
     console.log(`To: ${to}`)
     
-    const response = await fetch('https://api.brevo.com/v3/sendEmail', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         'accept': 'application/json',
