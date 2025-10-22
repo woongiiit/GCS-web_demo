@@ -9,7 +9,7 @@ import { permissions } from '@/lib/permissions'
 function CommunityContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { role } = usePermissions()
+  const { role, user } = usePermissions()
   const [activeTab, setActiveTab] = useState<'board' | 'lounge'>('board')
   const [posts, setPosts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -110,7 +110,7 @@ function CommunityContent() {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-black">Board</h2>
-                {permissions.canWritePost(role) && (
+                {permissions.canWritePost(role, user?.verificationStatus) && (
                   <Link 
                     href="/community/write?category=board"
                     className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
@@ -176,7 +176,7 @@ function CommunityContent() {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-black">Lounge</h2>
-                {permissions.canWritePost(role) && (
+                {permissions.canWritePost(role, user?.verificationStatus) && (
                   <Link 
                     href="/community/write?category=lounge"
                     className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"

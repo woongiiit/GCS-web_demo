@@ -124,8 +124,8 @@ export async function POST(request: NextRequest) {
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password: hashedPassword,
-        role: userType === 'MAJOR' ? 'MAJOR' : 'GENERAL',
-        verificationStatus: 'PENDING' // 기본값: 인증 대기
+        role: 'GENERAL', // 전공 회원도 일단 일반 회원으로 저장
+        verificationStatus: userType === 'MAJOR' ? 'REQUESTED' : 'PENDING' // 전공 회원은 인증 요청 상태
       }
     })
 

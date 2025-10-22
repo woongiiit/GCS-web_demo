@@ -15,11 +15,14 @@ export const permissions = {
   /**
    * 글 작성 권한 (Community - Board, Lounge만)
    * @param role - 사용자 역할
+   * @param verificationStatus - 인증 상태
    * @returns 글 작성 가능 여부
    */
-  canWritePost: (role?: UserRole): boolean => {
+  canWritePost: (role?: UserRole, verificationStatus?: string): boolean => {
     if (!role) return false; // 비회원 불가
-    return role === 'MAJOR' || role === 'ADMIN';
+    if (role === 'ADMIN') return true; // 관리자는 항상 가능
+    if (role === 'MAJOR' && verificationStatus === 'APPROVED') return true; // 전공 회원은 인증 완료 시에만 가능
+    return false;
   },
 
   /**

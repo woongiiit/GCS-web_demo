@@ -200,11 +200,12 @@ function UserManagement() {
     }
   }
 
-  const getRoleLabel = (role: string) => {
+  const getRoleLabel = (role: string, verificationStatus?: string) => {
     switch (role) {
       case 'ADMIN': return '관리자'
       case 'MAJOR': return '전공회원'
-      case 'GENERAL': return '일반회원'
+      case 'GENERAL': 
+        return verificationStatus === 'REQUESTED' ? '일반회원 (인증 대기 중)' : '일반회원'
       default: return '비회원'
     }
   }
@@ -306,7 +307,7 @@ function UserManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                        {getRoleLabel(user.role)}
+                        {getRoleLabel(user.role, user.verificationStatus)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
