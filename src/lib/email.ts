@@ -4,6 +4,7 @@ import { sendPasswordResetEmailViaBrevo } from './email-brevo'
 
 // 이메일 전송 방식 선택
 const EMAIL_METHOD = process.env.EMAIL_METHOD || 'smtp' // 'smtp', 'sendgrid', 또는 'brevo'
+// Railway 배포 강제 업데이트를 위한 주석
 
 // SMTP 설정 (기존 방식)
 let transporter: any = null
