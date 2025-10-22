@@ -25,6 +25,9 @@ export type SecurityEvent =
   | 'invalid_token_attempt'
   | 'rate_limit_exceeded'
   | 'suspicious_activity'
+  | 'invalid_login_attempt'
+  | 'login_success'
+  | 'login_error'
 
 /**
  * 로거 클래스
@@ -109,7 +112,10 @@ class Logger {
       'password_reset_failed': 'medium',
       'invalid_token_attempt': 'high',
       'rate_limit_exceeded': 'medium',
-      'suspicious_activity': 'high'
+      'suspicious_activity': 'high',
+      'invalid_login_attempt': 'medium',
+      'login_success': 'low',
+      'login_error': 'high'
     }
     return severityMap[event]
   }
