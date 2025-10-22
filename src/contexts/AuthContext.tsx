@@ -99,7 +99,7 @@ export function usePermissions() {
     verificationStatus: user?.verificationStatus,
     isGuest: !user,
     isGeneral: user?.role === 'GENERAL',
-    isStudent: user?.role === 'STUDENT',
+    isMajor: user?.role === 'MAJOR',
     isAdmin: user?.role === 'ADMIN',
     isVerified: user?.verificationStatus === 'APPROVED',
     isVerificationPending: user?.verificationStatus === 'PENDING',

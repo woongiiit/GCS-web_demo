@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
-          role: 'STUDENT', // 학생회원으로 전환
+          role: 'MAJOR', // 전공회원으로 전환
           verificationStatus: 'APPROVED',
           verificationApprovedAt: new Date(),
           verificationRejectedAt: null,
