@@ -23,11 +23,28 @@ export const permissions = {
   },
 
   /**
-   * 글 보기 권한 (Archive, Community)
+   * Archive 글 보기 권한 (Projects, News)
    * @returns 모든 사용자 가능 (비회원 포함)
    */
-  canViewPost: (): boolean => {
+  canViewArchive: (): boolean => {
     return true; // 모든 사용자 가능
+  },
+
+  /**
+   * Community 글 목록 보기 권한
+   * @returns 모든 사용자 가능 (비회원 포함)
+   */
+  canViewCommunityList: (): boolean => {
+    return true; // 모든 사용자 가능
+  },
+
+  /**
+   * Community 글 세부내용 보기 권한
+   * @param role - 사용자 역할
+   * @returns 로그인한 사용자만 가능
+   */
+  canViewCommunityPost: (role?: UserRole): boolean => {
+    return !!role; // 로그인한 사용자만 가능
   },
 
   /**

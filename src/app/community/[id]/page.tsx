@@ -16,6 +16,43 @@ function CommunityDetailContent() {
 
   const postId = params.id as string
 
+  // 권한 체크
+  if (!permissions.canViewCommunityPost(role)) {
+    return (
+      <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
+        <div className="relative min-h-screen bg-white">
+          <div className="bg-black pt-32 pb-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-0">
+              <div className="text-center">
+                <h1 className="text-4xl font-bold text-white mb-4">Community</h1>
+                <p className="text-white text-sm mb-8">로그인이 필요한 서비스입니다.</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-gray-600 mb-4">Community 글을 보려면 로그인이 필요합니다.</p>
+              <div className="flex space-x-4 justify-center">
+                <Link 
+                  href="/login"
+                  className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  로그인
+                </Link>
+                <Link 
+                  href="/community"
+                  className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  목록으로 돌아가기
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   useEffect(() => {
     if (postId) {
       fetchPost()

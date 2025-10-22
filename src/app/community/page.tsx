@@ -129,8 +129,17 @@ function CommunityContent() {
                   </div>
                 ) : posts.length > 0 ? (
                   posts.map((post) => (
-                    <Link key={post.id} href={`/community/${post.id}`}>
-                      <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
+                    <div 
+                      key={post.id} 
+                      onClick={() => {
+                        if (permissions.canViewCommunityPost(role)) {
+                          router.push(`/community/${post.id}`)
+                        } else {
+                          router.push('/login')
+                        }
+                      }}
+                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
@@ -154,8 +163,7 @@ function CommunityContent() {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                    </div>
                   ))
                 ) : (
                   <div className="text-center py-12 text-gray-500">
@@ -187,8 +195,17 @@ function CommunityContent() {
                   </div>
                 ) : posts.length > 0 ? (
                   posts.map((post) => (
-                    <Link key={post.id} href={`/community/${post.id}`}>
-                      <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
+                    <div 
+                      key={post.id} 
+                      onClick={() => {
+                        if (permissions.canViewCommunityPost(role)) {
+                          router.push(`/community/${post.id}`)
+                        } else {
+                          router.push('/login')
+                        }
+                      }}
+                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
@@ -212,8 +229,7 @@ function CommunityContent() {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                    </div>
                   ))
                 ) : (
                   <div className="text-center py-12 text-gray-500">
