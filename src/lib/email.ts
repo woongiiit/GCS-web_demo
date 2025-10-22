@@ -26,7 +26,7 @@ export async function sendPasswordResetEmail(
   resetLink: string,
   userName: string
 ): Promise<void> {
-  // 개발 환경에서 이메일 설정이 없는 경우 콘솔에 출력
+  // SMTP 설정이 없거나 연결 실패 시 개발 모드로 fallback
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.log('='.repeat(60))
     console.log('📧 비밀번호 재설정 이메일 (개발 모드)')
@@ -35,7 +35,8 @@ export async function sendPasswordResetEmail(
     console.log(`사용자: ${userName}`)
     console.log(`재설정 링크: ${resetLink}`)
     console.log('='.repeat(60))
-    console.log('💡 실제 이메일 전송을 위해서는 .env 파일에 SMTP 설정을 추가하세요.')
+    console.log('💡 실제 이메일 전송을 위해서는 Railway 환경변수에 SMTP 설정을 추가하세요.')
+    console.log('💡 권장: SendGrid (smtp.sendgrid.net) 또는 Mailgun 사용')
     console.log('='.repeat(60))
     return
   }
@@ -52,6 +53,22 @@ export async function sendPasswordResetEmail(
     console.log(`비밀번호 재설정 이메일 전송 완료: ${to}`)
   } catch (error) {
     console.error('이메일 전송 실패:', error)
+    
+    // Railway에서 Gmail 연결이 차단된 경우 개발 모드로 fallback
+    if (error instanceof Error && error.message.includes('timeout')) {
+      console.log('='.repeat(60))
+      console.log('⚠️  SMTP 연결 타임아웃 - 개발 모드로 전환')
+      console.log('='.repeat(60))
+      console.log(`수신자: ${to}`)
+      console.log(`사용자: ${userName}`)
+      console.log(`재설정 링크: ${resetLink}`)
+      console.log('='.repeat(60))
+      console.log('💡 Railway에서 Gmail SMTP가 차단되었습니다.')
+      console.log('💡 SendGrid 또는 Mailgun 사용을 권장합니다.')
+      console.log('='.repeat(60))
+      return
+    }
+    
     throw new Error('이메일 전송에 실패했습니다.')
   }
 }
