@@ -4,22 +4,23 @@
  * 권한 계층:
  * - 비회원 (GUEST): 로그인하지 않은 사용자
  * - 일반회원 (GENERAL): 상품 구매만 가능
+ * - 전공회원 (MAJOR): 상품 구매 + Community 글쓰기 가능 (Board, Lounge만)
  * - 학생회원 (STUDENT): 상품 구매 + 글쓰기 가능
  * - 운영자 (ADMIN): 모든 권한
  */
 
-export type UserRole = 'GENERAL' | 'STUDENT' | 'ADMIN';
+export type UserRole = 'GENERAL' | 'MAJOR' | 'STUDENT' | 'ADMIN';
 export type VerificationStatus = 'PENDING' | 'REQUESTED' | 'APPROVED' | 'REJECTED';
 
 export const permissions = {
   /**
-   * 글 작성 권한 (Archive, Community)
+   * 글 작성 권한 (Community - Board, Lounge만)
    * @param role - 사용자 역할
    * @returns 글 작성 가능 여부
    */
   canWritePost: (role?: UserRole): boolean => {
     if (!role) return false; // 비회원 불가
-    return role === 'STUDENT' || role === 'ADMIN';
+    return role === 'MAJOR' || role === 'STUDENT' || role === 'ADMIN';
   },
 
   /**
@@ -52,7 +53,7 @@ export const permissions = {
    */
   canWriteComment: (role?: UserRole): boolean => {
     if (!role) return false; // 비회원 불가
-    return role === 'STUDENT' || role === 'ADMIN';
+    return role === 'MAJOR' || role === 'STUDENT' || role === 'ADMIN';
   },
 
   /**
@@ -70,7 +71,7 @@ export const permissions = {
    */
   canPurchaseProduct: (role?: UserRole): boolean => {
     if (!role) return false; // 비회원 불가
-    return role === 'GENERAL' || role === 'STUDENT' || role === 'ADMIN';
+    return role === 'GENERAL' || role === 'MAJOR' || role === 'STUDENT' || role === 'ADMIN';
   },
 
   /**
@@ -130,6 +131,15 @@ export const permissions = {
   },
 
   /**
+   * Archive 글 작성 권한 (프로젝트, 뉴스 등록)
+   * @param role - 사용자 역할
+   * @returns Archive 글 작성 가능 여부
+   */
+  canWriteArchive: (role?: UserRole): boolean => {
+    return role === 'ADMIN';
+  },
+
+  /**
    * 관리자 페이지 접근 권한
    * @param role - 사용자 역할
    * @returns 관리자 페이지 접근 가능 여부
@@ -159,6 +169,7 @@ export const permissions = {
  */
 export const roleDescriptions: Record<UserRole, string> = {
   GENERAL: '일반회원 - 상품 구매만 가능',
+  MAJOR: '전공회원 - 상품 구매 및 Community 글쓰기 가능 (Board, Lounge만)',
   STUDENT: '학생회원 - 상품 구매 및 게시글 작성 가능',
   ADMIN: '운영자 - 모든 권한 보유'
 };
