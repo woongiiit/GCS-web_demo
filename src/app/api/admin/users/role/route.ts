@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 유효한 역할인지 확인
-    const validRoles = ['GENERAL', 'STUDENT', 'ADMIN']
+    const validRoles = ['GENERAL', 'MAJOR', 'STUDENT', 'ADMIN']
     if (!validRoles.includes(role)) {
       return NextResponse.json(
         { error: '유효하지 않은 역할입니다.' },
@@ -57,13 +57,13 @@ export async function POST(request: NextRequest) {
       where: { id: userId },
       data: { 
         role,
-        // 역할이 STUDENT로 변경되면 인증 상태를 APPROVED로 설정
-        ...(role === 'STUDENT' && { 
+        // 역할이 STUDENT 또는 MAJOR로 변경되면 인증 상태를 APPROVED로 설정
+        ...((role === 'STUDENT' || role === 'MAJOR') && { 
           verificationStatus: 'APPROVED',
           verificationApprovedAt: new Date()
         }),
-        // 역할이 STUDENT가 아닌 다른 역할로 변경되면 인증 상태를 PENDING으로 설정
-        ...(role !== 'STUDENT' && { 
+        // 역할이 STUDENT나 MAJOR가 아닌 다른 역할로 변경되면 인증 상태를 PENDING으로 설정
+        ...(role !== 'STUDENT' && role !== 'MAJOR' && { 
           verificationStatus: 'PENDING',
           verificationApprovedAt: null
         })
