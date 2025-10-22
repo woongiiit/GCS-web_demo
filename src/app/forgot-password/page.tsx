@@ -105,6 +105,12 @@ export default function ForgotPasswordPage() {
                     <span className="font-medium">{formData.email}</span>로<br />
                     비밀번호 재설정 링크를 전송했습니다.
                   </p>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-yellow-800">
+                      <strong>📧 이메일이 도착하지 않나요?</strong><br />
+                      스팸함을 확인하거나, 관리자에게 문의해주세요.
+                    </p>
+                  </div>
                   <p className="text-sm text-gray-500">
                     이메일을 확인하고 링크를 클릭하여 새 비밀번호를 설정해주세요.
                   </p>
