@@ -29,7 +29,7 @@ function WriteContent() {
             <div className="text-center">
               <p className="text-gray-600 mb-4">
                 {!role ? '로그인이 필요한 서비스입니다.' : 
-                 verificationStatus === 'REQUESTED' ? '전공 회원 인증이 완료되면 글을 작성할 수 있습니다.' :
+                 role === 'GENERAL' && verificationStatus === 'REQUESTED' ? '전공 회원 인증이 완료되면 글을 작성할 수 있습니다.' :
                  '글 작성 권한이 없습니다.'}
               </p>
               <div className="flex space-x-4 justify-center">

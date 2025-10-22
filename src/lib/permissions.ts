@@ -21,7 +21,7 @@ export const permissions = {
   canWritePost: (role?: UserRole, verificationStatus?: string): boolean => {
     if (!role) return false; // 비회원 불가
     if (role === 'ADMIN') return true; // 관리자는 항상 가능
-    if (role === 'MAJOR' && verificationStatus === 'APPROVED') return true; // 전공 회원은 인증 완료 시에만 가능
+    if (role === 'MAJOR') return true; // 전공 회원은 항상 가능 (이미 관리자 승인을 받은 상태)
     return false;
   },
 
