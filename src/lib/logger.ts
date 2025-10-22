@@ -28,6 +28,7 @@ export type SecurityEvent =
   | 'invalid_login_attempt'
   | 'login_success'
   | 'login_error'
+  | 'account_blocked'
 
 /**
  * 로거 클래스
@@ -115,7 +116,8 @@ class Logger {
       'suspicious_activity': 'high',
       'invalid_login_attempt': 'medium',
       'login_success': 'low',
-      'login_error': 'high'
+      'login_error': 'high',
+      'account_blocked': 'high'
     }
     return severityMap[event]
   }

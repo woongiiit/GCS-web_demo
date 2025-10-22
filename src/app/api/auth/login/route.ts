@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { rateLimiters, checkRateLimit, getClientIP } from '@/lib/rate-limit'
+import { rateLimiters, checkRateLimit, checkAccountRateLimit, getClientIP } from '@/lib/rate-limit'
 import { validateRequest, createErrorResponse, createSuccessResponse } from '@/lib/security'
 import { logger, logSecurityEvent } from '@/lib/logger'
 
@@ -46,6 +46,18 @@ export async function POST(request: NextRequest) {
         email: email || 'missing'
       })
       return createErrorResponse('이메일과 비밀번호를 입력해주세요.')
+    }
+
+    // 계정별 Rate Limit 확인 (비밀번호 실패 횟수 체크)
+    const accountRateLimit = await checkAccountRateLimit(email)
+    if (accountRateLimit.isBlocked) {
+      logSecurityEvent('account_blocked', 'Account temporarily blocked due to too many failed attempts', {
+        ip: clientIP,
+        userAgent,
+        email,
+        remainingTime: Math.ceil((accountRateLimit.reset.getTime() - Date.now()) / 60000)
+      })
+      return createErrorResponse(accountRateLimit.error!, 423) // 423 Locked
     }
 
     // 사용자 조회

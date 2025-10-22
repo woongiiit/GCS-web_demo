@@ -42,6 +42,14 @@ export const rateLimiters = {
     analytics: true,
     prefix: 'general',
   }),
+
+  // 계정별 로그인 실패: 10분에 5회 (5회 실패 시 10분 벤)
+  accountLoginFailure: new Ratelimit({
+    redis: redis!,
+    limiter: Ratelimit.slidingWindow(5, '10 m'),
+    analytics: true,
+    prefix: 'account-login-failure',
+  }),
 }
 
 /**
@@ -78,6 +86,43 @@ export async function checkRateLimit(
       limit: 100,
       remaining: 99,
       reset: new Date(Date.now() + 60000),
+    }
+  }
+}
+
+/**
+ * 계정별 Rate Limiting을 적용합니다.
+ * @param email 사용자 이메일
+ * @returns Rate limiting 결과
+ */
+export async function checkAccountRateLimit(email: string): Promise<{
+  success: boolean
+  limit: number
+  remaining: number
+  reset: Date
+  error?: string
+  isBlocked?: boolean
+}> {
+  try {
+    const { success, limit, remaining, reset } = await rateLimiters.accountLoginFailure.limit(email)
+    
+    return {
+      success,
+      limit,
+      remaining,
+      reset: new Date(reset),
+      isBlocked: !success,
+      error: success ? undefined : `계정이 일시적으로 잠겼습니다. ${Math.ceil((new Date(reset).getTime() - Date.now()) / 60000)}분 후에 다시 시도해주세요.`
+    }
+  } catch (error) {
+    console.error('Account rate limiting 오류:', error)
+    // Rate limiting 실패 시 허용 (서비스 가용성 우선)
+    return {
+      success: true,
+      limit: 5,
+      remaining: 4,
+      reset: new Date(Date.now() + 600000),
+      isBlocked: false,
     }
   }
 }
