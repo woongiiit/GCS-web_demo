@@ -54,12 +54,13 @@ export default function SignupPage() {
       }))
     }
     
-    // 회원 유형이 변경되면 학번 필드 초기화
+    // 회원 유형이 변경되면 학번, 주전공 필드 초기화
     if (name === 'userType') {
       setFormData(prev => ({
         ...prev,
         [name]: value,
-        studentId: value === 'GENERAL' ? '' : prev.studentId
+        studentId: value === 'GENERAL' ? '' : prev.studentId,
+        major: value === 'GENERAL' ? '' : prev.major
       }))
     }
     
@@ -91,11 +92,13 @@ export default function SignupPage() {
       }
     }
 
-    // 주전공 검증
-    if (!formData.major.trim()) {
-      newErrors.major = '주전공을 입력해주세요.'
-    } else if (formData.major.trim().length < 2) {
-      newErrors.major = '주전공은 2글자 이상이어야 합니다.'
+    // 주전공 검증 (전공 회원만)
+    if (formData.userType === 'MAJOR') {
+      if (!formData.major.trim()) {
+        newErrors.major = '주전공을 입력해주세요.'
+      } else if (formData.major.trim().length < 2) {
+        newErrors.major = '주전공은 2글자 이상이어야 합니다.'
+      }
     }
 
     // 이메일 검증
@@ -152,7 +155,7 @@ export default function SignupPage() {
           name: formData.name,
           userType: formData.userType,
           studentId: formData.userType === 'MAJOR' ? formData.studentId : null,
-          major: formData.major,
+          major: formData.userType === 'MAJOR' ? formData.major : null,
           email: formData.email,
           phone: formData.phone,
           password: formData.password
@@ -285,26 +288,28 @@ export default function SignupPage() {
                   </div>
                 )}
 
-                {/* 주전공 */}
-                <div>
-                  <label htmlFor="major" className="block text-sm font-medium text-black mb-2">
-                    주전공 *
-                  </label>
-                  <input
-                    type="text"
-                    id="major"
-                    name="major"
-                    value={formData.major}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                      errors.major ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                    }`}
-                    placeholder="예: 산업시스템공학과"
-                  />
-                  {errors.major && (
-                    <p className="mt-1 text-sm text-red-500">{errors.major}</p>
-                  )}
-                </div>
+                {/* 주전공 (전공 회원만) */}
+                {formData.userType === 'MAJOR' && (
+                  <div>
+                    <label htmlFor="major" className="block text-sm font-medium text-black mb-2">
+                      주전공 *
+                    </label>
+                    <input
+                      type="text"
+                      id="major"
+                      name="major"
+                      value={formData.major}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
+                        errors.major ? 'border-red-500' : 'border-gray-300 focus:border-black'
+                      }`}
+                      placeholder="예: 산업시스템공학과"
+                    />
+                    {errors.major && (
+                      <p className="mt-1 text-sm text-red-500">{errors.major}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* 이메일 */}
                 <div>

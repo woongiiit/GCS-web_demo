@@ -18,7 +18,7 @@ model User {
   password    String
   name        String
   studentId   String?  @unique
-  major       String
+  major       String?
   phone       String
   role        UserRole @default(GENERAL)
   

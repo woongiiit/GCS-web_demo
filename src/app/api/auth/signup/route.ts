@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const { name, userType, studentId, major, email, phone, password } = await request.json()
 
     // 입력값 검증
-    if (!name || !userType || !major || !email || !phone || !password) {
+    if (!name || !userType || !email || !phone || !password) {
       return NextResponse.json(
         { error: '모든 필드를 입력해주세요.' },
         { status: 400 }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 학번 형식 검증 (전공 회원만)
+    // 학번 및 주전공 검증 (전공 회원만)
     if (userType === 'MAJOR') {
       if (!studentId) {
         return NextResponse.json(
@@ -45,6 +45,18 @@ export async function POST(request: NextRequest) {
       if (!/^\d{10}$/.test(studentId)) {
         return NextResponse.json(
           { error: '학번은 10자리 숫자여야 합니다.' },
+          { status: 400 }
+        )
+      }
+      if (!major) {
+        return NextResponse.json(
+          { error: '전공 회원은 주전공을 입력해주세요.' },
+          { status: 400 }
+        )
+      }
+      if (major.trim().length < 2) {
+        return NextResponse.json(
+          { error: '주전공은 2글자 이상이어야 합니다.' },
           { status: 400 }
         )
       }
@@ -108,7 +120,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         studentId: userType === 'MAJOR' ? studentId?.trim() : null,
-        major: major.trim(),
+        major: userType === 'MAJOR' ? major?.trim() : null,
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password: hashedPassword,
