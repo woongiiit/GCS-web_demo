@@ -18,7 +18,7 @@ export interface LogContext {
 /**
  * 보안 이벤트 타입
  */
-export type SecurityEvent = 
+export type SecurityEvent =
   | 'password_reset_requested'
   | 'password_reset_completed'
   | 'password_reset_failed'
@@ -29,6 +29,9 @@ export type SecurityEvent =
   | 'login_success'
   | 'login_error'
   | 'account_blocked'
+  | 'email_verification_requested'
+  | 'email_verification_success'
+  | 'email_verification_failed'
 
 /**
  * 로거 클래스
@@ -117,7 +120,10 @@ class Logger {
       'invalid_login_attempt': 'medium',
       'login_success': 'low',
       'login_error': 'high',
-      'account_blocked': 'high'
+      'account_blocked': 'high',
+      'email_verification_requested': 'low',
+      'email_verification_success': 'low',
+      'email_verification_failed': 'medium'
     }
     return severityMap[event]
   }
