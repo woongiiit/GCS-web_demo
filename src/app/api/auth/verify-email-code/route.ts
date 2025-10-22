@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       })
 
       return createErrorResponse(verificationResult.message, 400, {
-        remainingAttempts: verificationResult.remainingAttempts
+        remainingAttempts: verificationResult.remainingAttempts?.toString() || '0'
       })
     }
 
