@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
-import { sendPasswordResetEmailViaSendGrid } from './email-sendgrid'
-import { sendPasswordResetEmailViaBrevo } from './email-brevo'
+import { sendPasswordResetEmailViaSendGrid, sendEmailVerificationCodeViaSendGrid } from './email-sendgrid'
+import { sendPasswordResetEmailViaBrevo, sendEmailVerificationCodeViaBrevo } from './email-brevo'
 
 // 이메일 전송 방식 선택
 const EMAIL_METHOD = process.env.EMAIL_METHOD || 'smtp' // 'smtp', 'sendgrid', 또는 'brevo'
