@@ -7,12 +7,20 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, studentId, major, email, phone, password } = await request.json()
+    const { name, userType, studentId, major, email, phone, password } = await request.json()
 
     // 입력값 검증
-    if (!name || !studentId || !major || !email || !phone || !password) {
+    if (!name || !userType || !major || !email || !phone || !password) {
       return NextResponse.json(
         { error: '모든 필드를 입력해주세요.' },
+        { status: 400 }
+      )
+    }
+
+    // 회원 유형 검증
+    if (!['GENERAL', 'MAJOR'].includes(userType)) {
+      return NextResponse.json(
+        { error: '올바른 회원 유형을 선택해주세요.' },
         { status: 400 }
       )
     }
@@ -26,12 +34,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 학번 형식 검증 (10자리 숫자)
-    if (!/^\d{10}$/.test(studentId)) {
-      return NextResponse.json(
-        { error: '학번은 10자리 숫자여야 합니다.' },
-        { status: 400 }
-      )
+    // 학번 형식 검증 (전공 회원만)
+    if (userType === 'MAJOR') {
+      if (!studentId) {
+        return NextResponse.json(
+          { error: '전공 회원은 학번을 입력해주세요.' },
+          { status: 400 }
+        )
+      }
+      if (!/^\d{10}$/.test(studentId)) {
+        return NextResponse.json(
+          { error: '학번은 10자리 숫자여야 합니다.' },
+          { status: 400 }
+        )
+      }
     }
 
     // 전화번호 형식 검증 (010-XXXX-XXXX)
@@ -69,16 +85,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 학번 중복 검사
-    const existingUserByStudentId = await prisma.user.findUnique({
-      where: { studentId }
-    })
+    // 학번 중복 검사 (전공 회원만)
+    if (userType === 'MAJOR' && studentId) {
+      const existingUserByStudentId = await prisma.user.findUnique({
+        where: { studentId }
+      })
 
-    if (existingUserByStudentId) {
-      return NextResponse.json(
-        { error: '이미 사용 중인 학번입니다.' },
-        { status: 409 }
-      )
+      if (existingUserByStudentId) {
+        return NextResponse.json(
+          { error: '이미 사용 중인 학번입니다.' },
+          { status: 409 }
+        )
+      }
     }
 
     // 비밀번호 해싱
@@ -89,12 +107,12 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.create({
       data: {
         name: name.trim(),
-        studentId: studentId.trim(),
+        studentId: userType === 'MAJOR' ? studentId?.trim() : null,
         major: major.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password: hashedPassword,
-        role: 'GENERAL', // 기본값: 일반회원
+        role: userType === 'MAJOR' ? 'MAJOR' : 'GENERAL',
         verificationStatus: 'PENDING' // 기본값: 인증 대기
       }
     })

@@ -6,6 +6,7 @@ import { useState } from 'react'
 export default function SignupPage() {
   const [formData, setFormData] = useState({
     name: '',
+    userType: 'GENERAL', // 'GENERAL' 또는 'MAJOR'
     studentId: '',
     major: '',
     email: '',
@@ -53,6 +54,15 @@ export default function SignupPage() {
       }))
     }
     
+    // 회원 유형이 변경되면 학번 필드 초기화
+    if (name === 'userType') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        studentId: value === 'GENERAL' ? '' : prev.studentId
+      }))
+    }
+    
     // 입력 시 해당 필드의 에러 메시지 제거
     if (errors[name]) {
       setErrors(prev => ({
@@ -72,11 +82,13 @@ export default function SignupPage() {
       newErrors.name = '이름은 2글자 이상이어야 합니다.'
     }
 
-    // 학번 검증
-    if (!formData.studentId.trim()) {
-      newErrors.studentId = '학번을 입력해주세요.'
-    } else if (!/^\d{10}$/.test(formData.studentId.trim())) {
-      newErrors.studentId = '학번은 10자리 숫자여야 합니다.'
+    // 학번 검증 (전공 회원만)
+    if (formData.userType === 'MAJOR') {
+      if (!formData.studentId.trim()) {
+        newErrors.studentId = '학번을 입력해주세요.'
+      } else if (!/^\d{10}$/.test(formData.studentId.trim())) {
+        newErrors.studentId = '학번은 10자리 숫자여야 합니다.'
+      }
     }
 
     // 주전공 검증
@@ -138,7 +150,8 @@ export default function SignupPage() {
         credentials: 'include',
         body: JSON.stringify({
           name: formData.name,
-          studentId: formData.studentId,
+          userType: formData.userType,
+          studentId: formData.userType === 'MAJOR' ? formData.studentId : null,
           major: formData.major,
           email: formData.email,
           phone: formData.phone,
@@ -211,27 +224,66 @@ export default function SignupPage() {
                   )}
                 </div>
 
-                {/* 학번 */}
+                {/* 회원 유형 */}
                 <div>
-                  <label htmlFor="studentId" className="block text-sm font-medium text-black mb-2">
-                    학번 *
+                  <label className="block text-sm font-medium text-black mb-3">
+                    회원 유형 *
                   </label>
-                  <input
-                    type="text"
-                    id="studentId"
-                    name="studentId"
-                    value={formData.studentId}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                      errors.studentId ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                    }`}
-                    placeholder="예: 2020112008"
-                    maxLength={10}
-                  />
-                  {errors.studentId && (
-                    <p className="mt-1 text-sm text-red-500">{errors.studentId}</p>
-                  )}
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="userType-general"
+                        name="userType"
+                        value="GENERAL"
+                        checked={formData.userType === 'GENERAL'}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                      />
+                      <label htmlFor="userType-general" className="ml-3 text-sm font-medium text-gray-700">
+                        일반 회원
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="userType-major"
+                        name="userType"
+                        value="MAJOR"
+                        checked={formData.userType === 'MAJOR'}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                      />
+                      <label htmlFor="userType-major" className="ml-3 text-sm font-medium text-gray-700">
+                        전공 회원
+                      </label>
+                    </div>
+                  </div>
                 </div>
+
+                {/* 학번 (전공 회원만) */}
+                {formData.userType === 'MAJOR' && (
+                  <div>
+                    <label htmlFor="studentId" className="block text-sm font-medium text-black mb-2">
+                      학번 *
+                    </label>
+                    <input
+                      type="text"
+                      id="studentId"
+                      name="studentId"
+                      value={formData.studentId}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
+                        errors.studentId ? 'border-red-500' : 'border-gray-300 focus:border-black'
+                      }`}
+                      placeholder="예: 2020112008"
+                      maxLength={10}
+                    />
+                    {errors.studentId && (
+                      <p className="mt-1 text-sm text-red-500">{errors.studentId}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* 주전공 */}
                 <div>
