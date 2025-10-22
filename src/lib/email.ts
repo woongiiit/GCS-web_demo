@@ -59,7 +59,7 @@ export async function sendPasswordResetEmail(
     console.log(`✅ 비밀번호 재설정 이메일 전송 완료: ${to}`)
   } catch (error) {
     console.error('❌ 이메일 전송 실패:', error)
-    console.error('오류 타입:', error.constructor.name)
+    console.error('오류 타입:', error instanceof Error ? error.constructor.name : typeof error)
     console.error('오류 코드:', (error as any).code)
     console.error('오류 명령:', (error as any).command)
     
