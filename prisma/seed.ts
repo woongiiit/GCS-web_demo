@@ -606,7 +606,7 @@ async function main() {
       studentId: 'STUDENT001',
       major: 'GCS:Web',
       phone: '010-2222-2222',
-      role: 'STUDENT',
+      role: 'MAJOR',
       verificationStatus: 'APPROVED',
       verificationApprovedAt: new Date()
     }
