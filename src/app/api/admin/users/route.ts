@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
-        { studentId: { contains: search, mode: 'insensitive' } }
+        { studentId: { contains: search, mode: 'insensitive' } },
+        { major: { contains: search, mode: 'insensitive' } }
       ]
     }
 

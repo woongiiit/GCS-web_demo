@@ -8,7 +8,7 @@ import Link from 'next/link'
 export default function AdminPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'users' | 'verification' | 'content'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'content'>('users')
 
   // 로그인하지 않은 경우 또는 관리자가 아닌 경우 리다이렉트
   useEffect(() => {
@@ -71,16 +71,6 @@ export default function AdminPage() {
                 사용자 관리
               </button>
               <button
-                onClick={() => setActiveTab('verification')}
-                className={`pb-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'verification'
-                    ? 'text-black border-black'
-                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                }`}
-              >
-                학생 인증 관리
-              </button>
-              <button
                 onClick={() => setActiveTab('content')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
                   activeTab === 'content'
@@ -100,8 +90,6 @@ export default function AdminPage() {
             <div className="bg-white px-4 py-8">
               {activeTab === 'users' ? (
                 <UserManagement />
-              ) : activeTab === 'verification' ? (
-                <VerificationManagement />
               ) : (
                 <ContentManagement />
               )}
@@ -216,6 +204,7 @@ function UserManagement() {
     switch (role) {
       case 'ADMIN': return '관리자'
       case 'STUDENT': return '학생'
+      case 'MAJOR': return '전공회원'
       case 'GENERAL': return '일반회원'
       default: return '비회원'
     }
@@ -225,6 +214,7 @@ function UserManagement() {
     switch (role) {
       case 'ADMIN': return 'bg-red-100 text-red-800'
       case 'STUDENT': return 'bg-green-100 text-green-800'
+      case 'MAJOR': return 'bg-purple-100 text-purple-800'
       case 'GENERAL': return 'bg-blue-100 text-blue-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -251,7 +241,7 @@ function UserManagement() {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="이름, 이메일, 학번으로 검색..."
+              placeholder="이름, 이메일, 학번, 전공으로 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
@@ -266,6 +256,7 @@ function UserManagement() {
               <option value="ALL">모든 역할</option>
               <option value="ADMIN">관리자</option>
               <option value="STUDENT">학생</option>
+              <option value="MAJOR">전공회원</option>
               <option value="GENERAL">일반회원</option>
             </select>
           </div>
@@ -308,7 +299,12 @@ function UserManagement() {
                       <div>
                         <div className="text-sm font-medium text-gray-900">{user.name}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
-                        <div className="text-sm text-gray-500">{user.studentId}</div>
+                        <div className="text-sm text-gray-500">
+                          {user.studentId ? `학번: ${user.studentId}` : '학번: -'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.major ? `전공: ${user.major}` : '전공: -'}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -339,6 +335,7 @@ function UserManagement() {
                           className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
                         >
                           <option value="GENERAL">일반회원</option>
+                          <option value="MAJOR">전공회원</option>
                           <option value="STUDENT">학생</option>
                           <option value="ADMIN">관리자</option>
                         </select>
@@ -394,15 +391,6 @@ function UserManagement() {
   )
 }
 
-// 학생 인증 관리 컴포넌트 (임시)
-function VerificationManagement() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold text-black mb-6">학생 인증 관리</h2>
-      <p className="text-gray-600">학생 인증 관리 기능은 추후 구현 예정입니다.</p>
-    </div>
-  )
-}
 
 // 콘텐츠 관리 컴포넌트 (임시)
 function ContentManagement() {
