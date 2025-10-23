@@ -212,67 +212,6 @@ function WriteContent() {
     })
   }
 
-  // 이미지 삽입
-  const handleInsertImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length === 0) return
-
-    const file = files[0]
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const img = document.createElement('img')
-      img.src = reader.result as string
-      img.style.maxWidth = '100%'
-      img.style.height = 'auto'
-      img.style.border = '1px solid #e5e7eb'
-      img.style.borderRadius = '8px'
-      img.style.margin = '8px 0'
-
-      // 에디터에 포커스가 없으면 먼저 포커스
-      if (editorRef?.current) {
-        editorRef.current.focus()
-
-        // 포커스 후 마지막 커서 위치 복원
-        setTimeout(() => {
-          const selection = window.getSelection()
-          let range: Range
-
-          if (lastCursorPosition && editorRef?.current?.contains(lastCursorPosition.startContainer)) {
-            // 마지막 커서 위치가 유효한 경우
-            range = lastCursorPosition.cloneRange()
-            range.deleteContents()
-            range.insertNode(img)
-          } else if (selection && selection.rangeCount > 0 && editorRef?.current?.contains(selection.anchorNode)) {
-            // 현재 선택 영역이 에디터 내부에 있는 경우
-            range = selection.getRangeAt(0)
-            range.deleteContents()
-            range.insertNode(img)
-          } else {
-            // 에디터 끝에 추가
-            range = document.createRange()
-            range.selectNodeContents(editorRef.current!)
-            range.collapse(false) // 끝으로 이동
-            range.insertNode(img)
-          }
-
-          // 커서를 이미지 뒤로 이동
-          range.setStartAfter(img)
-          range.setEndAfter(img)
-          selection?.removeAllRanges()
-          selection?.addRange(range)
-
-          // 새로운 커서 위치 저장
-          setLastCursorPosition(range.cloneRange())
-
-          handleEditorChange()
-        }, 20)
-      }
-
-      // 파일 입력 초기화
-      e.target.value = ''
-    }
-    reader.readAsDataURL(file)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
