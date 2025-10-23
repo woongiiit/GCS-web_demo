@@ -255,7 +255,10 @@ function WriteContent() {
     setIsEditorFocused(true)
     // 포커스 시 마지막 커서 위치 복원
     setTimeout(() => {
-      restoreCursorPosition()
+      if (editorRef.current) {
+        editorRef.current.focus()
+        restoreCursorPosition()
+      }
     }, 10)
   }
 
@@ -759,7 +762,10 @@ function WriteContent() {
                     onMouseUp={handleEditorSelection}
                     onKeyUp={handleEditorSelection}
                     onKeyDown={saveCursorPosition}
-                    onClick={saveCursorPosition}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      saveCursorPosition()
+                    }}
                     suppressContentEditableWarning
                     data-placeholder="상세 설명을 입력하세요..."
                     className="w-full min-h-[300px] px-4 py-3 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
@@ -767,7 +773,9 @@ function WriteContent() {
                       outline: 'none',
                       lineHeight: '1.6',
                     }}
-                  />
+                  >
+                    {editorContent}
+                  </div>
                   
                   {/* 선택된 텍스트 표시 (디버깅용) */}
                   {selectedText && (
