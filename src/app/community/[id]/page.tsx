@@ -277,38 +277,10 @@ function CommunityDetailContent() {
 
               {/* 게시글 내용 */}
               <div className="prose max-w-none">
-                <div className="text-gray-700 whitespace-pre-wrap">
-                  {post.content.split('\n').map((paragraph: string, index: number) => {
-                    // 이미지 태그 파싱
-                    const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
-                    if (imageMatch) {
-                      return (
-                        <div key={index} className="my-6">
-                          <img
-                            src={imageMatch[1]}
-                            alt="게시글 이미지"
-                            className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
-                            onError={(e) => {
-                              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Q29tbXVuaXR5IEltYWdlPC90ZXh0Pgo8L3N2Zz4='
-                            }}
-                          />
-                        </div>
-                      )
-                    }
-                    
-                    // 빈 줄 처리
-                    if (paragraph.trim() === '') {
-                      return <br key={index} />
-                    }
-                    
-                    // 일반 텍스트
-                    return (
-                      <p key={index} className="mb-4">
-                        {paragraph}
-                      </p>
-                    )
-                  })}
-                </div>
+                <div 
+                  className="text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: post.content }}
+                />
               </div>
 
               {/* 하단 액션 버튼 */}

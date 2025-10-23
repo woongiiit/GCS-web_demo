@@ -14,6 +14,13 @@ function CommunityContent() {
   const [posts, setPosts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // HTML 태그를 제거하고 텍스트만 추출하는 함수
+  const stripHtmlTags = (html: string): string => {
+    const temp = document.createElement('div')
+    temp.innerHTML = html
+    return temp.textContent || temp.innerText || ''
+  }
+
   // URL 쿼리 파라미터에서 초기 탭 설정
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -144,16 +151,7 @@ function CommunityContent() {
                           <div className="flex-1">
                             <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
                             <div className="text-sm text-gray-600 mb-3 line-clamp-2">
-                              {post.content.split('\n').map((paragraph: string, index: number) => {
-                                // 이미지 태그 파싱
-                                const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
-                                if (imageMatch) {
-                                  return (
-                                    <span key={index} className="text-blue-500">[이미지]</span>
-                                  )
-                                }
-                                return paragraph
-                              }).join(' ').substring(0, 100)}...
+                              {stripHtmlTags(post.content).substring(0, 100)}...
                             </div>
                             <div className="flex items-center space-x-4 text-xs text-gray-400">
                               <span>{post.author.name}</span>
@@ -210,16 +208,7 @@ function CommunityContent() {
                           <div className="flex-1">
                             <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
                             <div className="text-sm text-gray-600 mb-3 line-clamp-2">
-                              {post.content.split('\n').map((paragraph: string, index: number) => {
-                                // 이미지 태그 파싱
-                                const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
-                                if (imageMatch) {
-                                  return (
-                                    <span key={index} className="text-blue-500">[이미지]</span>
-                                  )
-                                }
-                                return paragraph
-                              }).join(' ').substring(0, 100)}...
+                              {stripHtmlTags(post.content).substring(0, 100)}...
                             </div>
                             <div className="flex items-center space-x-4 text-xs text-gray-400">
                               <span>{post.author.name}</span>
