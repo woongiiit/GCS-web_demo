@@ -1,7 +1,7 @@
 'use client'
 
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
+import dynamic from 'next/dynamic'
+import { useState, useEffect } from 'react'
 
 interface RichTextEditorProps {
   value: string
@@ -11,6 +11,14 @@ interface RichTextEditorProps {
   disabled?: boolean
 }
 
+// React Quill을 동적으로 임포트 (SSR 비활성화)
+const ReactQuill = dynamic(() => import('react-quill'), { 
+  ssr: false,
+  loading: () => <div className="w-full h-96 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+    <p className="text-gray-500">에디터 로딩 중...</p>
+  </div>
+})
+
 export default function RichTextEditor({
   value,
   onChange,
@@ -18,6 +26,12 @@ export default function RichTextEditor({
   height = 400,
   disabled = false
 }: RichTextEditorProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const modules = {
     toolbar: [
       [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
@@ -37,6 +51,14 @@ export default function RichTextEditor({
     'list', 'bullet', 'indent',
     'link', 'image'
   ]
+
+  if (!mounted) {
+    return (
+      <div className="w-full h-96 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">에디터 로딩 중...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full">
