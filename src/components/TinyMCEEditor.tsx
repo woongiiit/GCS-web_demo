@@ -52,8 +52,9 @@ export default function RichTextEditor({
         input.click();
 
         input.onchange = () => {
-          const file = input.files[0];
-          if (file) {
+          const files = input.files;
+          if (files && files.length > 0) {
+            const file = files[0];
             const reader = new FileReader();
             reader.onload = () => {
               const quill = this.quill;
