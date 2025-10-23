@@ -520,7 +520,7 @@ function WriteContent() {
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    className={`w-full px-4 py-8 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                    className={`w-full px-4 py-8 border-2 border-dashed rounded-lg transition-colors cursor-pointer relative ${
                       isDragOver
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-300 hover:border-gray-400'
@@ -545,7 +545,8 @@ function WriteContent() {
                       multiple
                       accept="image/*"
                       onChange={handleCoverImageUpload}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                   
