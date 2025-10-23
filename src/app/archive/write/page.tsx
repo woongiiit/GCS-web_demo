@@ -3,12 +3,15 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { permissions } from '@/lib/permissions'
 import Link from 'next/link'
 
 function ArchiveWriteContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const editId = searchParams.get('edit') // 수정 모드인지 확인
+  const isEditMode = !!editId
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -47,6 +50,52 @@ function ArchiveWriteContent() {
       router.push('/archive')
     }
   }, [user, isLoading, router])
+
+  // 수정 모드에서 기존 글 데이터 로드
+  useEffect(() => {
+    if (isEditMode && editId) {
+      fetchArchiveData()
+    }
+  }, [isEditMode, editId])
+
+  const fetchArchiveData = async () => {
+    try {
+      const apiUrl = formData.type === 'project' 
+        ? `/api/archive/projects/${editId}` 
+        : `/api/archive/news/${editId}`
+      
+      const response = await fetch(apiUrl)
+      const data = await response.json()
+      
+      if (data.success) {
+        const item = data.data
+        // 수정 권한 확인
+        if (!permissions.canEditPost(user?.role, item.authorId, user?.id)) {
+          alert('수정 권한이 없습니다.')
+          router.push('/archive')
+          return
+        }
+        
+        setFormData({
+          title: item.title,
+          content: item.content || item.description,
+          type: formData.type,
+          year: item.year.toString(),
+          members: item.members || '',
+          isFeatured: item.isFeatured || false
+        })
+        setEditorContent(item.content || item.description)
+        setCoverImagePreviews(item.images || [])
+      } else {
+        alert('글을 불러올 수 없습니다.')
+        router.push('/archive')
+      }
+    } catch (error) {
+      console.error('글 데이터 로드 오류:', error)
+      alert('글을 불러오는 중 오류가 발생했습니다.')
+      router.push('/archive')
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -250,8 +299,15 @@ function ArchiveWriteContent() {
         galleryImages.push(base64String)
       }
       
-      const response = await fetch('/api/archive/write', {
-        method: 'POST',
+      const url = isEditMode 
+        ? (formData.type === 'project' 
+            ? `/api/archive/projects/${editId}` 
+            : `/api/archive/news/${editId}`)
+        : '/api/archive/write'
+      const method = isEditMode ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -270,7 +326,7 @@ function ArchiveWriteContent() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage('글이 성공적으로 작성되었습니다.')
+        setMessage(isEditMode ? '글이 성공적으로 수정되었습니다.' : '글이 성공적으로 작성되었습니다.')
         setMessageType('success')
         
         // 성공 후 Archive 페이지로 이동 (새로고침 강제)
@@ -279,8 +335,8 @@ function ArchiveWriteContent() {
           router.refresh() // 페이지 새로고침 강제
         }, 1500)
       } else {
-        console.error('글 작성 실패:', data.error)
-        setMessage(data.error || '글 작성에 실패했습니다. 다시 시도해주세요.')
+        console.error(isEditMode ? '글 수정 실패:' : '글 작성 실패:', data.error)
+        setMessage(data.error || (isEditMode ? '글 수정에 실패했습니다. 다시 시도해주세요.' : '글 작성에 실패했습니다. 다시 시도해주세요.'))
         setMessageType('error')
       }
     } catch (error) {
@@ -328,7 +384,10 @@ function ArchiveWriteContent() {
             <div className="text-center">
               <h1 className="text-4xl font-bold text-white mb-4">Archive</h1>
               <p className="text-white text-sm mb-8">
-                {formData.type === 'project' ? '새로운 프로젝트를 등록하세요.' : '새로운 뉴스를 작성하세요.'}
+                {isEditMode 
+                  ? (formData.type === 'project' ? '프로젝트를 수정하세요.' : '뉴스를 수정하세요.')
+                  : (formData.type === 'project' ? '새로운 프로젝트를 등록하세요.' : '새로운 뉴스를 작성하세요.')
+                }
               </p>
               
               {/* 홈 아이콘 */}
@@ -656,7 +715,7 @@ function ArchiveWriteContent() {
                         : 'bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2'
                     }`}
                   >
-                    {isSubmitting ? '작성 중...' : '작성하기'}
+                    {isSubmitting ? (isEditMode ? '수정 중...' : '작성 중...') : (isEditMode ? '수정하기' : '작성하기')}
                   </button>
                 </div>
               </form>

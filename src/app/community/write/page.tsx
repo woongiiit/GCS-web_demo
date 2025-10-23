@@ -9,8 +9,10 @@ import { permissions } from '@/lib/permissions'
 function WriteContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { role, verificationStatus } = usePermissions()
+  const { role, verificationStatus, user } = usePermissions()
   const category = searchParams.get('category') || 'board'
+  const editId = searchParams.get('edit') // 수정 모드인지 확인
+  const isEditMode = !!editId
 
   // 권한 체크
   if (!permissions.canWritePost(role, verificationStatus)) {
@@ -74,6 +76,45 @@ function WriteContent() {
   const [coverImagePreviews, setCoverImagePreviews] = useState<string[]>([])
   
   const [isUploading, setIsUploading] = useState(false)
+
+  // 수정 모드에서 기존 글 데이터 로드
+  useEffect(() => {
+    if (isEditMode && editId) {
+      fetchPostData()
+    }
+  }, [isEditMode, editId])
+
+  const fetchPostData = async () => {
+    try {
+      const response = await fetch(`/api/community/posts/${editId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        const post = data.data
+        // 수정 권한 확인
+        if (!permissions.canEditPost(role, post.authorId, user?.id)) {
+          alert('수정 권한이 없습니다.')
+          router.push('/community')
+          return
+        }
+        
+        setFormData({
+          title: post.title,
+          content: post.content,
+          category: post.category.toLowerCase()
+        })
+        setEditorContent(post.content)
+        setCoverImagePreviews(post.images || [])
+      } else {
+        alert('글을 불러올 수 없습니다.')
+        router.push('/community')
+      }
+    } catch (error) {
+      console.error('글 데이터 로드 오류:', error)
+      alert('글을 불러오는 중 오류가 발생했습니다.')
+      router.push('/community')
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -274,8 +315,11 @@ function WriteContent() {
         galleryImages.push(base64String)
       }
       
-      const response = await fetch('/api/community/write', {
-        method: 'POST',
+      const url = isEditMode ? `/api/community/posts/${editId}` : '/api/community/write'
+      const method = isEditMode ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -291,13 +335,13 @@ function WriteContent() {
       const data = await response.json()
 
       if (response.ok) {
-        console.log('게시글 작성 성공:', data)
-        // 작성 완료 후 해당 카테고리로 이동 (새로고침 강제)
+        console.log(isEditMode ? '게시글 수정 성공:' : '게시글 작성 성공:', data)
+        // 완료 후 해당 카테고리로 이동 (새로고침 강제)
         router.push(`/community?tab=${category}`)
         router.refresh() // 페이지 새로고침 강제
       } else {
-        console.error('게시글 작성 실패:', data.error)
-        alert(data.error || '게시글 작성에 실패했습니다. 다시 시도해주세요.')
+        console.error(isEditMode ? '게시글 수정 실패:' : '게시글 작성 실패:', data.error)
+        alert(data.error || (isEditMode ? '게시글 수정에 실패했습니다. 다시 시도해주세요.' : '게시글 작성에 실패했습니다. 다시 시도해주세요.'))
       }
     } catch (error) {
       console.error('게시글 작성 오류:', error)
@@ -327,7 +371,9 @@ function WriteContent() {
             {/* 페이지 제목 */}
             <div className="text-center">
               <h1 className="text-4xl font-bold text-white mb-4">Community</h1>
-              <p className="text-white text-sm mb-8">새로운 글을 작성해보세요.</p>
+              <p className="text-white text-sm mb-8">
+                {isEditMode ? '글을 수정해보세요.' : '새로운 글을 작성해보세요.'}
+              </p>
               
               {/* 홈 아이콘 */}
               <Link href="/" className="inline-block">
@@ -586,7 +632,7 @@ function WriteContent() {
                     disabled={isUploading}
                     className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isUploading ? '작성 중...' : '작성하기'}
+                    {isUploading ? (isEditMode ? '수정 중...' : '작성 중...') : (isEditMode ? '수정하기' : '작성하기')}
                   </button>
                 </div>
               </form>

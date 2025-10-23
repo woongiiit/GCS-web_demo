@@ -2,10 +2,14 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { usePermissions } from '@/contexts/AuthContext'
+import { permissions } from '@/lib/permissions'
 
 export default function NewsDetailPage() {
   const params = useParams()
+  const router = useRouter()
+  const { role, user } = usePermissions()
   const newsId = params.id as string
   const [news, setNews] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -42,6 +46,31 @@ export default function NewsDetailPage() {
       setCurrentImageIndex((prev) => 
         prev === 0 ? news.images.length - 1 : prev - 1
       )
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('정말로 이 뉴스를 삭제하시겠습니까?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/archive/news/${newsId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('뉴스가 성공적으로 삭제되었습니다.')
+        router.push('/archive?tab=news')
+      } else {
+        alert(data.error || '뉴스 삭제에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('뉴스 삭제 오류:', error)
+      alert('서버 오류가 발생했습니다.')
     }
   }
 
@@ -168,7 +197,27 @@ export default function NewsDetailPage() {
                   <h2 className="text-2xl font-bold text-black mb-4">뉴스 정보</h2>
                   <div className="bg-gray-50 rounded-lg p-6 space-y-4">
                     <div>
-                      <h3 className="text-[#f57520] font-bold text-lg mb-2">{news.title}</h3>
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-[#f57520] font-bold text-lg mb-2">{news.title}</h3>
+                        
+                        {/* 관리자/작성자 액션 버튼 */}
+                        {permissions.canEditPost(role, news.authorId, user?.id) && (
+                          <div className="flex space-x-2">
+                            <Link
+                              href={`/archive/write?type=news&edit=${news.id}`}
+                              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                            >
+                              수정
+                            </Link>
+                            <button
+                              onClick={handleDelete}
+                              className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       {news.summary && (
                         <p className="text-gray-600 mb-4">{news.summary}</p>
                       )}

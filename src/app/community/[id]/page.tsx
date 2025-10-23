@@ -203,6 +203,12 @@ function CommunityDetailContent() {
                   {/* 관리자/작성자 액션 버튼 */}
                   {permissions.canEditPost(role, post.authorId, post.author.id) && (
                     <div className="flex space-x-2">
+                      <Link
+                        href={`/community/write?category=${post.category.toLowerCase()}&edit=${post.id}`}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                      >
+                        수정
+                      </Link>
                       <button
                         onClick={handleDelete}
                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
