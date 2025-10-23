@@ -198,6 +198,11 @@ function WriteContent() {
     setFormData(prev => ({ ...prev, content }))
   }
 
+  // 디버깅: API 키 확인
+  useEffect(() => {
+    console.log('TinyMCE API Key:', process.env.NEXT_PUBLIC_TINYMCE_API_KEY)
+  }, [])
+
   // 이미지 업로드 핸들러 (TinyMCE용)
   const handleImageUpload = (blobInfo: any, progress: any) => {
     return new Promise((resolve, reject) => {
@@ -409,7 +414,7 @@ function WriteContent() {
                   
                   {/* TinyMCE 에디터 */}
                   <Editor
-                    apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY || ''}
+                    apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY || process.env.TINYMCE_API_KEY || ''}
                     value={editorContent}
                     onEditorChange={handleEditorChange}
                     init={{
