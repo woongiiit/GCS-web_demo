@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { permissions, permissionErrors } from '@/lib/permissions'
+import { invalidateCache } from '@/lib/cache'
 
 export async function POST(request: Request) {
   try {
@@ -57,6 +58,9 @@ export async function POST(request: Request) {
         }
       }
     })
+
+    // Community 글 목록 캐시 무효화
+    invalidateCache('posts:.*')
 
     return NextResponse.json(
       { 

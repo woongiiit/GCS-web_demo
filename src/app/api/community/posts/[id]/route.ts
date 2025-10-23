@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { invalidateCache } from '@/lib/cache'
 
 // 게시글 상세 조회
 export async function GET(
@@ -87,6 +88,9 @@ export async function DELETE(
     await prisma.post.delete({
       where: { id: postId }
     })
+
+    // Community 글 목록 캐시 무효화
+    invalidateCache('posts:.*')
 
     return NextResponse.json(
       { 
