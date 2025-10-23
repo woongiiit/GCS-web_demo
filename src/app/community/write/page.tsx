@@ -198,10 +198,6 @@ function WriteContent() {
     setFormData(prev => ({ ...prev, content }))
   }
 
-  // 디버깅: API 키 확인
-  useEffect(() => {
-    console.log('TinyMCE API Key:', process.env.NEXT_PUBLIC_TINYMCE_API_KEY)
-  }, [])
 
   // 이미지 업로드 핸들러 (TinyMCE용)
   const handleImageUpload = (blobInfo: any, progress: any) => {
@@ -414,21 +410,21 @@ function WriteContent() {
                   
                   {/* TinyMCE 에디터 */}
                   <Editor
-                    apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY || process.env.TINYMCE_API_KEY || ''}
+                    apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY || ''}
                     value={editorContent}
                     onEditorChange={handleEditorChange}
                     init={{
                       height: 400,
                       menubar: false,
                       plugins: [
-                        'advlist autolink lists link image charmap print preview anchor',
-                        'searchreplace visualblocks code fullscreen',
+                        'advlist autolink lists link image charmap',
+                        'searchreplace visualblocks code',
                         'insertdatetime media table paste code help wordcount'
                       ],
                       toolbar: 'undo redo | formatselect | bold italic backcolor | \
                                alignleft aligncenter alignright alignjustify | \
                                bullist numlist outdent indent | removeformat | help | image',
-                      language: 'ko_KR',
+                      language: 'ko-KR',
                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; line-height: 1.6; }',
                       images_upload_handler: handleImageUpload,
                       automatic_uploads: true,

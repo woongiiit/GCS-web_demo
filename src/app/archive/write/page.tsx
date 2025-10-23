@@ -480,14 +480,14 @@ function ArchiveWriteContent() {
                       height: 400,
                       menubar: false,
                       plugins: [
-                        'advlist autolink lists link image charmap print preview anchor',
-                        'searchreplace visualblocks code fullscreen',
+                        'advlist autolink lists link image charmap',
+                        'searchreplace visualblocks code',
                         'insertdatetime media table paste code help wordcount'
                       ],
                       toolbar: 'undo redo | formatselect | bold italic backcolor | \
                                alignleft aligncenter alignright alignjustify | \
                                bullist numlist outdent indent | removeformat | help | image',
-                      language: 'ko_KR',
+                      language: 'ko-KR',
                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; line-height: 1.6; }',
                       images_upload_handler: handleImageUpload,
                       automatic_uploads: true,
