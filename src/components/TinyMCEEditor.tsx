@@ -1,9 +1,9 @@
 'use client'
 
-import { Editor } from '@tinymce/tinymce-react'
-import { useRef } from 'react'
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
 
-interface TinyMCEEditorProps {
+interface RichTextEditorProps {
   value: string
   onChange: (content: string) => void
   placeholder?: string
@@ -11,53 +11,44 @@ interface TinyMCEEditorProps {
   disabled?: boolean
 }
 
-export default function TinyMCEEditor({
+export default function RichTextEditor({
   value,
   onChange,
   placeholder = '내용을 입력하세요...',
   height = 400,
   disabled = false
-}: TinyMCEEditorProps) {
-  const editorRef = useRef<any>(null)
-
-  const handleEditorChange = (content: string) => {
-    onChange(content)
+}: RichTextEditorProps) {
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      ['link', 'image'],
+      ['clean']
+    ],
   }
+
+  const formats = [
+    'header', 'bold', 'italic', 'underline', 'strike',
+    'color', 'background', 'align',
+    'list', 'bullet', 'indent',
+    'link', 'image'
+  ]
 
   return (
     <div className="w-full">
-      <Editor
-        onInit={(evt, editor) => editorRef.current = editor}
+      <ReactQuill
+        theme="snow"
         value={value}
-        onEditorChange={handleEditorChange}
-        disabled={disabled}
-        licenseKey="gpl"
-        init={{
-          height: height,
-          menubar: false,
-          plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'help', 'wordcount'
-          ],
-          toolbar: 'undo redo | blocks | ' +
-            'bold italic forecolor | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | ' +
-            'removeformat | help',
-          content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
-          placeholder: placeholder,
-          branding: false,
-          promotion: false,
-          statusbar: false,
-          resize: false,
-          elementpath: false,
-          setup: (editor) => {
-            editor.on('init', () => {
-              editor.getContainer().style.border = '1px solid #d1d5db'
-              editor.getContainer().style.borderRadius = '0.5rem'
-            })
-          }
-        }}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder}
+        readOnly={disabled}
+        style={{ height: `${height}px` }}
       />
     </div>
   )

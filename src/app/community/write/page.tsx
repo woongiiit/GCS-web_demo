@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
-import TinyMCEEditor from '@/components/TinyMCEEditor'
+import RichTextEditor from '@/components/TinyMCEEditor'
 
 function WriteContent() {
   const searchParams = useSearchParams()
@@ -392,7 +392,7 @@ function WriteContent() {
                     상세 설명 *
                   </label>
                   
-                  <TinyMCEEditor
+                  <RichTextEditor
                     value={editorContent}
                     onChange={handleEditorChange}
                     placeholder="상세 설명을 입력하세요..."
