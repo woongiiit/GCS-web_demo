@@ -25,3 +25,27 @@
 .ql-editor .image-right {
   text-align: right;
 }
+
+/* 커스텀 이미지 정렬 버튼 스타일 */
+.ql-toolbar .ql-image-align-left::before {
+  content: '⬅️';
+  font-size: 16px;
+}
+
+.ql-toolbar .ql-image-align-center::before {
+  content: '↔️';
+  font-size: 16px;
+}
+
+.ql-toolbar .ql-image-align-right::before {
+  content: '➡️';
+  font-size: 16px;
+}
+
+/* 툴바 버튼 호버 효과 */
+.ql-toolbar .ql-image-align-left:hover,
+.ql-toolbar .ql-image-align-center:hover,
+.ql-toolbar .ql-image-align-right:hover {
+  background-color: #e5e7eb;
+  border-radius: 4px;
+}
