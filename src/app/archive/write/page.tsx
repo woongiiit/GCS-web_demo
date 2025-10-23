@@ -145,6 +145,52 @@ function ArchiveWriteContent() {
     setCoverImagePreviews(newPreviews)
   }
 
+  // 본문 이미지 업로드
+  const handleEditorImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드할 수 있습니다.')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string
+        if (imageUrl && editorRef.current) {
+          // 현재 커서 위치에 이미지 삽입
+          const selection = window.getSelection()
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0)
+            const img = document.createElement('img')
+            img.src = imageUrl
+            img.style.maxWidth = '100%'
+            img.style.height = 'auto'
+            img.style.display = 'block'
+            img.style.margin = '10px auto'
+            img.style.borderRadius = '8px'
+            img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+            
+            range.deleteContents()
+            range.insertNode(img)
+            range.setStartAfter(img)
+            range.setEndAfter(img)
+            selection.removeAllRanges()
+            selection.addRange(range)
+          }
+          
+          handleEditorChange()
+        }
+      }
+      reader.readAsDataURL(file)
+    })
+
+    // 파일 입력 초기화
+    e.target.value = ''
+  }
+
   // 드래그 앤 드롭 핸들러
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -761,6 +807,30 @@ function ArchiveWriteContent() {
                           <path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/>
                         </svg>
                       </button>
+                      
+                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                      
+                      {/* 이미지 업로드 */}
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleEditorImageUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          id="editor-image-upload-archive"
+                        />
+                        <button
+                          type="button"
+                          className="p-2 hover:bg-gray-200 rounded transition-colors"
+                          title="이미지 삽입"
+                          onClick={() => document.getElementById('editor-image-upload-archive')?.click()}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
                       
                       <div className="w-px h-6 bg-gray-300 mx-1"></div>
                       
