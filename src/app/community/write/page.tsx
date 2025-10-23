@@ -257,6 +257,23 @@ function WriteContent() {
     }
   }
 
+  // 에디터 초기화
+  useEffect(() => {
+    if (editorRef.current) {
+      // 에디터가 비어있고 editorContent가 있을 때만 초기화
+      if (editorRef.current.innerHTML === '' && editorContent) {
+        editorRef.current.innerHTML = editorContent
+      }
+    }
+  }, [editorContent])
+
+  // 에디터 마운트 시 초기화
+  useEffect(() => {
+    if (editorRef.current && editorContent && editorRef.current.innerHTML === '') {
+      editorRef.current.innerHTML = editorContent
+    }
+  }, [])
+
   const updateActiveFormats = () => {
     if (!editorRef.current) return
     
@@ -839,14 +856,14 @@ function WriteContent() {
                     }}
                     suppressContentEditableWarning
                     data-placeholder="상세 설명을 입력하세요..."
-                    className="w-full min-h-[300px] px-4 py-3 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                    className="w-full min-h-[300px] px-4 py-3 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors prose prose-sm max-w-none"
                     style={{
                       outline: 'none',
                       lineHeight: '1.6',
+                      wordBreak: 'break-word',
+                      whiteSpace: 'pre-wrap',
                     }}
-                  >
-                    {editorContent}
-                  </div>
+                  />
                   
                   {/* 선택된 텍스트 표시 (디버깅용) */}
                   {selectedText && (
