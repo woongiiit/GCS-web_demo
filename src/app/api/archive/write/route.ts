@@ -2,16 +2,17 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { permissions, permissionErrors } from '@/lib/permissions'
+import { invalidateCache } from '@/lib/cache'
 
 export async function POST(request: Request) {
   try {
     // 인증 확인 및 사용자 정보 가져오기
     const user = await requireAuth()
 
-    // 글 작성 권한 확인 (STUDENT 또는 ADMIN만)
-    if (!permissions.canWritePost(user.role as any)) {
+    // 글 작성 권한 확인 (ADMIN만 - Archive는 관리자 전용)
+    if (!permissions.canWriteArchive(user.role as any)) {
       return NextResponse.json(
-        { error: permissionErrors.studentOnly },
+        { error: 'Archive 글 작성 권한이 없습니다.' },
         { status: 403 }
       )
     }
@@ -43,6 +44,9 @@ export async function POST(request: Request) {
         }
       })
 
+      // Archive Projects 캐시 무효화
+      invalidateCache('projects:.*')
+
       return NextResponse.json(
         { 
           success: true, 
@@ -63,6 +67,9 @@ export async function POST(request: Request) {
           authorId: user.id,
         }
       })
+
+      // Archive News 캐시 무효화
+      invalidateCache('news:.*')
 
       return NextResponse.json(
         { 
