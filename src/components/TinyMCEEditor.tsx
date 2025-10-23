@@ -31,6 +31,7 @@ export default function TinyMCEEditor({
         value={value}
         onEditorChange={handleEditorChange}
         disabled={disabled}
+        licenseKey="gpl"
         init={{
           height: height,
           menubar: false,
@@ -50,8 +51,6 @@ export default function TinyMCEEditor({
           statusbar: false,
           resize: false,
           elementpath: false,
-          // API 키 없이 사용하기 위한 설정
-          license_key: 'gpl',
           setup: (editor) => {
             editor.on('init', () => {
               editor.getContainer().style.border = '1px solid #d1d5db'
