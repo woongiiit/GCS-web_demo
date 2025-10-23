@@ -107,7 +107,7 @@ export async function PUT(
         title,
         description: content,
         year: parseInt(year),
-        members: members || '',
+        teamMembers: members ? members.split(',').map(m => m.trim()) : [],
         images: images || [],
         isFeatured: isFeatured || false
       },

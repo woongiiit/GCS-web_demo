@@ -81,7 +81,7 @@ function ArchiveWriteContent() {
           content: item.content || item.description,
           type: formData.type,
           year: item.year.toString(),
-          members: item.members || '',
+          members: item.teamMembers ? item.teamMembers.join(', ') : '',
           isFeatured: item.isFeatured || false
         })
         setEditorContent(item.content || item.description)
