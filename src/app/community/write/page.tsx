@@ -292,8 +292,9 @@ function WriteContent() {
 
       if (response.ok) {
         console.log('게시글 작성 성공:', data)
-        // 작성 완료 후 해당 카테고리로 이동
+        // 작성 완료 후 해당 카테고리로 이동 (새로고침 강제)
         router.push(`/community?tab=${category}`)
+        router.refresh() // 페이지 새로고침 강제
       } else {
         console.error('게시글 작성 실패:', data.error)
         alert(data.error || '게시글 작성에 실패했습니다. 다시 시도해주세요.')

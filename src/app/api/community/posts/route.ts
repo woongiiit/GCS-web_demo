@@ -68,9 +68,9 @@ export async function GET(request: Request) {
       { 
         status: 200,
         headers: {
-          'Cache-Control': 'public, max-age=180, stale-while-revalidate=360',
-          'CDN-Cache-Control': 'max-age=180',
-          'Vercel-CDN-Cache-Control': 'max-age=180'
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       }
     )

@@ -45,7 +45,12 @@ function CommunityContent() {
   const fetchPosts = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/community/posts?category=${activeTab}`)
+      const response = await fetch(`/api/community/posts?category=${activeTab}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       const data = await response.json()
       
       if (data.success) {
