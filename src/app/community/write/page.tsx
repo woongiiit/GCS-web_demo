@@ -69,11 +69,20 @@ function WriteContent() {
   const [isEditorFocused, setIsEditorFocused] = useState(false)
   const [selectedText, setSelectedText] = useState('')
   const [lastCursorPosition, setLastCursorPosition] = useState<Range | null>(null)
+  const [activeFormats, setActiveFormats] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+    alignLeft: false,
+    alignCenter: false,
+    alignRight: false
+  })
   const editorRef = useRef<HTMLDivElement>(null)
   
   // 대표 이미지 관련 상태
   const [coverImages, setCoverImages] = useState<File[]>([])
   const [coverImagePreviews, setCoverImagePreviews] = useState<string[]>([])
+  const [isDragOver, setIsDragOver] = useState(false)
   
   const [isUploading, setIsUploading] = useState(false)
 
@@ -152,13 +161,94 @@ function WriteContent() {
     setCoverImagePreviews(newPreviews)
   }
 
+  // 드래그 앤 드롭 핸들러
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    
+    if (imageFiles.length === 0) {
+      alert('이미지 파일만 업로드할 수 있습니다.')
+      return
+    }
+
+    if (coverImages.length + imageFiles.length > 5) {
+      alert('최대 5개의 대표 이미지를 업로드할 수 있습니다.')
+      return
+    }
+
+    // 이미지 파일 처리
+    const newImages = [...coverImages, ...imageFiles]
+    setCoverImages(newImages)
+
+    // 미리보기 생성
+    const newPreviews = imageFiles.map(file => URL.createObjectURL(file))
+    setCoverImagePreviews(prev => [...prev, ...newPreviews])
+  }
+
   // 리치 텍스트 에디터 핸들러
   const handleEditorChange = () => {
     if (editorRef.current) {
       const content = editorRef.current.innerHTML
       setEditorContent(content)
       setFormData(prev => ({ ...prev, content }))
+      updateActiveFormats()
     }
+  }
+
+  const updateActiveFormats = () => {
+    if (!editorRef.current) return
+    
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+    
+    const range = selection.getRangeAt(0)
+    const container = range.commonAncestorContainer
+    
+    // 현재 선택된 텍스트의 포맷팅 상태 확인
+    const isBold = document.queryCommandState('bold')
+    const isItalic = document.queryCommandState('italic')
+    const isUnderline = document.queryCommandState('underline')
+    
+    // 정렬 상태 확인
+    const parentElement = container.nodeType === Node.TEXT_NODE 
+      ? container.parentElement 
+      : container as Element
+    
+    let alignLeft = false, alignCenter = false, alignRight = false
+    
+    if (parentElement) {
+      const computedStyle = window.getComputedStyle(parentElement)
+      const textAlign = computedStyle.textAlign
+      
+      if (textAlign === 'left' || textAlign === 'start') alignLeft = true
+      else if (textAlign === 'center') alignCenter = true
+      else if (textAlign === 'right' || textAlign === 'end') alignRight = true
+    }
+    
+    setActiveFormats({
+      bold: isBold,
+      italic: isItalic,
+      underline: isUnderline,
+      alignLeft,
+      alignCenter,
+      alignRight
+    })
   }
 
   const handleEditorFocus = () => {
@@ -423,13 +513,38 @@ function WriteContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     대표 이미지 (최대 5개)
                   </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleCoverImageUpload}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                  />
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`w-full px-4 py-8 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                      isDragOver
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium text-blue-600 hover:text-blue-500">
+                            클릭하여 파일을 선택
+                          </span>
+                          {' '}또는 드래그 앤 드롭
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF 최대 5개</p>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleCoverImageUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
                   
                   {/* 대표 이미지 미리보기 */}
                   {coverImagePreviews.length > 0 && (
@@ -470,17 +585,21 @@ function WriteContent() {
                         type="button"
                         onClick={handleUndo}
                         className="p-2 hover:bg-gray-200 rounded text-sm font-medium"
-                        title="실행 취소"
+                        title="실행 취소 (Ctrl+Z)"
                       >
-                        ↶
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
                       </button>
                       <button
                         type="button"
                         onClick={handleRedo}
                         className="p-2 hover:bg-gray-200 rounded text-sm font-medium"
-                        title="다시 실행"
+                        title="다시 실행 (Ctrl+Y)"
                       >
-                        ↷
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
+                        </svg>
                       </button>
                       
                       <div className="w-px h-6 bg-gray-300 mx-1"></div>
@@ -489,26 +608,44 @@ function WriteContent() {
                       <button
                         type="button"
                         onClick={handleBold}
-                        className="p-2 hover:bg-gray-200 rounded font-bold"
-                        title="굵게"
+                        className={`p-2 rounded transition-colors ${
+                          activeFormats.bold 
+                            ? 'bg-blue-500 text-white' 
+                            : 'hover:bg-gray-200'
+                        }`}
+                        title="굵게 (Ctrl+B)"
                       >
-                        B
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/>
+                        </svg>
                       </button>
                       <button
                         type="button"
                         onClick={handleItalic}
-                        className="p-2 hover:bg-gray-200 rounded italic"
-                        title="기울임"
+                        className={`p-2 rounded transition-colors ${
+                          activeFormats.italic 
+                            ? 'bg-blue-500 text-white' 
+                            : 'hover:bg-gray-200'
+                        }`}
+                        title="기울임 (Ctrl+I)"
                       >
-                        I
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4h-8z"/>
+                        </svg>
                       </button>
                       <button
                         type="button"
                         onClick={handleUnderline}
-                        className="p-2 hover:bg-gray-200 rounded underline"
-                        title="밑줄"
+                        className={`p-2 rounded transition-colors ${
+                          activeFormats.underline 
+                            ? 'bg-blue-500 text-white' 
+                            : 'hover:bg-gray-200'
+                        }`}
+                        title="밑줄 (Ctrl+U)"
                       >
-                        U
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/>
+                        </svg>
                       </button>
                       
                       <div className="w-px h-6 bg-gray-300 mx-1"></div>
@@ -517,26 +654,44 @@ function WriteContent() {
                       <button
                         type="button"
                         onClick={handleAlignLeft}
-                        className="p-2 hover:bg-gray-200 rounded"
+                        className={`p-2 rounded transition-colors ${
+                          activeFormats.alignLeft 
+                            ? 'bg-blue-500 text-white' 
+                            : 'hover:bg-gray-200'
+                        }`}
                         title="왼쪽 정렬"
                       >
-                        ⬅
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/>
+                        </svg>
                       </button>
                       <button
                         type="button"
                         onClick={handleAlignCenter}
-                        className="p-2 hover:bg-gray-200 rounded"
+                        className={`p-2 rounded transition-colors ${
+                          activeFormats.alignCenter 
+                            ? 'bg-blue-500 text-white' 
+                            : 'hover:bg-gray-200'
+                        }`}
                         title="가운데 정렬"
                       >
-                        ↔
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/>
+                        </svg>
                       </button>
                       <button
                         type="button"
                         onClick={handleAlignRight}
-                        className="p-2 hover:bg-gray-200 rounded"
+                        className={`p-2 rounded transition-colors ${
+                          activeFormats.alignRight 
+                            ? 'bg-blue-500 text-white' 
+                            : 'hover:bg-gray-200'
+                        }`}
                         title="오른쪽 정렬"
                       >
-                        ➡
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/>
+                        </svg>
                       </button>
                       
                       <div className="w-px h-6 bg-gray-300 mx-1"></div>
@@ -570,15 +725,19 @@ function WriteContent() {
                       <button
                         type="button"
                         onClick={handleInsertLink}
-                        className="p-2 hover:bg-gray-200 rounded"
-                        title="링크 삽입"
+                        className="p-2 hover:bg-gray-200 rounded transition-colors"
+                        title="링크 삽입 (Ctrl+K)"
                       >
-                        🔗
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                        </svg>
                       </button>
                       
                       {/* 이미지 삽입 */}
-                      <label className="p-2 hover:bg-gray-200 rounded cursor-pointer" title="이미지 삽입">
-                        📷
+                      <label className="p-2 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="이미지 삽입">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                        </svg>
                         <input
                           type="file"
                           accept="image/*"
