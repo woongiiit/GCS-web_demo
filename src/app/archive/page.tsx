@@ -25,11 +25,13 @@ function ArchiveContent() {
     }
   }, [searchParams])
 
-  // 탭 변경 시 URL 업데이트
+  // 탭 변경 시 URL 업데이트 및 데이터 새로고침
   const handleTabChange = (tab: 'project' | 'news') => {
     setActiveTab(tab)
     const tabParam = tab === 'project' ? 'projects' : 'news'
     router.push(`/archive?tab=${tabParam}`, { scroll: false })
+    // 탭 변경 시 데이터 새로고침
+    fetchArchiveData()
   }
 
   // 데이터 로드
@@ -40,10 +42,20 @@ function ArchiveContent() {
   const fetchArchiveData = async () => {
     setIsLoading(true)
     try {
-      // 병렬로 데이터 조회하여 성능 최적화
+      // 병렬로 데이터 조회하여 성능 최적화 (캐시 방지 옵션 추가)
       const [projectsRes, newsRes] = await Promise.all([
-        fetch('/api/archive/projects'),
-        fetch('/api/archive/news')
+        fetch('/api/archive/projects', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        }),
+        fetch('/api/archive/news', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        })
       ])
 
       const [projectsData, newsData] = await Promise.all([

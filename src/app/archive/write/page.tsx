@@ -273,9 +273,10 @@ function ArchiveWriteContent() {
         setMessage('글이 성공적으로 작성되었습니다.')
         setMessageType('success')
         
-        // 성공 후 Archive 페이지로 이동
+        // 성공 후 Archive 페이지로 이동 (새로고침 강제)
         setTimeout(() => {
           router.push('/archive')
+          router.refresh() // 페이지 새로고침 강제
         }, 1500)
       } else {
         console.error('글 작성 실패:', data.error)
