@@ -473,7 +473,7 @@ function ArchiveWriteContent() {
                   
                   {/* TinyMCE 에디터 */}
                   <Editor
-                    apiKey="no-api-key"
+                    apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY || ''}
                     value={editorContent}
                     onEditorChange={handleEditorChange}
                     init={{
