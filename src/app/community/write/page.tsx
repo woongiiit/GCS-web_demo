@@ -291,8 +291,8 @@ function WriteContent() {
       img.style.margin = '8px 0'
 
       // 에디터에 포커스가 없으면 먼저 포커스
-      if (editorRef) {
-        editorRef.focus()
+      if (editorRef?.current) {
+        editorRef.current.focus()
 
         // 포커스 후 마지막 커서 위치 복원
         setTimeout(() => {
