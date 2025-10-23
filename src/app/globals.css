@@ -4,3 +4,24 @@
 
 /* React Quill CSS - 클라이언트 사이드에서만 로드 */
 @import 'react-quill/dist/quill.snow.css';
+
+/* React Quill 이미지 정렬을 위한 커스텀 CSS */
+.ql-editor img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+/* 이미지 정렬을 위한 클래스 */
+.ql-editor .image-center {
+  text-align: center;
+}
+
+.ql-editor .image-left {
+  text-align: left;
+}
+
+.ql-editor .image-right {
+  text-align: right;
+}

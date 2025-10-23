@@ -43,6 +43,32 @@ export default function RichTextEditor({
       ['link', 'image'],
       ['clean']
     ],
+    // 이미지 정렬을 위한 커스텀 핸들러
+    handlers: {
+      image: function() {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = () => {
+          const file = input.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const quill = this.quill;
+              const range = quill.getSelection();
+              if (range) {
+                // 이미지를 가운데 정렬로 삽입
+                quill.insertEmbed(range.index, 'image', reader.result, 'user');
+                quill.formatLine(range.index, 1, 'align', 'center');
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+      }
+    }
   }
 
   const formats = [
