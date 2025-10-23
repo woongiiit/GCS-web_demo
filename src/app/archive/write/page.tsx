@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 import Link from 'next/link'
+import { Editor } from '@tinymce/tinymce-react'
 
 function ArchiveWriteContent() {
   const searchParams = useSearchParams()
@@ -21,20 +22,9 @@ function ArchiveWriteContent() {
     isFeatured: false
   })
   
-  // 리치 텍스트 에디터 관련 상태
+  // TinyMCE 에디터 관련 상태
   const [editorContent, setEditorContent] = useState('')
-  const [isEditorFocused, setIsEditorFocused] = useState(false)
-  const [selectedText, setSelectedText] = useState('')
-  const [lastCursorPosition, setLastCursorPosition] = useState<Range | null>(null)
-  const [activeFormats, setActiveFormats] = useState({
-    bold: false,
-    italic: false,
-    underline: false,
-    alignLeft: false,
-    alignCenter: false,
-    alignRight: false
-  })
-  const editorRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<any>(null)
   
   // 대표 이미지 관련 상태
   const [coverImages, setCoverImages] = useState<File[]>([])
@@ -145,51 +135,6 @@ function ArchiveWriteContent() {
     setCoverImagePreviews(newPreviews)
   }
 
-  // 본문 이미지 업로드
-  const handleEditorImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length === 0) return
-
-    files.forEach(file => {
-      if (!file.type.startsWith('image/')) {
-        alert('이미지 파일만 업로드할 수 있습니다.')
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const imageUrl = event.target?.result as string
-        if (imageUrl && editorRef.current) {
-          // 현재 커서 위치에 이미지 삽입
-          const selection = window.getSelection()
-          if (selection && selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0)
-            const img = document.createElement('img')
-            img.src = imageUrl
-            img.style.maxWidth = '100%'
-            img.style.height = 'auto'
-            img.style.display = 'block'
-            img.style.margin = '10px auto'
-            img.style.borderRadius = '8px'
-            img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
-            
-            range.deleteContents()
-            range.insertNode(img)
-            range.setStartAfter(img)
-            range.setEndAfter(img)
-            selection.removeAllRanges()
-            selection.addRange(range)
-          }
-          
-          handleEditorChange()
-        }
-      }
-      reader.readAsDataURL(file)
-    })
-
-    // 파일 입력 초기화
-    e.target.value = ''
-  }
 
   // 드래그 앤 드롭 핸들러
   const handleDragOver = (e: React.DragEvent) => {
@@ -231,145 +176,24 @@ function ArchiveWriteContent() {
     setCoverImagePreviews(prev => [...prev, ...newPreviews])
   }
 
-  // 리치 텍스트 에디터 핸들러
-  const handleEditorChange = () => {
-    if (editorRef.current) {
-      const content = editorRef.current.innerHTML
-      setEditorContent(content)
-      setFormData(prev => ({ ...prev, content }))
-      updateActiveFormats()
-    }
+  // TinyMCE 에디터 핸들러
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content)
+    setFormData(prev => ({ ...prev, content }))
   }
 
-  // 에디터 초기화
-  useEffect(() => {
-    if (editorRef.current) {
-      // 에디터가 비어있고 editorContent가 있을 때만 초기화
-      if (editorRef.current.innerHTML === '' && editorContent) {
-        editorRef.current.innerHTML = editorContent
+  // 이미지 업로드 핸들러 (TinyMCE용)
+  const handleImageUpload = (blobInfo: any, progress: any) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        resolve(reader.result as string)
       }
-    }
-  }, [editorContent])
-
-  // 에디터 마운트 시 초기화
-  useEffect(() => {
-    if (editorRef.current && editorContent && editorRef.current.innerHTML === '') {
-      editorRef.current.innerHTML = editorContent
-    }
-  }, [])
-
-  const updateActiveFormats = () => {
-    if (!editorRef.current) return
-    
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0) return
-    
-    const range = selection.getRangeAt(0)
-    const container = range.commonAncestorContainer
-    
-    // 현재 선택된 텍스트의 포맷팅 상태 확인
-    const isBold = document.queryCommandState('bold')
-    const isItalic = document.queryCommandState('italic')
-    const isUnderline = document.queryCommandState('underline')
-    
-    // 정렬 상태 확인
-    const parentElement = container.nodeType === Node.TEXT_NODE 
-      ? container.parentElement 
-      : container as Element
-    
-    let alignLeft = false, alignCenter = false, alignRight = false
-    
-    if (parentElement) {
-      const computedStyle = window.getComputedStyle(parentElement)
-      const textAlign = computedStyle.textAlign
-      
-      if (textAlign === 'left' || textAlign === 'start') alignLeft = true
-      else if (textAlign === 'center') alignCenter = true
-      else if (textAlign === 'right' || textAlign === 'end') alignRight = true
-    }
-    
-    setActiveFormats({
-      bold: isBold,
-      italic: isItalic,
-      underline: isUnderline,
-      alignLeft,
-      alignCenter,
-      alignRight
+      reader.onerror = () => {
+        reject('이미지 업로드에 실패했습니다.')
+      }
+      reader.readAsDataURL(blobInfo.blob())
     })
-  }
-
-  const handleEditorFocus = () => {
-    setIsEditorFocused(true)
-    // 포커스 시 마지막 커서 위치 복원
-    setTimeout(() => {
-      if (editorRef.current) {
-        editorRef.current.focus()
-        restoreCursorPosition()
-      }
-    }, 10)
-  }
-
-  const handleEditorBlur = () => {
-    setIsEditorFocused(false)
-    saveCursorPosition()
-  }
-
-  const handleEditorSelection = () => {
-    const selection = window.getSelection()
-    if (selection) {
-      setSelectedText(selection.toString())
-    }
-  }
-
-  // 커서 위치 관리
-  const saveCursorPosition = () => {
-    const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0 && editorRef?.current?.contains(selection.anchorNode)) {
-      setLastCursorPosition(selection.getRangeAt(0).cloneRange())
-    }
-  }
-
-  const restoreCursorPosition = () => {
-    if (lastCursorPosition && editorRef) {
-      const selection = window.getSelection()
-      if (selection) {
-        selection.removeAllRanges()
-        selection.addRange(lastCursorPosition)
-      }
-    }
-  }
-
-  // 포맷팅 함수들
-  const applyFormat = (command: string, value?: string) => {
-    document.execCommand(command, false, value)
-    editorRef.current?.focus()
-    handleEditorChange()
-  }
-
-  const handleBold = () => applyFormat('bold')
-  const handleItalic = () => applyFormat('italic')
-  const handleUnderline = () => applyFormat('underline')
-  const handleAlignLeft = () => applyFormat('justifyLeft')
-  const handleAlignCenter = () => applyFormat('justifyCenter')
-  const handleAlignRight = () => applyFormat('justifyRight')
-  const handleUndo = () => applyFormat('undo')
-  const handleRedo = () => applyFormat('redo')
-
-  const handleFontSize = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const size = e.target.value
-    applyFormat('fontSize', size)
-  }
-
-  const handleFontColor = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const color = e.target.value
-    applyFormat('foreColor', color)
-  }
-
-  const handleInsertLink = () => {
-    const url = prompt('링크 URL을 입력하세요:')
-    if (url) {
-      applyFormat('createLink', url)
-    }
   }
 
   // 이미지 삽입
@@ -708,233 +532,49 @@ function ArchiveWriteContent() {
                     상세 설명 *
                   </label>
                   
-                  {/* 툴바 */}
-                  <div className="border border-gray-300 rounded-t-lg bg-gray-50 p-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* 실행 취소/다시 실행 */}
-                      <button
-                        type="button"
-                        onClick={handleUndo}
-                        className="p-2 hover:bg-gray-200 rounded text-sm font-medium"
-                        title="실행 취소 (Ctrl+Z)"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRedo}
-                        className="p-2 hover:bg-gray-200 rounded text-sm font-medium"
-                        title="다시 실행 (Ctrl+Y)"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
-                        </svg>
-                      </button>
-                      
-                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                      
-                      {/* 텍스트 포맷팅 */}
-                      <button
-                        type="button"
-                        onClick={handleBold}
-                        className={`p-2 rounded transition-colors ${
-                          activeFormats.bold 
-                            ? 'bg-blue-500 text-white' 
-                            : 'hover:bg-gray-200'
-                        }`}
-                        title="굵게 (Ctrl+B)"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleItalic}
-                        className={`p-2 rounded transition-colors ${
-                          activeFormats.italic 
-                            ? 'bg-blue-500 text-white' 
-                            : 'hover:bg-gray-200'
-                        }`}
-                        title="기울임 (Ctrl+I)"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4h-8z"/>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleUnderline}
-                        className={`p-2 rounded transition-colors ${
-                          activeFormats.underline 
-                            ? 'bg-blue-500 text-white' 
-                            : 'hover:bg-gray-200'
-                        }`}
-                        title="밑줄 (Ctrl+U)"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/>
-                        </svg>
-                      </button>
-                      
-                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                      
-                      {/* 정렬 */}
-                      <button
-                        type="button"
-                        onClick={handleAlignLeft}
-                        className={`p-2 rounded transition-colors ${
-                          activeFormats.alignLeft 
-                            ? 'bg-blue-500 text-white' 
-                            : 'hover:bg-gray-200'
-                        }`}
-                        title="왼쪽 정렬"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleAlignCenter}
-                        className={`p-2 rounded transition-colors ${
-                          activeFormats.alignCenter 
-                            ? 'bg-blue-500 text-white' 
-                            : 'hover:bg-gray-200'
-                        }`}
-                        title="가운데 정렬"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleAlignRight}
-                        className={`p-2 rounded transition-colors ${
-                          activeFormats.alignRight 
-                            ? 'bg-blue-500 text-white' 
-                            : 'hover:bg-gray-200'
-                        }`}
-                        title="오른쪽 정렬"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/>
-                        </svg>
-                      </button>
-                      
-                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                      
-                      {/* 이미지 업로드 */}
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleEditorImageUpload}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          id="editor-image-upload-archive"
-                        />
-                        <button
-                          type="button"
-                          className="p-2 hover:bg-gray-200 rounded transition-colors"
-                          title="이미지 삽입"
-                          onClick={() => document.getElementById('editor-image-upload-archive')?.click()}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </button>
-                      </div>
-                      
-                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                      
-                      {/* 폰트 크기 */}
-                      <select
-                        onChange={handleFontSize}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm"
-                        title="폰트 크기"
-                      >
-                        <option value="1">8pt</option>
-                        <option value="2">10pt</option>
-                        <option value="3">12pt</option>
-                        <option value="4">14pt</option>
-                        <option value="5">18pt</option>
-                        <option value="6">24pt</option>
-                        <option value="7">36pt</option>
-                      </select>
-                      
-                      {/* 폰트 색상 */}
-                      <input
-                        type="color"
-                        onChange={handleFontColor}
-                        className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                        title="폰트 색상"
-                      />
-                      
-                      <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                      
-                      {/* 링크 삽입 */}
-                      <button
-                        type="button"
-                        onClick={handleInsertLink}
-                        className="p-2 hover:bg-gray-200 rounded transition-colors"
-                        title="링크 삽입 (Ctrl+K)"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-                        </svg>
-                      </button>
-                      
-                      {/* 이미지 삽입 */}
-                      <label className="p-2 hover:bg-gray-200 rounded cursor-pointer transition-colors" title="이미지 삽입">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                        </svg>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleInsertImage}
-                          className="hidden"
-                          onClick={saveCursorPosition}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  
-                  {/* 에디터 영역 */}
-                  <div
-                    ref={editorRef}
-                    contentEditable
-                    onInput={handleEditorChange}
-                    onFocus={handleEditorFocus}
-                    onBlur={handleEditorBlur}
-                    onMouseUp={handleEditorSelection}
-                    onKeyUp={handleEditorSelection}
-                    onKeyDown={saveCursorPosition}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      saveCursorPosition()
-                    }}
-                    suppressContentEditableWarning
-                    data-placeholder="상세 설명을 입력하세요..."
-                    className="w-full min-h-[300px] px-4 py-3 border border-t-0 border-gray-300 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors prose prose-sm max-w-none"
-                    style={{
-                      outline: 'none',
-                      lineHeight: '1.6',
-                      wordBreak: 'break-word',
-                      whiteSpace: 'pre-wrap',
+                  {/* TinyMCE 에디터 */}
+                  <Editor
+                    apiKey="no-api-key"
+                    value={editorContent}
+                    onEditorChange={handleEditorChange}
+                    init={{
+                      height: 400,
+                      menubar: false,
+                      plugins: [
+                        'advlist autolink lists link image charmap print preview anchor',
+                        'searchreplace visualblocks code fullscreen',
+                        'insertdatetime media table paste code help wordcount'
+                      ],
+                      toolbar: 'undo redo | formatselect | bold italic backcolor | \
+                               alignleft aligncenter alignright alignjustify | \
+                               bullist numlist outdent indent | removeformat | help | image',
+                      language: 'ko_KR',
+                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; line-height: 1.6; }',
+                      images_upload_handler: handleImageUpload,
+                      automatic_uploads: true,
+                      file_picker_types: 'image',
+                      file_picker_callback: (callback: any, value: any, meta: any) => {
+                        if (meta.filetype === 'image') {
+                          const input = document.createElement('input')
+                          input.setAttribute('type', 'file')
+                          input.setAttribute('accept', 'image/*')
+                          input.click()
+                          input.onchange = () => {
+                            const file = input.files?.[0]
+                            if (file) {
+                              const reader = new FileReader()
+                              reader.onload = () => {
+                                callback(reader.result as string, {
+                                  alt: file.name
+                                })
+                              }
+                              reader.readAsDataURL(file)
+                            }
+                          }
+                        }
+                      }
                     }}
                   />
-                  
-                  {/* 선택된 텍스트 표시 (디버깅용) */}
-                  {selectedText && (
-                    <div className="mt-2 text-xs text-gray-500">
-                      선택된 텍스트: "{selectedText}"
-                    </div>
-                  )}
                 </div>
 
                 {/* 주요 항목 체크박스 */}
