@@ -9,16 +9,19 @@ export async function POST(request: Request) {
     // 인증 확인 및 사용자 정보 가져오기
     const user = await requireAuth()
 
-    // 글 작성 권한 확인 (STUDENT 또는 ADMIN만)
-    if (!permissions.canWritePost(user.role as any)) {
+    // 글 작성 권한 확인 (MAJOR 또는 ADMIN만)
+    if (!permissions.canWritePost(user.role as any, user.verificationStatus)) {
       return NextResponse.json(
-        { error: permissionErrors.studentOnly },
+        { error: '글 작성 권한이 없습니다.' },
         { status: 403 }
       )
     }
 
     const body = await request.json()
     const { title, content, category, images } = body
+
+    console.log('Community 글 작성 요청:', { title, category, contentLength: content?.length, imagesCount: images?.length })
+    console.log('사용자 정보:', { id: user.id, role: user.role, verificationStatus: user.verificationStatus })
 
     // 유효성 검사
     if (!title || !content || !category) {
@@ -58,6 +61,8 @@ export async function POST(request: Request) {
         }
       }
     })
+
+    console.log('글 작성 성공:', { id: post.id, title: post.title, category: post.category })
 
     // Community 글 목록 캐시 무효화
     invalidateCache('posts:.*')

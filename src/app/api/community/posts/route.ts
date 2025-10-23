@@ -16,48 +16,52 @@ export async function GET(request: Request) {
       category || 'all'
     )
 
-    // 캐시와 함께 데이터 가져오기
-    const result = await withCache(cacheKey, async () => {
-      const whereClause: any = {}
-      
-      if (category && (category === 'BOARD' || category === 'LOUNGE')) {
-        whereClause.category = category
-      }
+    // 캐시 비활성화하여 직접 DB 조회 (디버깅용)
+    const whereClause: any = {}
+    
+    if (category && (category === 'BOARD' || category === 'LOUNGE')) {
+      whereClause.category = category
+    }
 
-      const posts = await prisma.post.findMany({
-        where: whereClause,
-        include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-              role: true,
-            }
-          },
-          _count: {
-            select: {
-              comments: true
-            }
+    console.log('Community 글 목록 조회 - 카테고리:', category)
+    console.log('WHERE 조건:', whereClause)
+
+    const posts = await prisma.post.findMany({
+      where: whereClause,
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
           }
         },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 50 // 최대 50개로 제한
-      })
+        _count: {
+          select: {
+            comments: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 50 // 최대 50개로 제한
+    })
 
-      // 댓글 수 추가
-      const postsWithCommentCount = posts.map(post => ({
-        ...post,
-        commentCount: post._count.comments
-      }))
+    console.log('조회된 글 수:', posts.length)
+    console.log('글 목록:', posts.map(p => ({ id: p.id, title: p.title, category: p.category, createdAt: p.createdAt })))
 
-      return {
-        success: true,
-        data: postsWithCommentCount,
-        count: postsWithCommentCount.length
-      }
-    }, 180000) // 3분 캐시
+    // 댓글 수 추가
+    const postsWithCommentCount = posts.map(post => ({
+      ...post,
+      commentCount: post._count.comments
+    }))
+
+    const result = {
+      success: true,
+      data: postsWithCommentCount,
+      count: postsWithCommentCount.length
+    }
 
     return NextResponse.json(
       result,
