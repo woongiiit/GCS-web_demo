@@ -91,7 +91,16 @@ export default function AdminPage() {
               {activeTab === 'users' ? (
                 <UserManagement />
               ) : (
-                <ContentManagement />
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-black mb-6">콘텐츠 관리</h2>
+                  <p className="text-gray-600 mb-6">About 페이지의 각 섹션 콘텐츠를 관리합니다.</p>
+                  <Link 
+                    href="/admin/content"
+                    className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                  >
+                    콘텐츠 관리 페이지로 이동
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -388,13 +397,3 @@ function UserManagement() {
   )
 }
 
-
-// 콘텐츠 관리 컴포넌트 (임시)
-function ContentManagement() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold text-black mb-6">콘텐츠 관리</h2>
-      <p className="text-gray-600">콘텐츠 관리 기능은 추후 구현 예정입니다.</p>
-    </div>
-  )
-}

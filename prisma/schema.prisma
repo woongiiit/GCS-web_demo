@@ -399,6 +399,25 @@ model EmailVerificationCode {
   @@map("email_verification_codes")
 }
 
+// 관리자 콘텐츠 관리 모델
+model AdminContent {
+  id          String   @id @default(cuid())
+  section     ContentSection
+  title       String?
+  content     String?  // HTML 콘텐츠
+  imageUrl    String?  // 이미지 URL
+  imageAlt    String?  // 이미지 alt 텍스트
+  order       Int      @default(0)  // 표시 순서
+  isActive    Boolean  @default(true)
+  updatedBy   String?  // 마지막 수정자 ID
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@unique([section])
+  @@index([section, isActive])
+  @@map("admin_contents")
+}
+
 // Enums
 enum UserRole {
   GENERAL   // 일반회원 (상품 구매만 가능)
@@ -430,4 +449,11 @@ enum SubjectCategory {
   ART      // 예술
   BUSINESS // 경영
   ENGINEERING // 공학
+}
+
+enum ContentSection {
+  GCS_WEB      // GCS:Web
+  MAJOR_INTRO  // 전공 소개
+  SUBJECTS     // 개설 과목
+  PROFESSORS   // 교수진
 }
