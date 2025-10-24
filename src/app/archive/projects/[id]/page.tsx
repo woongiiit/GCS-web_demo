@@ -14,9 +14,13 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isLiked, setIsLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [isLikeLoading, setIsLikeLoading] = useState(false)
 
   useEffect(() => {
     fetchProjectDetail()
+    fetchLikeStatus()
   }, [projectId])
 
   const fetchProjectDetail = async () => {
@@ -30,6 +34,49 @@ export default function ProjectDetailPage() {
       console.error('프로젝트 상세 조회 오류:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchLikeStatus = async () => {
+    try {
+      const response = await fetch(`/api/archive/projects/${projectId}/like`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setIsLiked(data.liked)
+        setLikeCount(data.likeCount)
+      }
+    } catch (error) {
+      console.error('좋아요 상태 조회 오류:', error)
+    }
+  }
+
+  const handleLike = async () => {
+    if (isLikeLoading) return
+    
+    setIsLikeLoading(true)
+    try {
+      const response = await fetch(`/api/archive/projects/${projectId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setIsLiked(data.liked)
+        setLikeCount(prev => data.liked ? prev + 1 : prev - 1)
+      } else {
+        alert(data.error || '좋아요 처리에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('좋아요 처리 오류:', error)
+      alert('서버 오류가 발생했습니다.')
+    } finally {
+      setIsLikeLoading(false)
     }
   }
 
@@ -345,6 +392,34 @@ export default function ProjectDetailPage() {
                     </div>
                   </div>
                 )}
+
+                {/* 좋아요 버튼 */}
+                <div className="flex justify-center pt-8">
+                  <button 
+                    onClick={handleLike}
+                    disabled={isLikeLoading}
+                    className={`px-6 py-3 rounded-lg transition-colors flex items-center space-x-2 ${
+                      isLiked 
+                        ? 'bg-red-500 text-white hover:bg-red-600' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    } ${isLikeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <svg 
+                      className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} 
+                      fill={isLiked ? 'currentColor' : 'none'} 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                      />
+                    </svg>
+                    <span>{isLikeLoading ? '처리중...' : `좋아요 ${likeCount}`}</span>
+                  </button>
+                </div>
 
                 {/* 작성자 정보 */}
                 <div>
