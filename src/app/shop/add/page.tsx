@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/contexts/AuthContext'
 import Link from 'next/link'
+import RichTextEditor from '@/components/TinyMCEEditor'
 
 export default function ShopAddPage() {
   const router = useRouter()
@@ -28,12 +29,8 @@ export default function ShopAddPage() {
   const [coverImages, setCoverImages] = useState<File[]>([])
   const [coverImagePreviews, setCoverImagePreviews] = useState<string[]>([])
   
-  // 리치 텍스트 에디터 상태
+  // React Quill 에디터 상태
   const [editorContent, setEditorContent] = useState('')
-  const [isEditorFocused, setIsEditorFocused] = useState(false)
-  const [selectedText, setSelectedText] = useState('')
-  const [editorRef, setEditorRef] = useState<HTMLDivElement | null>(null)
-  const [lastCursorPosition, setLastCursorPosition] = useState<Range | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
@@ -127,174 +124,13 @@ export default function ShopAddPage() {
     }
   }
 
-  // 리치 텍스트 에디터 함수들
-  const handleEditorChange = () => {
-    if (editorRef) {
-      setEditorContent(editorRef.innerHTML)
-      setFormData(prev => ({ ...prev, description: editorRef.innerHTML }))
-    }
+  // React Quill 에디터 핸들러
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content)
+    setFormData(prev => ({ ...prev, description: content }))
   }
 
-  const handleEditorFocus = () => {
-    setIsEditorFocused(true)
-    // 포커스 시 마지막 커서 위치 복원
-    setTimeout(() => {
-      restoreCursorPosition()
-    }, 10)
-  }
 
-  const handleEditorBlur = () => {
-    setIsEditorFocused(false)
-  }
-
-  const handleEditorSelection = () => {
-    const selection = window.getSelection()
-    if (selection && selection.toString().trim() !== '') {
-      setSelectedText(selection.toString())
-    } else {
-      setSelectedText('')
-    }
-    
-    // 커서 위치 저장
-    if (selection && selection.rangeCount > 0) {
-      setLastCursorPosition(selection.getRangeAt(0).cloneRange())
-    }
-  }
-
-  // 커서 위치 저장 함수
-  const saveCursorPosition = () => {
-    const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
-      setLastCursorPosition(selection.getRangeAt(0).cloneRange())
-    }
-  }
-
-  // 커서 위치 복원 함수
-  const restoreCursorPosition = () => {
-    if (lastCursorPosition && editorRef) {
-      const selection = window.getSelection()
-      if (selection) {
-        selection.removeAllRanges()
-        selection.addRange(lastCursorPosition)
-      }
-    }
-  }
-
-  // 텍스트 포맷팅 함수들
-  const applyFormat = (command: string, value?: string) => {
-    document.execCommand(command, false, value)
-    handleEditorChange()
-    editorRef?.focus()
-  }
-
-  const handleBold = () => {
-    applyFormat('bold')
-  }
-
-  const handleItalic = () => {
-    applyFormat('italic')
-  }
-
-  const handleUnderline = () => {
-    applyFormat('underline')
-  }
-
-  const handleFontSize = (size: string) => {
-    applyFormat('fontSize', size)
-  }
-
-  const handleFontColor = (color: string) => {
-    applyFormat('foreColor', color)
-  }
-
-  const handleAlignLeft = () => {
-    applyFormat('justifyLeft')
-  }
-
-  const handleAlignCenter = () => {
-    applyFormat('justifyCenter')
-  }
-
-  const handleAlignRight = () => {
-    applyFormat('justifyRight')
-  }
-
-  const handleInsertImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length === 0) return
-
-    const file = files[0]
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const img = document.createElement('img')
-      img.src = reader.result as string
-      img.style.maxWidth = '100%'
-      img.style.height = 'auto'
-      img.style.display = 'block'
-      img.style.margin = '10px 0'
-      img.style.border = '1px solid #e5e7eb'
-      img.style.borderRadius = '4px'
-      
-      // 에디터에 포커스
-      if (editorRef) {
-        editorRef.focus()
-        
-        // 포커스 후 마지막 커서 위치 복원
-        setTimeout(() => {
-          const selection = window.getSelection()
-          let range: Range
-          
-          if (lastCursorPosition && editorRef?.contains(lastCursorPosition.startContainer)) {
-            // 마지막 커서 위치가 유효한 경우
-            range = lastCursorPosition.cloneRange()
-            range.deleteContents()
-            range.insertNode(img)
-          } else if (selection && selection.rangeCount > 0 && editorRef?.contains(selection.anchorNode)) {
-            // 현재 선택 영역이 에디터 내부에 있는 경우
-            range = selection.getRangeAt(0)
-            range.deleteContents()
-            range.insertNode(img)
-          } else {
-            // 에디터 끝에 추가
-            range = document.createRange()
-            range.selectNodeContents(editorRef)
-            range.collapse(false) // 끝으로 이동
-            range.insertNode(img)
-          }
-          
-          // 커서를 이미지 뒤로 이동
-          range.setStartAfter(img)
-          range.setEndAfter(img)
-          selection?.removeAllRanges()
-          selection?.addRange(range)
-          
-          // 새로운 커서 위치 저장
-          setLastCursorPosition(range.cloneRange())
-          
-          handleEditorChange()
-        }, 20)
-      }
-      
-      // 파일 입력 초기화
-      e.target.value = ''
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const handleInsertLink = () => {
-    const url = prompt('링크 URL을 입력하세요:')
-    if (url) {
-      applyFormat('createLink', url)
-    }
-  }
-
-  const handleUndo = () => {
-    applyFormat('undo')
-  }
-
-  const handleRedo = () => {
-    applyFormat('redo')
-  }
 
 
 
@@ -545,190 +381,12 @@ export default function ShopAddPage() {
                       상세 설명 *
                     </label>
                     
-                    {/* 고급 리치 텍스트 툴바 */}
-                    <div className="border border-gray-300 rounded-t-lg bg-gray-100 p-2">
-                      {/* 첫 번째 줄: 기본 포맷팅 */}
-                      <div className="flex items-center gap-1 mb-2 flex-wrap">
-                        {/* 실행 취소/다시 실행 */}
-                        <button
-                          type="button"
-                          onClick={handleUndo}
-                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
-                          title="실행 취소"
-                        >
-                          ↶
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleRedo}
-                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
-                          title="다시 실행"
-                        >
-                          ↷
-                        </button>
-                        
-                        <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                        
-                        {/* 텍스트 포맷팅 */}
-                        <button
-                          type="button"
-                          onClick={handleBold}
-                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border font-bold"
-                          title="굵게"
-                        >
-                          B
-                        </button>
-                        
-                        <button
-                          type="button"
-                          onClick={handleItalic}
-                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border italic"
-                          title="기울임"
-                        >
-                          I
-                        </button>
-                        
-                        <button
-                          type="button"
-                          onClick={handleUnderline}
-                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border"
-                          title="밑줄"
-                          style={{ textDecoration: 'underline' }}
-                        >
-                          U
-                        </button>
-                        
-                        <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                        
-                        {/* 정렬 */}
-                        <button
-                          type="button"
-                          onClick={handleAlignLeft}
-                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
-                          title="왼쪽 정렬"
-                        >
-                          ⬅
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleAlignCenter}
-                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
-                          title="가운데 정렬"
-                        >
-                          ↔
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleAlignRight}
-                          className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-200 transition-colors border"
-                          title="오른쪽 정렬"
-                        >
-                          ➡
-                        </button>
-                      </div>
-                      
-                      {/* 두 번째 줄: 고급 기능 */}
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {/* 폰트 크기 */}
-                        <select
-                          onChange={(e) => handleFontSize(e.target.value)}
-                          className="px-2 py-1 text-sm border border-gray-300 rounded bg-white"
-                          title="폰트 크기"
-                          defaultValue="3"
-                        >
-                          <option value="1">8pt</option>
-                          <option value="2">10pt</option>
-                          <option value="3">12pt</option>
-                          <option value="4">14pt</option>
-                          <option value="5">18pt</option>
-                          <option value="6">24pt</option>
-                          <option value="7">36pt</option>
-                        </select>
-                        
-                        {/* 폰트 색상 */}
-                        <input
-                          type="color"
-                          onChange={(e) => handleFontColor(e.target.value)}
-                          className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                          title="폰트 색상"
-                          defaultValue="#000000"
-                        />
-                        
-                        <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                        
-                        {/* 링크 삽입 */}
-                        <button
-                          type="button"
-                          onClick={handleInsertLink}
-                          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-200 transition-colors border"
-                          title="링크 삽입"
-                        >
-                          🔗
-                        </button>
-                        
-                        {/* 이미지 삽입 */}
-                        <div className="relative">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleInsertImage}
-                            className="hidden"
-                            id="rich-text-image-upload"
-                          />
-                          <label
-                            htmlFor="rich-text-image-upload"
-                            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors cursor-pointer"
-                            title="이미지 삽입"
-                            onClick={() => {
-                              // 이미지 업로드 버튼 클릭 시 현재 커서 위치 저장
-                              saveCursorPosition()
-                            }}
-                          >
-                            📷
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* 리치 텍스트 에디터 */}
-                    <div
-                      ref={setEditorRef}
-                      contentEditable
-                      className="w-full min-h-[200px] px-4 py-3 border border-gray-300 border-t-0 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                      style={{
-                        fontSize: '16px',
-                        lineHeight: '1.6',
-                        fontFamily: 'inherit'
-                      }}
-                      onInput={handleEditorChange}
-                      onFocus={handleEditorFocus}
-                      onBlur={handleEditorBlur}
-                      onMouseUp={handleEditorSelection}
-                      onKeyUp={handleEditorSelection}
-                      onKeyDown={saveCursorPosition}
-                      onClick={saveCursorPosition}
-                      suppressContentEditableWarning={true}
-                      data-placeholder="상품에 대한 자세한 설명을 입력하세요. 텍스트를 선택하고 위 툴바를 사용하여 꾸밀 수 있습니다."
+                    <RichTextEditor
+                      value={editorContent}
+                      onChange={handleEditorChange}
+                      placeholder="상품에 대한 자세한 설명을 입력하세요..."
+                      height={300}
                     />
-                    
-                    {/* Placeholder 스타일 */}
-                    <style jsx>{`
-                      [contenteditable]:empty:before {
-                        content: attr(data-placeholder);
-                        color: #9ca3af;
-                        pointer-events: none;
-                      }
-                      [contenteditable]:focus:before {
-                        content: none;
-                      }
-                    `}</style>
-                    
-                    {/* 선택된 텍스트 표시 */}
-                    {selectedText && (
-                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                        <span className="text-blue-600 font-medium">선택된 텍스트:</span> "{selectedText}"
-                      </div>
-                    )}
                   </div>
                 </div>
 
