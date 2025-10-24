@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
-import RichTextEditor from '@/components/RichTextEditor'
+import TinyMCEEditor from '@/components/TinyMCEEditor'
 
 interface ContentData {
   id?: string
@@ -298,7 +298,7 @@ export default function AdminContentPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       콘텐츠
                     </label>
-                    <RichTextEditor
+                    <TinyMCEEditor
                       value={currentContent?.content || ''}
                       onChange={(content) => {
                         setContents(prev => ({
