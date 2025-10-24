@@ -11,6 +11,8 @@
   margin: 0 auto;
   max-width: 100%;
   height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 이미지 정렬을 위한 클래스 */
@@ -26,26 +28,12 @@
   text-align: right;
 }
 
-/* 커스텀 이미지 정렬 버튼 스타일 */
-.ql-toolbar .ql-image-align-left::before {
-  content: '⬅️';
-  font-size: 16px;
+/* 이미지 컨테이너 정렬 */
+.ql-editor p {
+  text-align: center;
 }
 
-.ql-toolbar .ql-image-align-center::before {
-  content: '↔️';
-  font-size: 16px;
-}
-
-.ql-toolbar .ql-image-align-right::before {
-  content: '➡️';
-  font-size: 16px;
-}
-
-/* 툴바 버튼 호버 효과 */
-.ql-toolbar .ql-image-align-left:hover,
-.ql-toolbar .ql-image-align-center:hover,
-.ql-toolbar .ql-image-align-right:hover {
-  background-color: #e5e7eb;
-  border-radius: 4px;
+.ql-editor p img {
+  display: inline-block;
+  margin: 8px auto;
 }

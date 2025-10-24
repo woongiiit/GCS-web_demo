@@ -41,32 +41,8 @@ export default function RichTextEditor({
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
       [{ 'indent': '-1'}, { 'indent': '+1' }],
       ['link', 'image'],
-      ['image-align-left', 'image-align-center', 'image-align-right'],
       ['clean']
-    ],
-    handlers: {
-      'image-align-left': function(this: any) {
-        const quill = this.quill;
-        const range = quill.getSelection();
-        if (range) {
-          quill.formatLine(range.index, 1, 'align', 'left');
-        }
-      },
-      'image-align-center': function(this: any) {
-        const quill = this.quill;
-        const range = quill.getSelection();
-        if (range) {
-          quill.formatLine(range.index, 1, 'align', 'center');
-        }
-      },
-      'image-align-right': function(this: any) {
-        const quill = this.quill;
-        const range = quill.getSelection();
-        if (range) {
-          quill.formatLine(range.index, 1, 'align', 'right');
-        }
-      }
-    }
+    ]
   }
 
   const formats = [
