@@ -45,21 +45,21 @@ export default function RichTextEditor({
       ['clean']
     ],
     handlers: {
-      'image-align-left': function() {
+      'image-align-left': function(this: any) {
         const quill = this.quill;
         const range = quill.getSelection();
         if (range) {
           quill.formatLine(range.index, 1, 'align', 'left');
         }
       },
-      'image-align-center': function() {
+      'image-align-center': function(this: any) {
         const quill = this.quill;
         const range = quill.getSelection();
         if (range) {
           quill.formatLine(range.index, 1, 'align', 'center');
         }
       },
-      'image-align-right': function() {
+      'image-align-right': function(this: any) {
         const quill = this.quill;
         const range = quill.getSelection();
         if (range) {
