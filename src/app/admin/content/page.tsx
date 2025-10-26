@@ -14,6 +14,20 @@ interface ContentData {
   imageAlt?: string
   order: number
   isActive: boolean
+  items?: ContentItem[]
+}
+
+interface ContentItem {
+  id?: string
+  title?: string
+  subtitle?: string
+  description?: string
+  htmlContent?: string
+  imageUrl?: string
+  imageAlt?: string
+  order: number
+  isActive: boolean
+  type?: 'area' | 'subject' // 영역과 과목을 구분하는 필드
 }
 
 const SECTIONS = [
@@ -31,22 +45,6 @@ export default function AdminContentPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-
-  // 권한 체크
-  if (!permissions.canAccessAdmin(role)) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">접근 권한 없음</h1>
-          <p className="text-gray-600">관리자 권한이 필요합니다.</p>
-        </div>
-      </div>
-    )
-  }
-
-  useEffect(() => {
-    fetchContents()
-  }, [])
 
   const fetchContents = async () => {
     setIsLoading(true)
@@ -67,6 +65,10 @@ export default function AdminContentPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchContents()
+  }, [])
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -110,14 +112,23 @@ export default function AdminContentPage() {
         imageUrl = await uploadImage(selectedImage)
       }
 
+      // 탭을 ContentSection enum으로 매핑
+      const sectionMap = {
+        'GCS_WEB': 'GCS_WEB',
+        'MAJOR_INTRO': 'MAJOR_INTRO',
+        'SUBJECTS': 'SUBJECTS',
+        'PROFESSORS': 'PROFESSORS'
+      }
+
       const contentData = {
-        section: activeTab,
+        section: sectionMap[activeTab as keyof typeof sectionMap],
         title: currentContent?.title || '',
         content: currentContent?.content || '',
         imageUrl,
         imageAlt: currentContent?.imageAlt || '',
         order: currentContent?.order || 0,
-        isActive: currentContent?.isActive !== false
+        isActive: currentContent?.isActive !== false,
+        items: currentContent?.items || []
       }
 
       let response
@@ -143,7 +154,34 @@ export default function AdminContentPage() {
         })
       }
 
-      const data = await response.json()
+      // 응답 상태 확인
+      if (!response.ok) {
+        console.error('HTTP 오류:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('오류 응답:', errorText)
+        
+        // JSON 응답인지 확인
+        try {
+          const errorData = JSON.parse(errorText)
+          console.error('파싱된 오류 데이터:', errorData)
+          alert(`서버 오류: ${errorData.error || errorData.message || '알 수 없는 오류'}`)
+        } catch {
+          alert(`서버 오류 (${response.status}): ${response.statusText}`)
+        }
+        return
+      }
+
+      // JSON 파싱을 안전하게 처리
+      let data
+      try {
+        data = await response.json()
+      } catch (jsonError) {
+        console.error('JSON 파싱 오류:', jsonError)
+        const responseText = await response.text()
+        console.error('응답 텍스트:', responseText)
+        alert('서버 응답을 파싱할 수 없습니다.')
+        return
+      }
       
       if (data.success) {
         alert('콘텐츠가 저장되었습니다.')
@@ -151,7 +189,11 @@ export default function AdminContentPage() {
         setImagePreview(null)
         fetchContents()
       } else {
+        console.error('저장 실패:', data)
         alert(data.error || '저장에 실패했습니다.')
+        if (data.details) {
+          console.error('상세 오류:', data.details)
+        }
       }
     } catch (error) {
       console.error('저장 오류:', error)
@@ -162,6 +204,18 @@ export default function AdminContentPage() {
   }
 
   const currentContent = contents[activeTab]
+
+  // 권한 체크 - 모든 hooks 호출 후에 위치
+  if (!permissions.canAccessAdmin(role)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">접근 권한 없음</h1>
+          <p className="text-gray-600">관리자 권한이 필요합니다.</p>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -216,122 +270,490 @@ export default function AdminContentPage() {
                   {SECTIONS.find(s => s.key === activeTab)?.label} 콘텐츠 편집
                 </h2>
 
-                <div className="space-y-6">
-                  {/* 제목 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      제목
-                    </label>
-                    <input
-                      type="text"
-                      value={currentContent?.title || ''}
-                      onChange={(e) => {
-                        setContents(prev => ({
-                          ...prev,
-                          [activeTab]: {
-                            ...prev[activeTab],
-                            title: e.target.value
-                          }
-                        }))
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                      placeholder="섹션 제목을 입력하세요"
-                    />
-                  </div>
+                {/* 탭별 맞춤형 편집 인터페이스 */}
+                {activeTab === 'SUBJECTS' ? (
+                  <SubjectsEditor 
+                    content={currentContent}
+                    onContentChange={(content) => {
+                      setContents(prev => ({
+                        ...prev,
+                        [activeTab]: content
+                      }))
+                    }}
+                    onImageChange={handleImageChange}
+                    imagePreview={imagePreview}
+                    selectedImage={selectedImage}
+                  />
+                ) : (
+                  <DefaultEditor 
+                    content={currentContent}
+                    onContentChange={(content) => {
+                      setContents(prev => ({
+                        ...prev,
+                        [activeTab]: content
+                      }))
+                    }}
+                    onImageChange={handleImageChange}
+                    imagePreview={imagePreview}
+                    selectedImage={selectedImage}
+                  />
+                )}
 
-                  {/* 이미지 업로드 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이미지
-                    </label>
-                    <div className="space-y-4">
-                      {/* 현재 이미지 또는 미리보기 */}
-                      {(imagePreview || currentContent?.imageUrl) && (
-                        <div className="relative">
-                          <img
-                            src={imagePreview || currentContent?.imageUrl}
-                            alt="이미지 미리보기"
-                            className="w-full h-48 object-cover rounded-lg border"
-                          />
-                          {selectedImage && (
-                            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-sm">
-                              새 이미지
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* 파일 선택 */}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 이미지 Alt 텍스트 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이미지 설명 (Alt 텍스트)
-                    </label>
-                    <input
-                      type="text"
-                      value={currentContent?.imageAlt || ''}
-                      onChange={(e) => {
-                        setContents(prev => ({
-                          ...prev,
-                          [activeTab]: {
-                            ...prev[activeTab],
-                            imageAlt: e.target.value
-                          }
-                        }))
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                      placeholder="이미지에 대한 설명을 입력하세요"
-                    />
-                  </div>
-
-                  {/* 콘텐츠 편집 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      콘텐츠
-                    </label>
-                    <TinyMCEEditor
-                      value={currentContent?.content || ''}
-                      onChange={(content) => {
-                        setContents(prev => ({
-                          ...prev,
-                          [activeTab]: {
-                            ...prev[activeTab],
-                            content
-                          }
-                        }))
-                      }}
-                      placeholder="섹션 콘텐츠를 입력하세요..."
-                      height={300}
-                    />
-                  </div>
-
-                  {/* 저장 버튼 */}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                        isSaving
-                          ? 'bg-gray-400 text-white cursor-not-allowed'
-                          : 'bg-black text-white hover:bg-gray-800'
-                      }`}
-                    >
-                      {isSaving ? '저장 중...' : '저장'}
-                    </button>
-                  </div>
+                {/* 저장 버튼 */}
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      isSaving
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-black text-white hover:bg-gray-800'
+                    }`}
+                  >
+                    {isSaving ? '저장 중...' : '저장'}
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 기본 편집기 (GCS:Web, 전공 소개, 교수진용)
+function DefaultEditor({ 
+  content, 
+  onContentChange, 
+  onImageChange, 
+  imagePreview, 
+  selectedImage 
+}: {
+  content?: ContentData
+  onContentChange: (content: ContentData) => void
+  onImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  imagePreview: string | null
+  selectedImage: File | null
+}) {
+  return (
+    <div className="space-y-6">
+      {/* 제목 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          제목
+        </label>
+        <input
+          type="text"
+          value={content?.title || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              title: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          placeholder="섹션 제목을 입력하세요"
+        />
+      </div>
+
+      {/* 이미지 업로드 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          이미지
+        </label>
+        <div className="space-y-4">
+          {/* 현재 이미지 또는 미리보기 */}
+          {(imagePreview || content?.imageUrl) && (
+            <div className="relative">
+              <img
+                src={imagePreview || content?.imageUrl}
+                alt="이미지 미리보기"
+                className="w-full h-48 object-cover rounded-lg border"
+              />
+              {selectedImage && (
+                <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-sm">
+                  새 이미지
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* 파일 선택 */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={onImageChange}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+          />
+        </div>
+      </div>
+
+      {/* 이미지 Alt 텍스트 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          이미지 설명 (Alt 텍스트)
+        </label>
+        <input
+          type="text"
+          value={content?.imageAlt || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              imageAlt: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          placeholder="이미지에 대한 설명을 입력하세요"
+        />
+      </div>
+
+      {/* 콘텐츠 편집 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          콘텐츠
+        </label>
+        <TinyMCEEditor
+          value={content?.content || ''}
+          onChange={(contentValue) => {
+            onContentChange({
+              ...content!,
+              content: contentValue
+            })
+          }}
+          placeholder="섹션 콘텐츠를 입력하세요..."
+          height={300}
+        />
+      </div>
+    </div>
+  )
+}
+
+// 개설 과목 전용 편집기 (계층적 구조)
+function SubjectsEditor({ 
+  content, 
+  onContentChange, 
+  onImageChange, 
+  imagePreview, 
+  selectedImage 
+}: {
+  content?: ContentData
+  onContentChange: (content: ContentData) => void
+  onImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  imagePreview: string | null
+  selectedImage: File | null
+}) {
+  // 영역과 과목을 구분하는 더 정확한 방법 사용
+  const [areas, setAreas] = useState<ContentItem[]>([])
+  const [subjects, setSubjects] = useState<ContentItem[]>([])
+
+  // content가 변경될 때 영역과 과목을 분리
+  useEffect(() => {
+    if (content?.items) {
+      const areasList = content.items.filter(item => item.type === 'area')
+      const subjectsList = content.items.filter(item => item.type === 'subject')
+      setAreas(areasList)
+      setSubjects(subjectsList)
+    }
+  }, [content?.items])
+
+  const addArea = () => {
+    const newArea: ContentItem = {
+      title: '',
+      subtitle: '',
+      description: '',
+      order: areas.length,
+      isActive: true,
+      type: 'area'
+    }
+    const updatedAreas = [...areas, newArea]
+    setAreas(updatedAreas)
+    // 즉시 부모 컴포넌트에 변경사항 전달
+    onContentChange({
+      ...(content || {}),
+      items: [...updatedAreas, ...subjects]
+    })
+  }
+
+  const addSubject = () => {
+    const newSubject: ContentItem = {
+      title: '',
+      subtitle: '',
+      description: '',
+      htmlContent: '',
+      order: subjects.length,
+      isActive: true,
+      type: 'subject'
+    }
+    const updatedSubjects = [...subjects, newSubject]
+    setSubjects(updatedSubjects)
+    // 즉시 부모 컴포넌트에 변경사항 전달
+    onContentChange({
+      ...(content || {}),
+      items: [...areas, ...updatedSubjects]
+    })
+  }
+
+  const updateArea = (index: number, field: keyof ContentItem, value: string) => {
+    const updatedAreas = [...areas]
+    updatedAreas[index] = { ...updatedAreas[index], [field]: value }
+    setAreas(updatedAreas)
+    onContentChange({
+      ...(content || {}),
+      items: [...updatedAreas, ...subjects]
+    })
+  }
+
+  const updateSubject = (index: number, field: keyof ContentItem, value: string) => {
+    const updatedSubjects = [...subjects]
+    updatedSubjects[index] = { ...updatedSubjects[index], [field]: value }
+    setSubjects(updatedSubjects)
+    onContentChange({
+      ...(content || {}),
+      items: [...areas, ...updatedSubjects]
+    })
+  }
+
+  const removeArea = (index: number) => {
+    const updatedAreas = areas.filter((_, i) => i !== index)
+    setAreas(updatedAreas)
+    onContentChange({
+      ...(content || {}),
+      items: [...updatedAreas, ...subjects]
+    })
+  }
+
+  const removeSubject = (index: number) => {
+    const updatedSubjects = subjects.filter((_, i) => i !== index)
+    setSubjects(updatedSubjects)
+    onContentChange({
+      ...(content || {}),
+      items: [...areas, ...updatedSubjects]
+    })
+  }
+
+  const addSubjectToArea = (areaIndex: number) => {
+    const newSubject: ContentItem = {
+      title: '',
+      subtitle: '',
+      description: '',
+      htmlContent: '',
+      order: subjects.length,
+      isActive: true,
+      type: 'subject'
+    }
+    const updatedSubjects = [...subjects, newSubject]
+    setSubjects(updatedSubjects)
+    onContentChange({
+      ...(content || {}),
+      items: [...areas, ...updatedSubjects]
+    })
+  }
+
+  const removeSubjectFromArea = (areaIndex: number, subjectIndex: number) => {
+    const areaSubjects = subjects.filter(subject => 
+      subject.title && areas[areaIndex].title && 
+      subject.title.toLowerCase().includes(areas[areaIndex].title.toLowerCase())
+    )
+    const subjectToRemove = areaSubjects[subjectIndex]
+    if (subjectToRemove) {
+      const updatedSubjects = subjects.filter(subject => subject !== subjectToRemove)
+      setSubjects(updatedSubjects)
+      onContentChange({
+        ...(content || {}),
+        items: [...areas, ...updatedSubjects]
+      })
+    }
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* 메인 제목 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          메인 제목
+        </label>
+        <input
+          type="text"
+          value={content?.title || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              title: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          placeholder="예: GCS 개설과목"
+        />
+      </div>
+
+      {/* 메인 이미지 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          메인 이미지
+        </label>
+        <div className="space-y-4">
+          {(imagePreview || content?.imageUrl) && (
+            <div className="relative">
+              <img
+                src={imagePreview || content?.imageUrl}
+                alt="이미지 미리보기"
+                className="w-full h-48 object-cover rounded-lg border"
+              />
+              {selectedImage && (
+                <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-sm">
+                  새 이미지
+                </div>
+              )}
+            </div>
+          )}
+          
+          <input
+            type="file"
+            accept="image/*"
+            onChange={onImageChange}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+          />
+        </div>
+      </div>
+
+      {/* 영역 섹션 */}
+      <div className="border-t pt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">영역 (Areas)</h3>
+          <button
+            onClick={addArea}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            영역 추가
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {areas.map((area, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="font-medium text-gray-700">영역 {index + 1}</h4>
+                <button
+                  onClick={() => removeArea(index)}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  삭제
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    영역명 (한글)
+                  </label>
+                  <input
+                    type="text"
+                    value={area.title || ''}
+                    onChange={(e) => updateArea(index, 'title', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="예: 예술"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    영역명 (영문)
+                  </label>
+                  <input
+                    type="text"
+                    value={area.subtitle || ''}
+                    onChange={(e) => updateArea(index, 'subtitle', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="예: Art"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  영역 설명
+                </label>
+                <textarea
+                  value={area.description || ''}
+                  onChange={(e) => updateArea(index, 'description', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="예: 미술학, 영화영상학, 디자인학 (콤마로 구분하여 입력)"
+                />
+              </div>
+              
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 과목 섹션 */}
+      <div className="border-t pt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">과목 (Subjects)</h3>
+          <button
+            onClick={addSubject}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            과목 추가
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {subjects.map((subject, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="font-medium text-gray-700">과목 {index + 1}</h4>
+                <button
+                  onClick={() => removeSubject(index)}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  삭제
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    과목 코드
+                  </label>
+                  <input
+                    type="text"
+                    value={subject.title || ''}
+                    onChange={(e) => updateSubject(index, 'title', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="예: GCS2001"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    과목명
+                  </label>
+                  <input
+                    type="text"
+                    value={subject.subtitle || ''}
+                    onChange={(e) => updateSubject(index, 'subtitle', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="예: 컬러매니지먼트"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  과목 설명
+                </label>
+                <TinyMCEEditor
+                  value={subject.htmlContent || ''}
+                  onChange={(content) => updateSubject(index, 'htmlContent', content)}
+                  placeholder="과목에 대한 상세 설명을 입력하세요..."
+                  height={150}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

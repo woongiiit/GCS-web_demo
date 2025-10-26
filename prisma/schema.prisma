@@ -399,7 +399,7 @@ model EmailVerificationCode {
   @@map("email_verification_codes")
 }
 
-// 관리자 콘텐츠 관리 모델
+// 관리자 콘텐츠 관리 모델 (개선된 구조)
 model AdminContent {
   id          String   @id @default(cuid())
   section     ContentSection
@@ -413,9 +413,34 @@ model AdminContent {
   updatedAt   DateTime @updatedAt
   createdAt   DateTime @default(now())
 
+  // 관계
+  items       AdminContentItem[]  // 하위 콘텐츠 아이템들
+
   @@unique([section])
-  @@index([section, isActive])
+  @@index([section, isActive, order])
   @@map("admin_contents")
+}
+
+// 관리자 콘텐츠 아이템 모델 (섹션 내 세부 항목들)
+model AdminContentItem {
+  id          String   @id @default(cuid())
+  contentId   String
+  content     AdminContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  title       String?
+  subtitle    String?  // 부제목
+  description String?  // 설명
+  htmlContent String?  // HTML 콘텐츠
+  imageUrl    String?  // 이미지 URL
+  imageAlt    String?  // 이미지 alt 텍스트
+  order       Int      @default(0)  // 표시 순서
+  isActive    Boolean  @default(true)
+  type        String?  // 영역과 과목 구분 ('area' | 'subject')
+  updatedBy   String?  // 마지막 수정자 ID
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([contentId, isActive, order])
+  @@map("admin_content_items")
 }
 
 // Enums

@@ -38,7 +38,15 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await requireAuth()
+    let user
+    try {
+      user = await requireAuth()
+    } catch (authError) {
+      return NextResponse.json(
+        { error: '로그인이 필요합니다.' },
+        { status: 401 }
+      )
+    }
     
     // 관리자 권한 확인
     if (user.role !== 'ADMIN') {
@@ -49,7 +57,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { title, content, imageUrl, imageAlt, order, isActive } = body
+    const { title, content, imageUrl, imageAlt, order, isActive, items } = body
 
     // 콘텐츠 존재 확인
     const existingContent = await prisma.adminContent.findUnique({
@@ -63,6 +71,13 @@ export async function PUT(
       )
     }
 
+    // 기존 items 삭제 후 새로 생성
+    if (items) {
+      await prisma.adminContentItem.deleteMany({
+        where: { contentId: params.id }
+      })
+    }
+
     const updatedContent = await prisma.adminContent.update({
       where: { id: params.id },
       data: {
@@ -72,7 +87,26 @@ export async function PUT(
         imageAlt,
         order: order !== undefined ? order : existingContent.order,
         isActive: isActive !== undefined ? isActive : existingContent.isActive,
-        updatedBy: user.id
+        updatedBy: user.id,
+        items: items ? {
+          create: items.map((item: any) => ({
+            title: item.title,
+            subtitle: item.subtitle,
+            description: item.description,
+            htmlContent: item.htmlContent,
+            imageUrl: item.imageUrl,
+            imageAlt: item.imageAlt,
+            order: item.order || 0,
+            isActive: item.isActive !== false,
+            type: item.type,
+            updatedBy: user.id
+          }))
+        } : undefined
+      },
+      include: {
+        items: {
+          orderBy: { order: 'asc' }
+        }
       }
     })
 
@@ -96,7 +130,15 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await requireAuth()
+    let user
+    try {
+      user = await requireAuth()
+    } catch (authError) {
+      return NextResponse.json(
+        { error: '로그인이 필요합니다.' },
+        { status: 401 }
+      )
+    }
     
     // 관리자 권한 확인
     if (user.role !== 'ADMIN') {
