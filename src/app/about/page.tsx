@@ -8,6 +8,8 @@ interface AboutContent {
   section: string
   title?: string
   content?: string
+  description?: string  // 한글 소개글
+  subtitle?: string     // 영어 소개글
   imageUrl?: string
   imageAlt?: string
   items?: AboutContentItem[]
@@ -200,6 +202,11 @@ function DynamicContent({ activeTab, content }: { activeTab: string, content?: A
     )
   }
 
+  // GCS:Web 탭의 경우 특별한 렌더링
+  if (activeTab === 'gcsweb') {
+    return <GCSWebContent content={content} />
+  }
+
   // 개설 과목 탭의 경우 특별한 렌더링
   if (activeTab === 'lectures' && content.items && content.items.length > 0) {
     return <SubjectsContent content={content} />
@@ -271,6 +278,59 @@ function DynamicContent({ activeTab, content }: { activeTab: string, content?: A
               )}
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// GCS:Web 전용 콘텐츠 컴포넌트
+function GCSWebContent({ content }: { content: AboutContent }) {
+  // items에서 이미지들 필터링
+  const images = content.items?.filter(item => item.imageUrl) || []
+  
+  return (
+    <div className="prose prose-lg max-w-none text-white">
+      {/* 메인 타이틀 */}
+      <div className="mb-12">
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          {content.title || 'GCS:Web'}
+        </h2>
+        <div className="w-24 h-1 bg-[#f57520]"></div>
+      </div>
+
+      {/* 이미지 갤러리 */}
+      {images.length > 0 && (
+        <div className="mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {images.map((image, index) => (
+              <div key={image.id || index} className="bg-gray-800 aspect-[4/3] rounded-lg flex items-center justify-center overflow-hidden">
+                <img 
+                  src={image.imageUrl}
+                  alt={image.title || `Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 한글 소개글 */}
+      {content.description && (
+        <div className="mb-8">
+          <div className="text-gray-300 text-base leading-relaxed">
+            {content.description}
+          </div>
+        </div>
+      )}
+
+      {/* 영어 소개글 */}
+      {content.subtitle && (
+        <div className="mb-8">
+          <div className="text-gray-300 text-base leading-relaxed">
+            {content.subtitle}
+          </div>
         </div>
       )}
     </div>

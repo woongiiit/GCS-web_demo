@@ -10,6 +10,8 @@ interface ContentData {
   section: string
   title?: string
   content?: string
+  description?: string  // 한글 소개글용
+  subtitle?: string     // 영어 소개글용
   imageUrl?: string
   imageAlt?: string
   order: number
@@ -284,6 +286,20 @@ export default function AdminContentPage() {
                     imagePreview={imagePreview}
                     selectedImage={selectedImage}
                   />
+                ) : activeTab === 'GCS_WEB' ? (
+                  <GCSWebEditor 
+                    content={currentContent}
+                    onContentChange={(content) => {
+                      setContents(prev => ({
+                        ...prev,
+                        [activeTab]: content
+                      }))
+                    }}
+                    onImageChange={handleImageChange}
+                    imagePreview={imagePreview}
+                    selectedImage={selectedImage}
+                    uploadImage={uploadImage}
+                  />
                 ) : (
                   <DefaultEditor 
                     content={currentContent}
@@ -322,7 +338,157 @@ export default function AdminContentPage() {
   )
 }
 
-// 기본 편집기 (GCS:Web, 전공 소개, 교수진용)
+// GCS:Web 전용 편집기 (다중 이미지 + 텍스트)
+function GCSWebEditor({ 
+  content, 
+  onContentChange, 
+  onImageChange, 
+  imagePreview, 
+  selectedImage,
+  uploadImage
+}: {
+  content?: ContentData
+  onContentChange: (content: ContentData) => void
+  onImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  imagePreview: string | null
+  selectedImage: File | null
+  uploadImage: (file: File) => Promise<string>
+}) {
+  const handleMultipleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    
+    const files = Array.from(e.target.files)
+    const uploadedUrls: string[] = []
+    
+    for (const file of files) {
+      try {
+        const url = await uploadImage(file)
+        uploadedUrls.push(url)
+      } catch (error) {
+        console.error('이미지 업로드 실패:', error)
+      }
+    }
+    
+    // 기존 items에 새로운 이미지들 추가
+    const newItems: ContentItem[] = uploadedUrls.map((url, index) => ({
+      title: `이미지 ${(content?.items?.length || 0) + index + 1}`,
+      imageUrl: url,
+      order: (content?.items?.length || 0) + index,
+      isActive: true,
+      type: 'image' as any
+    }))
+    
+    onContentChange({
+      ...content!,
+      items: [...(content?.items || []), ...newItems]
+    })
+  }
+
+  const removeImageItem = (index: number) => {
+    const updatedItems = content?.items?.filter((_, i) => i !== index) || []
+    onContentChange({
+      ...content!,
+      items: updatedItems
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 제목 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          제목
+        </label>
+        <input
+          type="text"
+          value={content?.title || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              title: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          placeholder="섹션 제목을 입력하세요"
+        />
+      </div>
+
+      {/* 다중 이미지 업로드 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          이미지 (여러 장 업로드 가능)
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleMultipleImageUpload}
+          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+        />
+        
+        {/* 업로드된 이미지들 표시 */}
+        <div className="mt-4 grid grid-cols-3 gap-4">
+          {content?.items?.filter(item => item.imageUrl).map((item, index) => (
+            <div key={item.id || index} className="relative group">
+              <img
+                src={item.imageUrl}
+                alt={item.title || `Image ${index + 1}`}
+                className="w-full h-32 object-cover rounded-lg border"
+              />
+              <button
+                type="button"
+                onClick={() => removeImageItem(index)}
+                className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                삭제
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 한글 소개글 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          한글 소개글
+        </label>
+        <textarea
+          value={content?.description || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              description: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          rows={5}
+          placeholder="한글 소개글을 입력하세요"
+        />
+      </div>
+
+      {/* 영어 소개글 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          영어 소개글
+        </label>
+        <textarea
+          value={content?.subtitle || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              subtitle: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          rows={5}
+          placeholder="영어 소개글을 입력하세요"
+        />
+      </div>
+    </div>
+  )
+}
+
+// 기본 편집기 (전공 소개, 교수진용)
 function DefaultEditor({ 
   content, 
   onContentChange, 
