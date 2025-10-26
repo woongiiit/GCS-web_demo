@@ -469,10 +469,12 @@ function SubjectsEditor({
     const updatedAreas = [...areas, newArea]
     setAreas(updatedAreas)
     // 즉시 부모 컴포넌트에 변경사항 전달
-    onContentChange({
-      ...(content || {}),
-      items: [...updatedAreas, ...subjects]
-    })
+    if (content) {
+      onContentChange({
+        ...content,
+        items: [...updatedAreas, ...subjects]
+      })
+    }
   }
 
   const addSubject = () => {
@@ -488,48 +490,58 @@ function SubjectsEditor({
     const updatedSubjects = [...subjects, newSubject]
     setSubjects(updatedSubjects)
     // 즉시 부모 컴포넌트에 변경사항 전달
-    onContentChange({
-      ...(content || {}),
-      items: [...areas, ...updatedSubjects]
-    })
+    if (content) {
+      onContentChange({
+        ...content,
+        items: [...areas, ...updatedSubjects]
+      })
+    }
   }
 
   const updateArea = (index: number, field: keyof ContentItem, value: string) => {
     const updatedAreas = [...areas]
     updatedAreas[index] = { ...updatedAreas[index], [field]: value }
     setAreas(updatedAreas)
-    onContentChange({
-      ...(content || {}),
-      items: [...updatedAreas, ...subjects]
-    })
+    if (content) {
+      onContentChange({
+        ...content,
+        items: [...updatedAreas, ...subjects]
+      })
+    }
   }
 
   const updateSubject = (index: number, field: keyof ContentItem, value: string) => {
     const updatedSubjects = [...subjects]
     updatedSubjects[index] = { ...updatedSubjects[index], [field]: value }
     setSubjects(updatedSubjects)
-    onContentChange({
-      ...(content || {}),
-      items: [...areas, ...updatedSubjects]
-    })
+    if (content) {
+      onContentChange({
+        ...content,
+        items: [...areas, ...updatedSubjects]
+      })
+    }
   }
 
   const removeArea = (index: number) => {
     const updatedAreas = areas.filter((_, i) => i !== index)
     setAreas(updatedAreas)
-    onContentChange({
-      ...(content || {}),
-      items: [...updatedAreas, ...subjects]
-    })
+    if (content) {
+      onContentChange({
+        ...content,
+        items: [...updatedAreas, ...subjects]
+      })
+    }
   }
 
   const removeSubject = (index: number) => {
     const updatedSubjects = subjects.filter((_, i) => i !== index)
     setSubjects(updatedSubjects)
-    onContentChange({
-      ...(content || {}),
-      items: [...areas, ...updatedSubjects]
-    })
+    if (content) {
+      onContentChange({
+        ...content,
+        items: [...areas, ...updatedSubjects]
+      })
+    }
   }
 
   const addSubjectToArea = (areaIndex: number) => {
@@ -544,10 +556,12 @@ function SubjectsEditor({
     }
     const updatedSubjects = [...subjects, newSubject]
     setSubjects(updatedSubjects)
-    onContentChange({
-      ...(content || {}),
-      items: [...areas, ...updatedSubjects]
-    })
+    if (content) {
+      onContentChange({
+        ...content,
+        items: [...areas, ...updatedSubjects]
+      })
+    }
   }
 
   const removeSubjectFromArea = (areaIndex: number, subjectIndex: number) => {
@@ -559,10 +573,12 @@ function SubjectsEditor({
     if (subjectToRemove) {
       const updatedSubjects = subjects.filter(subject => subject !== subjectToRemove)
       setSubjects(updatedSubjects)
-      onContentChange({
-        ...(content || {}),
-        items: [...areas, ...updatedSubjects]
-      })
+      if (content) {
+        onContentChange({
+          ...content,
+          items: [...areas, ...updatedSubjects]
+        })
+      }
     }
   }
 
