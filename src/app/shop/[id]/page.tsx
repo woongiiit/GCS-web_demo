@@ -245,10 +245,8 @@ export default function ProductDetailPage() {
         </div>
 
         {/* 제품 상세 정보 */}
-        <div className="border-t border-gray-200">
-          {/* 제품 상세 내용 */}
-          <div className="py-8">
-            <div>
+        <div className="border-t border-gray-200 pt-8">
+          <div>
                 <div className="text-sm text-gray-700 mb-8">
                   {product.description.split('\n').map((paragraph: string, index: number) => {
                     // 이미지 태그 파싱
@@ -418,7 +416,6 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
         </div>
       </div>
