@@ -29,7 +29,7 @@ interface ContentItem {
   imageAlt?: string
   order: number
   isActive: boolean
-  type?: 'area' | 'subject' // 영역과 과목을 구분하는 필드
+  type?: 'area' | 'subject' | 'professor' // 영역, 과목, 교수진을 구분하는 필드
 }
 
 const SECTIONS = [
