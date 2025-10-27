@@ -3,6 +3,18 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
+interface AboutContentItem {
+  id?: string
+  title?: string
+  subtitle?: string
+  description?: string
+  htmlContent?: string
+  imageUrl?: string
+  imageAlt?: string
+  order: number
+  type?: string
+}
+
 export default function IntroPage() {
   const [content, setContent] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -81,9 +93,9 @@ export default function IntroPage() {
             {content ? (
               <>
                 {/* 다중 이미지 표시 */}
-                {content?.items && content.items.filter(item => item.imageUrl).length > 0 && (
+                {content?.items && content.items.filter((item: AboutContentItem) => item.imageUrl).length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    {content.items.filter(item => item.imageUrl).map((item, index) => (
+                    {content.items.filter((item: AboutContentItem) => item.imageUrl).map((item: AboutContentItem, index: number) => (
                       <div key={item.id || index}>
                         <img 
                           src={item.imageUrl}
