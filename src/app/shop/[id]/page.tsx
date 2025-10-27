@@ -7,7 +7,6 @@ import { useParams } from 'next/navigation'
 export default function ProductDetailPage() {
   const params = useParams()
   const productId = params.id as string
-  const [activeTab, setActiveTab] = useState<'details' | 'contact'>('details')
   const [product, setProduct] = useState<any>(null)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -245,35 +244,11 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* 하단 탭 (Details / Contact) */}
+        {/* 제품 상세 정보 */}
         <div className="border-t border-gray-200">
-          <div className="flex gap-8 border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`py-4 px-2 text-sm ${
-                activeTab === 'details'
-                  ? 'text-black border-b-2 border-black font-semibold'
-                  : 'text-gray-600 hover:text-black'
-              }`}
-            >
-              (Details)
-            </button>
-            <button
-              onClick={() => setActiveTab('contact')}
-              className={`py-4 px-2 text-sm ${
-                activeTab === 'contact'
-                  ? 'text-black border-b-2 border-black font-semibold'
-                  : 'text-gray-600 hover:text-black'
-              }`}
-            >
-              (Contact)
-            </button>
-          </div>
-
-          {/* 탭 내용 */}
+          {/* 제품 상세 내용 */}
           <div className="py-8">
-            {activeTab === 'details' && (
-              <div>
+            <div>
                 <div className="text-sm text-gray-700 mb-8">
                   {product.description.split('\n').map((paragraph: string, index: number) => {
                     // 이미지 태그 파싱
@@ -443,13 +418,7 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               </div>
-            )}
-            {activeTab === 'contact' && (
-              <div className="text-sm text-gray-700">
-                <p>문의사항이 있으시면 연락주세요.</p>
-                <p className="mt-4">Email: contact@gcsweb.com</p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
