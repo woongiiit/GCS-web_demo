@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     console.log('요청 본문:', body)
-    const { section, title, content, imageUrl, imageAlt, order, items } = body
+    const { section, title, content, description, subtitle, imageUrl, imageAlt, order, items } = body
 
     // 필수 필드 검증
     if (!section) {
@@ -100,6 +100,8 @@ export async function POST(request: NextRequest) {
         section,
         title,
         content,
+        description,
+        subtitle,
         imageUrl,
         imageAlt,
         order: order || 0,

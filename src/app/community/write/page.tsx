@@ -193,8 +193,8 @@ function WriteContent() {
 
   // TinyMCE 에디터 핸들러
   const handleEditorChange = (content: string) => {
-    setEditorContent(content)
-    setFormData(prev => ({ ...prev, content }))
+      setEditorContent(content)
+      setFormData(prev => ({ ...prev, content }))
   }
 
 

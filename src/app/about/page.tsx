@@ -207,6 +207,16 @@ function DynamicContent({ activeTab, content }: { activeTab: string, content?: A
     return <GCSWebContent content={content} />
   }
 
+  // 전공 소개 탭의 경우 특별한 렌더링
+  if (activeTab === 'intro') {
+    return <MajorIntroContent content={content} />
+  }
+
+  // 교수진 탭의 경우 특별한 렌더링
+  if (activeTab === 'professor' && content.items && content.items.length > 0) {
+    return <ProfessorsContent content={content} />
+  }
+
   // 개설 과목 탭의 경우 특별한 렌더링
   if (activeTab === 'lectures' && content.items && content.items.length > 0) {
     return <SubjectsContent content={content} />
@@ -222,8 +232,8 @@ function DynamicContent({ activeTab, content }: { activeTab: string, content?: A
         <div className="w-24 h-1 bg-[#f57520]"></div>
       </div>
 
-      {/* 메인 이미지 */}
-      {content.imageUrl && (
+      {/* 메인 이미지 - 전공 소개에서는 표시하지 않음 */}
+      {activeTab !== 'intro' && content.imageUrl && (
         <div className="mb-12">
           <img 
             src={content.imageUrl} 
@@ -319,18 +329,147 @@ function GCSWebContent({ content }: { content: AboutContent }) {
       {/* 한글 소개글 */}
       {content.description && (
         <div className="mb-8">
-          <div className="text-gray-300 text-base leading-relaxed">
-            {content.description}
-          </div>
+          <div 
+            className="text-gray-300 text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content.description }}
+          />
         </div>
       )}
 
       {/* 영어 소개글 */}
       {content.subtitle && (
         <div className="mb-8">
-          <div className="text-gray-300 text-base leading-relaxed">
+          <div 
+            className="text-gray-300 text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content.subtitle }}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 전공 소개 전용 콘텐츠 컴포넌트
+function MajorIntroContent({ content }: { content: AboutContent }) {
+  // items에서 이미지들 필터링
+  const images = content.items?.filter(item => item.imageUrl) || []
+  
+  return (
+    <div className="prose prose-lg max-w-none text-white">
+      {/* 메인 타이틀 */}
+      <div className="mb-12">
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          {content.title || getDefaultTitle('intro')}
+        </h2>
+        <div className="w-24 h-1 bg-[#f57520]"></div>
+      </div>
+
+      {/* 소제목 - 이미지 위로 이동 */}
+      {content.subtitle && (
+        <div className="mb-8">
+          <p className="text-gray-300 text-lg leading-relaxed font-medium italic">
             {content.subtitle}
+          </p>
+        </div>
+      )}
+
+      {/* 이미지 갤러리 - 상단에 가로로 표시 */}
+      {images.length > 0 && (
+        <div className="mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {images.map((image, index) => (
+              <div key={image.id || index} className="bg-gray-800 aspect-[4/3] rounded-lg flex items-center justify-center overflow-hidden">
+                <img 
+                  src={image.imageUrl}
+                  alt={image.title || `Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
           </div>
+        </div>
+      )}
+
+      {/* 메인 콘텐츠 */}
+      {content.content && (
+        <div className="mb-8">
+          <div 
+            className="text-gray-300 text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content.content }}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 교수진 전용 콘텐츠 컴포넌트
+function ProfessorsContent({ content }: { content: AboutContent }) {
+  // 교수진 카드들
+  const professors = content.items?.filter(item => item.imageUrl || item.title) || []
+  
+  return (
+    <div className="prose prose-lg max-w-none text-white">
+      {/* 메인 타이틀 */}
+      <div className="mb-12">
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          {content.title || '교수진'}
+        </h2>
+        <div className="w-24 h-1 bg-[#f57520]"></div>
+      </div>
+
+      {/* 메인 설명 */}
+      {content.content && (
+        <div className="mb-12">
+          <div 
+            className="text-gray-300 text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content.content }}
+          />
+        </div>
+      )}
+
+      {/* 교수진 카드들 */}
+      {professors.length > 0 && (
+        <div className="space-y-12">
+          {professors.map((professor, index) => (
+            <div key={professor.id || index} className="flex flex-col lg:flex-row gap-8 pb-8 border-b border-white">
+              {/* 모바일: 사진, 데스크톱観 설명 */}
+              <div className="flex-1 lg:order-1 order-2">
+                <h3 className="text-white font-semibold text-2xl mb-4">
+                  {professor.title}
+                </h3>
+                {professor.htmlContent && (
+                  <div 
+                    className="text-gray-300 space-y-3"
+                    dangerouslySetInnerHTML={{ __html: professor.htmlContent }}
+                  />
+                )}
+              </div>
+              
+              {/* 모바일: 설명, 데스크톱: 사진 */}
+              {professor.imageUrl && (
+                <div className="w-32 text-center lg:order-2 order-1 mx-auto">
+                  <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+                    <img 
+                      src={professor.imageUrl} 
+                      alt={professor.title || '교수 사진'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (nextElement) {
+                          nextElement.style.display = 'flex';
+                        }
+                      }}
+                    />
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
+                      {professor.title}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

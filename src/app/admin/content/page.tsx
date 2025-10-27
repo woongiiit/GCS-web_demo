@@ -125,7 +125,9 @@ export default function AdminContentPage() {
       const contentData = {
         section: sectionMap[activeTab as keyof typeof sectionMap],
         title: currentContent?.title || '',
+        subtitle: currentContent?.subtitle || '',
         content: currentContent?.content || '',
+        description: currentContent?.description || '',
         imageUrl,
         imageAlt: currentContent?.imageAlt || '',
         order: currentContent?.order || 0,
@@ -286,6 +288,20 @@ export default function AdminContentPage() {
                     imagePreview={imagePreview}
                     selectedImage={selectedImage}
                   />
+                ) : activeTab === 'PROFESSORS' ? (
+                  <ProfessorsEditor 
+                    content={currentContent}
+                    onContentChange={(content) => {
+                      setContents(prev => ({
+                        ...prev,
+                        [activeTab]: content
+                      }))
+                    }}
+                    onImageChange={handleImageChange}
+                    imagePreview={imagePreview}
+                    selectedImage={selectedImage}
+                    uploadImage={uploadImage}
+                  />
                 ) : activeTab === 'GCS_WEB' ? (
                   <GCSWebEditor 
                     content={currentContent}
@@ -312,6 +328,7 @@ export default function AdminContentPage() {
                     onImageChange={handleImageChange}
                     imagePreview={imagePreview}
                     selectedImage={selectedImage}
+                    uploadImage={uploadImage}
                   />
                 )}
 
@@ -382,10 +399,13 @@ function GCSWebEditor({
       ...content!,
       items: [...(content?.items || []), ...newItems]
     })
+    
+    // 파일 입력 초기화
+    e.target.value = ''
   }
 
-  const removeImageItem = (index: number) => {
-    const updatedItems = content?.items?.filter((_, i) => i !== index) || []
+  const removeImageItem = (imageUrlToRemove: string) => {
+    const updatedItems = content?.items?.filter(item => item.imageUrl !== imageUrlToRemove) || []
     onContentChange({
       ...content!,
       items: updatedItems
@@ -437,7 +457,7 @@ function GCSWebEditor({
               />
               <button
                 type="button"
-                onClick={() => removeImageItem(index)}
+                onClick={() => removeImageItem(item.imageUrl!)}
                 className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 삭제
@@ -452,17 +472,16 @@ function GCSWebEditor({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           한글 소개글
         </label>
-        <textarea
+        <TinyMCEEditor
           value={content?.description || ''}
-          onChange={(e) => {
+          onChange={(descriptionValue) => {
             onContentChange({
               ...content!,
-              description: e.target.value
+              description: descriptionValue
             })
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-          rows={5}
-          placeholder="한글 소개글을 입력하세요"
+          placeholder="한글 소개글을 입력하세요..."
+          height={300}
         />
       </div>
 
@@ -471,17 +490,16 @@ function GCSWebEditor({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           영어 소개글
         </label>
-        <textarea
+        <TinyMCEEditor
           value={content?.subtitle || ''}
-          onChange={(e) => {
+          onChange={(subtitleValue) => {
             onContentChange({
               ...content!,
-              subtitle: e.target.value
+              subtitle: subtitleValue
             })
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-          rows={5}
-          placeholder="영어 소개글을 입력하세요"
+          placeholder="영어 소개글을 입력하세요..."
+          height={300}
         />
       </div>
     </div>
@@ -494,14 +512,57 @@ function DefaultEditor({
   onContentChange, 
   onImageChange, 
   imagePreview, 
-  selectedImage 
+  selectedImage,
+  uploadImage
 }: {
   content?: ContentData
   onContentChange: (content: ContentData) => void
   onImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   imagePreview: string | null
   selectedImage: File | null
+  uploadImage: (file: File) => Promise<string>
 }) {
+  const handleMultipleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    
+    const files = Array.from(e.target.files)
+    const uploadedUrls: string[] = []
+    
+    for (const file of files) {
+      try {
+        const url = await uploadImage(file)
+        uploadedUrls.push(url)
+      } catch (error) {
+        console.error('이미지 업로드 실패:', error)
+      }
+    }
+    
+    // 기존 items에 새로운 이미지들 추가
+    const newItems: ContentItem[] = uploadedUrls.map((url, index) => ({
+      title: `이미지 ${(content?.items?.length || 0) + index + 1}`,
+      imageUrl: url,
+      order: (content?.items?.length || 0) + index,
+      isActive: true,
+      type: 'image' as any
+    }))
+    
+    onContentChange({
+      ...content!,
+      items: [...(content?.items || []), ...newItems]
+    })
+    
+    // 파일 입력 초기화
+    e.target.value = ''
+  }
+
+  const removeImageItem = (imageUrlToRemove: string) => {
+    const updatedItems = content?.items?.filter(item => item.imageUrl !== imageUrlToRemove) || []
+    onContentChange({
+      ...content!,
+      items: updatedItems
+    })
+  }
+
   return (
     <div className="space-y-6">
       {/* 제목 */}
@@ -523,55 +584,57 @@ function DefaultEditor({
         />
       </div>
 
-      {/* 이미지 업로드 */}
+      {/* 소제목 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          이미지
-        </label>
-        <div className="space-y-4">
-          {/* 현재 이미지 또는 미리보기 */}
-          {(imagePreview || content?.imageUrl) && (
-            <div className="relative">
-              <img
-                src={imagePreview || content?.imageUrl}
-                alt="이미지 미리보기"
-                className="w-full h-48 object-cover rounded-lg border"
-              />
-              {selectedImage && (
-                <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-sm">
-                  새 이미지
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* 파일 선택 */}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={onImageChange}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
-          />
-        </div>
-      </div>
-
-      {/* 이미지 Alt 텍스트 */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          이미지 설명 (Alt 텍스트)
+          소제목
         </label>
         <input
           type="text"
-          value={content?.imageAlt || ''}
+          value={content?.subtitle || ''}
           onChange={(e) => {
             onContentChange({
               ...content!,
-              imageAlt: e.target.value
+              subtitle: e.target.value
             })
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-          placeholder="이미지에 대한 설명을 입력하세요"
+          placeholder="소제목을 입력하세요"
         />
+      </div>
+
+      {/* 다중 이미지 업로드 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          이미지 (여러 장 업로드 가능)
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleMultipleImageUpload}
+          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+        />
+        
+        {/* 업로드된 이미지들 표시 */}
+        <div className="mt-4 grid grid-cols-3 gap-4">
+          {content?.items?.filter(item => item.imageUrl).map((item, index) => (
+            <div key={item.id || index} className="relative group">
+              <img
+                src={item.imageUrl}
+                alt={item.title || `Image ${index + 1}`}
+                className="w-full h-32 object-cover rounded-lg border"
+              />
+              <button
+                type="button"
+                onClick={() => removeImageItem(item.imageUrl!)}
+                className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                삭제
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 콘텐츠 편집 */}
@@ -936,6 +999,222 @@ function SubjectsEditor({
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 교수진 전용 편집기
+function ProfessorsEditor({ 
+  content, 
+  onContentChange, 
+  onImageChange, 
+  imagePreview, 
+  selectedImage,
+  uploadImage
+}: {
+  content?: ContentData
+  onContentChange: (content: ContentData) => void
+  onImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  imagePreview: string | null
+  selectedImage: File | null
+  uploadImage: (file: File) => Promise<string>
+}) {
+  const [professors, setProfessors] = useState<ContentItem[]>([])
+
+  // content가 변경될 때 교수진 목록 업데이트
+  useEffect(() => {
+    if (content?.items) {
+      setProfessors(content.items)
+    }
+  }, [content?.items])
+
+  const addProfessor = () => {
+    const newProfessor: ContentItem = {
+      title: '',           // 교수 이름
+      subtitle: '',        // 직급 (교수, 부교수 등)
+      description: '',     // 간단한 소개
+      htmlContent: '',     // 상세 정보 (전공분야, 연구분야 등)
+      imageUrl: '',        // 사진
+      order: professors.length,
+      isActive: true,
+      type: 'professor'
+    }
+    const updatedProfessors = [...professors, newProfessor]
+    setProfessors(updatedProfessors)
+    if (content) {
+      onContentChange({
+        ...content,
+        items: updatedProfessors
+      })
+    }
+  }
+
+  const updateProfessor = (index: number, field: keyof ContentItem, value: string) => {
+    const updatedProfessors = [...professors]
+    updatedProfessors[index] = { ...updatedProfessors[index], [field]: value }
+    setProfessors(updatedProfessors)
+    if (content) {
+      onContentChange({
+        ...content,
+        items: updatedProfessors
+      })
+    }
+  }
+
+  const removeProfessor = (index: number) => {
+    const updatedProfessors = professors.filter((_, i) => i !== index)
+    setProfessors(updatedProfessors)
+    if (content) {
+      onContentChange({
+        ...content,
+        items: updatedProfessors
+      })
+    }
+  }
+
+  const handleProfessorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    
+    const file = e.target.files[0]
+    try {
+      const url = await uploadImage(file)
+      updateProfessor(index, 'imageUrl', url)
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error)
+      alert('이미지 업로드에 실패했습니다.')
+    }
+    
+    // 파일 입력 초기화
+    e.target.value = ''
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 메인 제목 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          메인 제목
+        </label>
+        <input
+          type="text"
+          value={content?.title || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              title: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          placeholder="예: 교수진"
+        />
+      </div>
+
+      {/* 메인 설명 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          메인 설명
+        </label>
+        <textarea
+          value={content?.content || ''}
+          onChange={(e) => {
+            onContentChange({
+              ...content!,
+              content: e.target.value
+            })
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          rows={3}
+          placeholder="교수진에 대한 간단한 소개를 입력하세요"
+        />
+      </div>
+
+      {/* 교수진 카드 섹션 */}
+      <div className="border-t pt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">교수진 카드</h3>
+          <button 
+            onClick={addProfessor}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            교수 추가
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {professors.map((professor, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-medium text-gray-700">교수 {index + 1}</h4>
+                <button
+                  onClick={() => removeProfessor(index)}
+                  className="text-red-500 hover:text-red-700 text-sm px-3 py-1 rounded hover:bg-red-50"
+                >
+                  삭제
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 교수 이름 */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    교수 이름
+                  </label>
+                  <input
+                    type="text"
+                    value={professor.title || ''}
+                    onChange={(e) => updateProfessor(index, 'title', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="예: 김교수"
+                  />
+                </div>
+
+                {/* 교수 사진 */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    교수 사진
+                  </label>
+                  <div className="space-y-2">
+                    {professor.imageUrl && (
+                      <div className="relative inline-block">
+                        <img
+                          src={professor.imageUrl}
+                          alt={professor.title || '교수 사진'}
+                          className="w-32 h-32 object-cover rounded-lg border-2 border-gray-300"
+                        />
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleProfessorImageUpload(e, index)}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+                    />
+                  </div>
+                </div>
+
+                {/* 상세 정보 */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    상세 정보
+                  </label>
+                  <TinyMCEEditor
+                    value={professor.htmlContent || ''}
+                    onChange={(content) => updateProfessor(index, 'htmlContent', content)}
+                    placeholder="전공분야, 연구분야, 주요 과목, 학위 등을 입력하세요..."
+                    height={150}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {professors.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              교수를 추가하려면 "교수 추가" 버튼을 클릭하세요.
+            </div>
+          )}
         </div>
       </div>
     </div>

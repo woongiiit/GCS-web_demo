@@ -27,10 +27,21 @@ export default function RichTextEditor({
   disabled = false
 }: RichTextEditorProps) {
   const [mounted, setMounted] = useState(false)
+  const [internalValue, setInternalValue] = useState(value)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // value prop이 외부에서 변경될 때만 internalValue 업데이트
+  useEffect(() => {
+    setInternalValue(value)
+  }, [value])
+
+  const handleChange = (content: string) => {
+    setInternalValue(content)
+    onChange(content)
+  }
 
   const modules = {
     toolbar: [
@@ -64,8 +75,8 @@ export default function RichTextEditor({
     <div className="w-full">
       <ReactQuill
         theme="snow"
-        value={value}
-        onChange={onChange}
+        value={internalValue}
+        onChange={handleChange}
         modules={modules}
         formats={formats}
         placeholder={placeholder}

@@ -57,7 +57,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { title, content, imageUrl, imageAlt, order, isActive, items } = body
+    const { title, content, description, subtitle, imageUrl, imageAlt, order, isActive, items } = body
 
     // 콘텐츠 존재 확인
     const existingContent = await prisma.adminContent.findUnique({
@@ -83,6 +83,8 @@ export async function PUT(
       data: {
         title,
         content,
+        description,
+        subtitle,
         imageUrl,
         imageAlt,
         order: order !== undefined ? order : existingContent.order,

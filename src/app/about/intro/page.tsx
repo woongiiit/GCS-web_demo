@@ -1,8 +1,41 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
 export default function IntroPage() {
+  const [content, setContent] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchContent()
+  }, [])
+
+  const fetchContent = async () => {
+    try {
+      const response = await fetch('/api/about')
+      const data = await response.json()
+      
+      if (data.success && data.data.MAJOR_INTRO) {
+        console.log('전공소개 데이터:', data.data.MAJOR_INTRO)
+        console.log('subtitle 값:', data.data.MAJOR_INTRO.subtitle)
+        setContent(data.data.MAJOR_INTRO)
+      }
+    } catch (error) {
+      console.error('콘텐츠 조회 오류:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black overflow-auto flex items-center justify-center">
+        <div className="text-white">로딩 중...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 bg-black overflow-auto" style={{ overflowY: 'scroll' }}>
       <div className="relative min-h-screen bg-black px-4 py-6 sm:px-0">
@@ -44,11 +77,55 @@ export default function IntroPage() {
               </div>
             </div>
             
-            <h2 className="text-2xl font-semibold text-white mb-6">전공 소개</h2>
-            <p className="text-gray-300 mb-8 text-lg leading-relaxed">
-              GCS(Graphic Communication Science) 연계전공은 동국대학교의 혁신적인 교육 프로그램으로,
-              그래픽 디자인과 커뮤니케이션 기술을 융합하여 디지털 시대의 창의적 인재를 양성합니다.
-            </p>
+            {/* 콘텐츠 표시 */}
+            {content ? (
+              <>
+                {/* 다중 이미지 표시 */}
+                {content?.items && content.items.filter(item => item.imageUrl).length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    {content.items.filter(item => item.imageUrl).map((item, index) => (
+                      <div key={item.id || index}>
+                        <img 
+                          src={item.imageUrl}
+                          alt={item.title || content.title}
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <h2 className="text-2xl font-semibold text-white mb-4">{content.title}</h2>
+                
+                {content.subtitle && (
+                  <p className="text-gray-300 text-lg mb-8 leading-relaxed font-medium italic">
+                    {content.subtitle}
+                  </p>
+                )}
+                
+                {content.content && (
+                  <div 
+                    className="text-gray-300 text-lg mb-8 leading-relaxed prose prose-lg max-w-none prose-invert"
+                    dangerouslySetInnerHTML={{ __html: content.content }}
+                  />
+                )}
+                
+                {!content.content && (
+                  <p className="text-gray-300 mb-8 text-lg leading-relaxed">
+                    GCS(Graphic Communication Science) 연계전공은 동국대학교의 혁신적인 교육 프로그램으로,
+                    그래픽 디자인과 커뮤니케이션 기술을 융합하여 디지털 시대의 창의적 인재를 양성합니다.
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-semibold text-white mb-6">전공 소개</h2>
+                <p className="text-gray-300 mb-8 text-lg leading-relaxed">
+                  GCS(Graphic Communication Science) 연계전공은 동국대학교의 혁신적인 교육 프로그램으로,
+                  그래픽 디자인과 커뮤니케이션 기술을 융합하여 디지털 시대의 창의적 인재를 양성합니다.
+                </p>
+              </>
+            )}
             
             <h3 className="text-xl font-semibold text-white mb-4">교육 목표</h3>
             <div className="bg-gray-800 rounded-lg p-6 mb-8">
