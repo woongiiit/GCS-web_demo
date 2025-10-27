@@ -242,10 +242,6 @@ export default function ProductDetailPage() {
                 </svg>
               </button>
             </div>
-
-            <Link href="#" className="text-sm text-gray-600 underline hover:text-black">
-              제안되 보관가기
-            </Link>
           </div>
         </div>
 
