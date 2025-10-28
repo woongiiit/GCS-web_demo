@@ -246,9 +246,8 @@ export default function ProductDetailPage() {
 
         {/* 제품 상세 정보 */}
         <div className="border-t border-gray-200 pt-8">
-          <div>
-                <div className="text-sm text-gray-700 mb-8">
-                  {product.description.split('\n').map((paragraph: string, index: number) => {
+          <div className="text-sm text-gray-700 mb-8">
+            {product.description.split('\n').map((paragraph: string, index: number) => {
                     // 이미지 태그 파싱
                     const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
                     if (imageMatch) {
@@ -415,10 +414,8 @@ export default function ProductDetailPage() {
                     )}
                   </div>
                 </div>
-              </div>
           </div>
         </div>
-      </div>
 
       {/* 하단 배너 */}
       <div className="bg-white py-6 border-t border-gray-200">
