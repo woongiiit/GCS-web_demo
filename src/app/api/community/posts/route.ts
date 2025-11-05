@@ -38,7 +38,8 @@ export async function GET(request: Request) {
         },
         _count: {
           select: {
-            comments: true
+            comments: true,
+            likes: true
           }
         }
       },
@@ -51,16 +52,17 @@ export async function GET(request: Request) {
     console.log('조회된 글 수:', posts.length)
     console.log('글 목록:', posts.map(p => ({ id: p.id, title: p.title, category: p.category, createdAt: p.createdAt })))
 
-    // 댓글 수 추가
-    const postsWithCommentCount = posts.map(post => ({
+    // 댓글 수와 좋아요 수 추가
+    const postsWithCounts = posts.map(post => ({
       ...post,
-      commentCount: post._count.comments
+      commentCount: post._count.comments,
+      likeCount: post._count.likes
     }))
 
     const result = {
       success: true,
-      data: postsWithCommentCount,
-      count: postsWithCommentCount.length
+      data: postsWithCounts,
+      count: postsWithCounts.length
     }
 
     return NextResponse.json(

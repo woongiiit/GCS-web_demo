@@ -152,8 +152,18 @@ function CommunityContent() {
                       }}
                       className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
                     >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
+                        <div className="flex items-start gap-4">
+                          {/* 대표 이미지 */}
+                          {post.images && post.images.length > 0 && (
+                            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                              <img
+                                src={post.images[0]}
+                                alt={post.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
                             <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
                             <div className="text-sm text-gray-600 mb-3 line-clamp-2">
                               {stripHtmlTags(post.content).substring(0, 100)}...
@@ -161,6 +171,7 @@ function CommunityContent() {
                             <div className="flex items-center space-x-4 text-xs text-gray-400">
                               <span>{post.author.name}</span>
                               <span>조회 {post.views}</span>
+                              <span>좋아요 {post.likeCount || 0}</span>
                               <span>댓글 {post.commentCount}</span>
                               <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
                             </div>
@@ -209,8 +220,18 @@ function CommunityContent() {
                       }}
                       className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
                     >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
+                        <div className="flex items-start gap-4">
+                          {/* 대표 이미지 */}
+                          {post.images && post.images.length > 0 && (
+                            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                              <img
+                                src={post.images[0]}
+                                alt={post.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
                             <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
                             <div className="text-sm text-gray-600 mb-3 line-clamp-2">
                               {stripHtmlTags(post.content).substring(0, 100)}...
@@ -218,6 +239,7 @@ function CommunityContent() {
                             <div className="flex items-center space-x-4 text-xs text-gray-400">
                               <span>{post.author.name}</span>
                               <span>조회 {post.views}</span>
+                              <span>좋아요 {post.likeCount || 0}</span>
                               <span>댓글 {post.commentCount}</span>
                               <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
                             </div>
