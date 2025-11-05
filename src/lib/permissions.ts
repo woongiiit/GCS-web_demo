@@ -99,7 +99,7 @@ export const permissions = {
    * @returns 상품 등록 가능 여부
    */
   canAddProduct: (role?: UserRole): boolean => {
-    return role === 'ADMIN';
+    return role === 'ADMIN' || role === 'SELLER';
   },
 
   /**

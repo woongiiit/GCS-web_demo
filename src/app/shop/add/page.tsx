@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/contexts/AuthContext'
+import { permissions } from '@/lib/permissions'
 import Link from 'next/link'
 import RichTextEditor from '@/components/TinyMCEEditor'
 
 export default function ShopAddPage() {
   const router = useRouter()
-  const { isAdmin } = usePermissions()
+  const { role } = usePermissions()
   const [categories, setCategories] = useState<any[]>([])
   const [formData, setFormData] = useState({
     name: '',
@@ -35,12 +36,12 @@ export default function ShopAddPage() {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
-  // 관리자가 아닌 경우 접근 차단
+  // 상품 등록 권한이 없는 경우 접근 차단
   useEffect(() => {
-    if (!isAdmin) {
+    if (!permissions.canAddProduct(role)) {
       router.push('/shop')
     }
-  }, [isAdmin, router])
+  }, [role, router])
 
   // 카테고리 목록 불러오기
   useEffect(() => {
@@ -197,7 +198,7 @@ export default function ShopAddPage() {
     }
   }
 
-  if (!isAdmin) {
+  if (!permissions.canAddProduct(role)) {
     return null
   }
 

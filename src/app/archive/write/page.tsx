@@ -18,9 +18,16 @@ function ArchiveWriteContent() {
     content: '',
     type: 'project', // 'project' 또는 'news'
     year: new Date().getFullYear().toString(),
-    members: '', // 프로젝트의 경우
+    selectedMemberIds: [] as string[], // 프로젝트의 경우 - 선택된 사용자 ID 배열
     isFeatured: false
   })
+  
+  // 참여 멤버 선택 관련 상태
+  const [memberSearchTerm, setMemberSearchTerm] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [selectedMembers, setSelectedMembers] = useState<any[]>([]) // 선택된 사용자 정보 배열
   
   // TinyMCE 에디터 관련 상태
   const [editorContent, setEditorContent] = useState('')
@@ -74,12 +81,35 @@ function ArchiveWriteContent() {
           return
         }
         
+        // 기존 멤버 정보 로드 (teamMembers는 이름 배열이므로, 사용자 정보를 조회해야 함)
+        const memberIds: string[] = []
+        const memberInfos: any[] = []
+        
+        if (item.teamMembers && item.teamMembers.length > 0) {
+          // 이름으로 사용자 검색하여 ID 찾기
+          const memberPromises = item.teamMembers.map(async (name: string) => {
+            const user = await fetch(`/api/users/search?search=${encodeURIComponent(name.trim())}&limit=1`)
+              .then(res => res.json())
+              .then(data => data.success && data.data.length > 0 ? data.data[0] : null)
+              .catch(() => null)
+            return user
+          })
+          const foundUsers = await Promise.all(memberPromises)
+          foundUsers.forEach(user => {
+            if (user) {
+              memberIds.push(user.id)
+              memberInfos.push(user)
+            }
+          })
+        }
+        
+        setSelectedMembers(memberInfos)
         setFormData({
           title: item.title,
           content: item.content || item.description,
           type: formData.type,
           year: item.year.toString(),
-          members: item.teamMembers ? item.teamMembers.join(', ') : '',
+          selectedMemberIds: memberIds,
           isFeatured: item.isFeatured || false
         })
         setEditorContent(item.content || item.description)
@@ -103,6 +133,93 @@ function ArchiveWriteContent() {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
+  }
+
+  // 사용자 검색
+  const searchUsers = async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.length < 1) {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await fetch(`/api/users/search?search=${encodeURIComponent(searchTerm)}&limit=10`)
+      const data = await response.json()
+      
+      if (data.success) {
+        // 이미 선택된 사용자는 제외
+        const filtered = data.data.filter((user: any) => 
+          !formData.selectedMemberIds.includes(user.id)
+        )
+        setSearchResults(filtered)
+        setShowSearchResults(true)
+      }
+    } catch (error) {
+      console.error('사용자 검색 오류:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // 사용자 검색 입력 핸들러 (디바운싱)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (memberSearchTerm) {
+        searchUsers(memberSearchTerm)
+      } else {
+        setSearchResults([])
+        setShowSearchResults(false)
+      }
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberSearchTerm])
+
+  // 외부 클릭 시 검색 결과 숨기기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.member-search-container')) {
+        setShowSearchResults(false)
+      }
+    }
+
+    if (showSearchResults) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showSearchResults])
+
+  const handleMemberSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setMemberSearchTerm(value)
+  }
+
+  // 사용자 선택
+  const handleSelectMember = (user: any) => {
+    if (!formData.selectedMemberIds.includes(user.id)) {
+      setFormData(prev => ({
+        ...prev,
+        selectedMemberIds: [...prev.selectedMemberIds, user.id]
+      }))
+      setSelectedMembers(prev => [...prev, user])
+    }
+    setMemberSearchTerm('')
+    setSearchResults([])
+    setShowSearchResults(false)
+  }
+
+  // 사용자 제거
+  const handleRemoveMember = (userId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedMemberIds: prev.selectedMemberIds.filter(id => id !== userId)
+    }))
+    setSelectedMembers(prev => prev.filter(user => user.id !== userId))
   }
 
   // 대표 이미지 업로드
@@ -221,7 +338,7 @@ function ArchiveWriteContent() {
           content: editorContent, // 리치 텍스트 에디터 내용 사용
           type: formData.type,
           year: formData.year,
-          members: formData.members,
+          memberIds: formData.selectedMemberIds, // 선택된 사용자 ID 배열
           images: galleryImages, // 대표 이미지들
           isFeatured: formData.isFeatured
         })
@@ -371,18 +488,77 @@ function ArchiveWriteContent() {
                 {/* 프로젝트 멤버 (프로젝트인 경우만) */}
                 {formData.type === 'project' && (
                   <div>
-                    <label htmlFor="members" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       참여 멤버
                     </label>
-                    <input
-                      id="members"
-                      name="members"
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                      value={formData.members}
-                      onChange={handleInputChange}
-                      placeholder="예: 김봉구, 김병수, 김정욱"
-                    />
+                    
+                    {/* 사용자 검색 입력 */}
+                    <div className="relative mb-2 member-search-container">
+                      <input
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                        value={memberSearchTerm}
+                        onChange={handleMemberSearchChange}
+                        placeholder="이름, 이메일, 학번으로 검색..."
+                        onFocus={() => {
+                          if (memberSearchTerm && searchResults.length > 0) {
+                            setShowSearchResults(true)
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      
+                      {/* 검색 결과 드롭다운 */}
+                      {showSearchResults && searchResults.length > 0 && (
+                        <div 
+                          className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {searchResults.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => handleSelectMember(user)}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">{user.name}</div>
+                              <div className="text-sm text-gray-500">
+                                {user.email} {user.studentId ? `| ${user.studentId}` : ''} {user.major ? `| ${user.major}` : ''}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {isSearching && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* 선택된 멤버 표시 */}
+                    {selectedMembers.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedMembers.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg"
+                          >
+                            <span className="text-sm font-medium text-gray-900">{member.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(member.id)}
+                              className="text-gray-500 hover:text-red-600 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

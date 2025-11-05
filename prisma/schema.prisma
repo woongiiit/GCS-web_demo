@@ -21,6 +21,7 @@ model User {
   major       String?
   phone       String
   role        UserRole @default(GENERAL)
+  participatedProjectIds String[] // 참여한 프로젝트의 ID 배열
   
   // 학생 인증 관련 필드
   verificationStatus VerificationStatus @default(PENDING)
@@ -37,8 +38,9 @@ model User {
   posts       Post[]
   comments    Comment[]
   orders      Order[]
-  projects    Project[]
+  projects    Project[]  // 작성한 프로젝트
   news        News[]
+  products    Product[]  // 등록한 상품들
   passwordResetTokens PasswordResetToken[]
   postLikes   PostLike[]
   projectLikes ProjectLike[]
@@ -171,6 +173,8 @@ model Product {
   isBestItem  Boolean  @default(false) // Best Item 여부
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
+  authorId    String?  // 상품 등록자 ID (관리자 또는 판매자)
+  author      User?    @relation(fields: [authorId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

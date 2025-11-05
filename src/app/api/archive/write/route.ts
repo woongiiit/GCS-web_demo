@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, content, type, year, members, images, isFeatured } = body
+    const { title, content, type, year, memberIds, images, isFeatured } = body
 
     // 유효성 검사
     if (!title || !content || !type || !year) {
@@ -30,19 +30,51 @@ export async function POST(request: Request) {
 
     // 타입에 따라 Project 또는 News 생성
     if (type === 'project') {
+      // 선택된 멤버들의 이름 가져오기
+      let teamMembers: string[] = []
+      if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+        const memberUsers = await prisma.user.findMany({
+          where: { id: { in: memberIds } },
+          select: { id: true, name: true }
+        })
+        teamMembers = memberUsers.map(u => u.name)
+      }
+
       const project = await prisma.project.create({
         data: {
           title,
           description: content.substring(0, 200), // 첫 200자를 요약으로
           content,
           year: parseInt(year),
-          teamMembers: members ? members.split(',').map((m: string) => m.trim()) : [],
+          teamMembers,
           technologies: [],
           images: images || [],
           isFeatured: isFeatured || false,
           authorId: user.id,
         }
       })
+
+      // 선택된 멤버들의 participatedProjectIds 배열에 프로젝트 id 추가
+      if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+        await Promise.all(
+          memberIds.map(async (userId: string) => {
+            const user = await prisma.user.findUnique({
+              where: { id: userId },
+              select: { participatedProjectIds: true }
+            })
+            if (user && !user.participatedProjectIds.includes(project.id)) {
+              await prisma.user.update({
+                where: { id: userId },
+                data: {
+                  participatedProjectIds: {
+                    push: project.id
+                  }
+                }
+              })
+            }
+          })
+        )
+      }
 
       // Archive Projects 캐시 무효화
       invalidateCache('projects:.*')

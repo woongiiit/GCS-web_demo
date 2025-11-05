@@ -246,56 +246,10 @@ export default function ProductDetailPage() {
 
         {/* 제품 상세 정보 */}
         <div className="border-t border-gray-200 pt-8">
-          <div className="text-sm text-gray-700 mb-8">
-            {product.description.split('\n').map((paragraph: string, index: number) => {
-                    // 이미지 태그 파싱
-                    const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
-                    if (imageMatch) {
-                      return (
-                        <div key={index} className="my-6">
-                          <img
-                            src={imageMatch[1]}
-                            alt="상품 상세 이미지"
-                            className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
-                            onError={(e) => {
-                              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+UHJvZHVjdCBJbWFnZTwvdGV4dD4KPC9zdmc+'
-                            }}
-                          />
-                        </div>
-                      )
-                    }
-                    
-                    // 빈 줄 처리
-                    if (paragraph.trim() === '') {
-                      return <br key={index} />
-                    }
-                    
-                    // 일반 텍스트
-                    return (
-                      <p key={index} className="mb-4">
-                        {paragraph}
-                      </p>
-                    )
-                  })}
-                </div>
-                
-                {/* 제품 추가 이미지 (첫 번째 이미지를 제외한 나머지 이미지들) */}
-                {product.images && product.images.length > 1 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    {product.images.slice(1).map((image: string, index: number) => (
-                      <div key={index} className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
-                          src={image}
-                          alt={`${product.name} 상세 이미지 ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f0f0f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%23999"%3E상세 이미지 ' + (index + 1) + '%3C/text%3E%3C/svg%3E'
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div 
+            className="text-sm text-gray-700 mb-8 prose prose-sm max-w-none [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4 [&_p]:mb-4"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
                 
                 {/* 상품 정보 고시 내용 */}
                 {product.productDetails && product.productDetails.length > 0 && (

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     // 인증 확인 및 사용자 정보 가져오기
     const user = await requireAuth()
 
-    // 상품 등록 권한 확인 (ADMIN만 가능)
+    // 상품 등록 권한 확인 (ADMIN, SELLER만 가능)
     if (!permissions.canAddProduct(user.role as any)) {
       return NextResponse.json(
         { error: permissionErrors.adminOnly },
@@ -77,6 +77,7 @@ export async function POST(request: Request) {
         colors: colors || [],
         isBestItem: isBestItem || false,
         isActive: true,
+        authorId: user.id, // 상품 등록자 ID 저장
       },
       include: {
         category: true,

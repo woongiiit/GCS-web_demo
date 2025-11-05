@@ -18,7 +18,7 @@ interface UserInfo {
 export default function MyPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'profile' | 'cart' | 'verification'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'cart' | 'archive' | 'verification'>('profile')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -249,6 +249,16 @@ export default function MyPage() {
               >
                 장바구니
               </button>
+              <button
+                onClick={() => setActiveTab('archive')}
+                className={`pb-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'archive'
+                    ? 'text-black border-black'
+                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                }`}
+              >
+                내 아카이브
+              </button>
               
               {/* 학생 인증 탭 (일반회원만 보임) */}
               {user.role === 'GENERAL' && (
@@ -445,6 +455,8 @@ export default function MyPage() {
                   </div>
                   */}
                 </div>
+              ) : activeTab === 'archive' ? (
+                <MyArchiveTab user={user} />
               ) : (
                 <div>
                   {/* 학생 인증 탭 */}
@@ -623,6 +635,173 @@ export default function MyPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 내 아카이브 탭 컴포넌트
+function MyArchiveTab({ user }: { user: any }) {
+  const [myProjects, setMyProjects] = useState<any[]>([])
+  const [myProducts, setMyProducts] = useState<any[]>([])
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true)
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+
+  useEffect(() => {
+    fetchMyProjects()
+    fetchMyProducts()
+  }, [])
+
+  const fetchMyProjects = async () => {
+    try {
+      setIsLoadingProjects(true)
+      const response = await fetch('/api/mypage/projects')
+      const data = await response.json()
+      
+      if (data.success) {
+        setMyProjects(data.data)
+      }
+    } catch (error) {
+      console.error('내 프로젝트 조회 오류:', error)
+    } finally {
+      setIsLoadingProjects(false)
+    }
+  }
+
+  const fetchMyProducts = async () => {
+    try {
+      setIsLoadingProducts(true)
+      const response = await fetch('/api/mypage/products')
+      const data = await response.json()
+      
+      if (data.success) {
+        setMyProducts(data.data)
+      }
+    } catch (error) {
+      console.error('내 상품 조회 오류:', error)
+    } finally {
+      setIsLoadingProducts(false)
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-black mb-6">내 아카이브</h2>
+      
+      {/* 좌우 분할 레이아웃 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 좌측: 내 프로젝트 */}
+        <div className="border-r-0 md:border-r-2 border-gray-200 pr-0 md:pr-6">
+          <h3 className="text-xl font-bold text-black mb-4">내 프로젝트</h3>
+          
+          {isLoadingProjects ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+            </div>
+          ) : myProjects.length > 0 ? (
+            <div className="space-y-4">
+              {myProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/archive/projects/${project.id}`}
+                  className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-4">
+                    {project.images && project.images[0] && (
+                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                        <img
+                          src={project.images[0]}
+                          alt={project.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-[#f57520] text-white text-sm font-bold">GCS</span>'
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 mb-1 truncate">{project.title}</h4>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{project.description}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span>{project.year}년</span>
+                        {project.teamMembers && project.teamMembers.length > 0 && (
+                          <span>{project.teamMembers.length}명 참여</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>참여한 프로젝트가 없습니다.</p>
+            </div>
+          )}
+        </div>
+
+        {/* 우측: 내 상품 */}
+        <div className="pl-0 md:pl-6">
+          <h3 className="text-xl font-bold text-black mb-4">내 상품</h3>
+          
+          {isLoadingProducts ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+            </div>
+          ) : myProducts.length > 0 ? (
+            <div className="space-y-4">
+              {myProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/shop/${product.id}`}
+                  className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-4">
+                    {product.images && product.images[0] && (
+                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-gray-300 text-gray-600 text-xs">No Image</span>'
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h4>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="font-semibold text-black">{product.price.toLocaleString()}원</span>
+                        {product.category && (
+                          <span>{product.category.name}</span>
+                        )}
+                        {!product.isActive && (
+                          <span className="text-red-500">판매 중단</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>등록한 상품이 없습니다.</p>
+              {user?.role === 'ADMIN' && (
+                <Link
+                  href="/shop/add"
+                  className="inline-block mt-4 text-sm text-black underline hover:text-gray-600"
+                >
+                  상품 등록하러 가기
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

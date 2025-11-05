@@ -90,7 +90,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { title, content, year, members, images, isFeatured } = body
+    const { title, content, year, memberIds, images, isFeatured } = body
 
     // 유효성 검사
     if (!title || !content) {
@@ -100,6 +100,40 @@ export async function PUT(
       )
     }
 
+    // 기존 멤버들의 participatedProjectIds 배열에서 프로젝트 id 제거
+    const existingMembers = await prisma.user.findMany({
+      where: { participatedProjectIds: { has: projectId } },
+      select: { id: true }
+    })
+    
+    if (existingMembers.length > 0) {
+      await Promise.all(
+        existingMembers.map(member =>
+          prisma.user.update({
+            where: { id: member.id },
+            data: {
+              participatedProjectIds: {
+                set: (await prisma.user.findUnique({
+                  where: { id: member.id },
+                  select: { participatedProjectIds: true }
+                }))?.participatedProjectIds.filter((id: string) => id !== projectId) || []
+              }
+            }
+          })
+        )
+      )
+    }
+
+    // 선택된 멤버들의 이름 가져오기
+    let teamMembers: string[] = []
+    if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+      const memberUsers = await prisma.user.findMany({
+        where: { id: { in: memberIds } },
+        select: { id: true, name: true }
+      })
+      teamMembers = memberUsers.map(u => u.name)
+    }
+
     // 프로젝트 수정
     const updatedProject = await prisma.project.update({
       where: { id: projectId },
@@ -107,7 +141,7 @@ export async function PUT(
         title,
         description: content,
         year: parseInt(year),
-        teamMembers: members ? members.split(',').map((m: string) => m.trim()) : [],
+        teamMembers,
         images: images || [],
         isFeatured: isFeatured || false
       },
@@ -121,6 +155,28 @@ export async function PUT(
         }
       }
     })
+
+    // 새로 선택된 멤버들의 participatedProjectIds 배열에 프로젝트 id 추가
+    if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
+      await Promise.all(
+        memberIds.map(async (userId: string) => {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { participatedProjectIds: true }
+          })
+          if (user && !user.participatedProjectIds.includes(projectId)) {
+            await prisma.user.update({
+              where: { id: userId },
+              data: {
+                participatedProjectIds: {
+                  push: projectId
+                }
+              }
+            })
+          }
+        })
+      )
+    }
 
     // Archive 프로젝트 목록 캐시 무효화
     invalidateCache('projects:.*')
@@ -186,6 +242,30 @@ export async function DELETE(
       return NextResponse.json(
         { error: '삭제 권한이 없습니다.' },
         { status: 403 }
+      )
+    }
+
+    // 프로젝트에 참여한 모든 멤버들의 participatedProjectIds 배열에서 프로젝트 id 제거
+    const projectMembers = await prisma.user.findMany({
+      where: { participatedProjectIds: { has: projectId } },
+      select: { id: true }
+    })
+    
+    if (projectMembers.length > 0) {
+      await Promise.all(
+        projectMembers.map(member =>
+          prisma.user.update({
+            where: { id: member.id },
+            data: {
+              participatedProjectIds: {
+                set: (await prisma.user.findUnique({
+                  where: { id: member.id },
+                  select: { participatedProjectIds: true }
+                }))?.participatedProjectIds.filter((id: string) => id !== projectId) || []
+              }
+            }
+          })
+        )
       )
     }
 

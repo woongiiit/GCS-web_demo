@@ -108,7 +108,7 @@ export default function ShopPage() {
               ))}
               </div>
               
-              {/* 상품 등록 버튼 (관리자만) */}
+              {/* 상품 등록 버튼 (관리자, 판매자) */}
               {permissions.canAddProduct(role) && (
                 <Link 
                   href="/shop/add"
