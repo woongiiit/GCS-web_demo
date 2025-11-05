@@ -108,19 +108,20 @@ export async function PUT(
     
     if (existingMembers.length > 0) {
       await Promise.all(
-        existingMembers.map(member =>
-          prisma.user.update({
+        existingMembers.map(async (member) => {
+          const user = await prisma.user.findUnique({
+            where: { id: member.id },
+            select: { participatedProjectIds: true }
+          })
+          return prisma.user.update({
             where: { id: member.id },
             data: {
               participatedProjectIds: {
-                set: (await prisma.user.findUnique({
-                  where: { id: member.id },
-                  select: { participatedProjectIds: true }
-                }))?.participatedProjectIds.filter((id: string) => id !== projectId) || []
+                set: user?.participatedProjectIds.filter((id: string) => id !== projectId) || []
               }
             }
           })
-        )
+        })
       )
     }
 
@@ -253,19 +254,20 @@ export async function DELETE(
     
     if (projectMembers.length > 0) {
       await Promise.all(
-        projectMembers.map(member =>
-          prisma.user.update({
+        projectMembers.map(async (member) => {
+          const user = await prisma.user.findUnique({
+            where: { id: member.id },
+            select: { participatedProjectIds: true }
+          })
+          return prisma.user.update({
             where: { id: member.id },
             data: {
               participatedProjectIds: {
-                set: (await prisma.user.findUnique({
-                  where: { id: member.id },
-                  select: { participatedProjectIds: true }
-                }))?.participatedProjectIds.filter((id: string) => id !== projectId) || []
+                set: user?.participatedProjectIds.filter((id: string) => id !== projectId) || []
               }
             }
           })
-        )
+        })
       )
     }
 
