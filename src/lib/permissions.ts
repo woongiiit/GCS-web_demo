@@ -8,7 +8,7 @@
  * - 운영자 (ADMIN): 모든 권한
  */
 
-export type UserRole = 'GENERAL' | 'MAJOR' | 'ADMIN';
+export type UserRole = 'GENERAL' | 'MAJOR' | 'SELLER' | 'ADMIN';
 export type VerificationStatus = 'PENDING' | 'REQUESTED' | 'APPROVED' | 'REJECTED';
 
 export const permissions = {
@@ -189,6 +189,7 @@ export const permissions = {
 export const roleDescriptions: Record<UserRole, string> = {
   GENERAL: '일반회원 - 상품 구매만 가능',
   MAJOR: '전공회원 - 상품 구매 및 Community 글쓰기 가능 (Board, Lounge만)',
+  SELLER: '판매자 - 상품 등록 및 판매 가능',
   ADMIN: '운영자 - 모든 권한 보유'
 };
 

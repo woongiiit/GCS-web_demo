@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 유효한 역할인지 확인
-    const validRoles = ['GENERAL', 'MAJOR', 'ADMIN']
+    const validRoles = ['GENERAL', 'MAJOR', 'SELLER', 'ADMIN']
     if (!validRoles.includes(role)) {
       return NextResponse.json(
         { error: '유효하지 않은 역할입니다.' },

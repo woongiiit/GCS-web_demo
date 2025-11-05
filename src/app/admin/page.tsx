@@ -213,6 +213,7 @@ function UserManagement() {
     switch (role) {
       case 'ADMIN': return '관리자'
       case 'MAJOR': return '전공회원'
+      case 'SELLER': return '판매자'
       case 'GENERAL': 
         return verificationStatus === 'REQUESTED' ? '일반회원 (인증 대기 중)' : '일반회원'
       default: return '비회원'
@@ -223,6 +224,7 @@ function UserManagement() {
     switch (role) {
       case 'ADMIN': return 'bg-red-100 text-red-800'
       case 'MAJOR': return 'bg-purple-100 text-purple-800'
+      case 'SELLER': return 'bg-green-100 text-green-800'
       case 'GENERAL': return 'bg-blue-100 text-blue-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -264,6 +266,7 @@ function UserManagement() {
               <option value="ALL">모든 역할</option>
               <option value="ADMIN">관리자</option>
               <option value="MAJOR">전공회원</option>
+              <option value="SELLER">판매자</option>
               <option value="GENERAL">일반회원</option>
             </select>
           </div>
@@ -343,6 +346,7 @@ function UserManagement() {
                         >
                           <option value="GENERAL">일반회원</option>
                           <option value="MAJOR">전공회원</option>
+                          <option value="SELLER">판매자</option>
                           <option value="ADMIN">관리자</option>
                         </select>
                       </div>

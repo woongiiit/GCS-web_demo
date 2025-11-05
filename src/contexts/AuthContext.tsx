@@ -100,6 +100,7 @@ export function usePermissions() {
     isGuest: !user,
     isGeneral: user?.role === 'GENERAL',
     isMajor: user?.role === 'MAJOR',
+    isSeller: user?.role === 'SELLER',
     isAdmin: user?.role === 'ADMIN',
     isVerified: user?.verificationStatus === 'APPROVED',
     isVerificationPending: user?.verificationStatus === 'PENDING',
