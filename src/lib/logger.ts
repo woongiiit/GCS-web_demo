@@ -20,8 +20,10 @@ export interface LogContext {
  */
 export type SecurityEvent =
   | 'password_reset_requested'
+  | 'password_reset_code_sent'
   | 'password_reset_completed'
   | 'password_reset_failed'
+  | 'password_reset_verification_failed'
   | 'invalid_token_attempt'
   | 'rate_limit_exceeded'
   | 'suspicious_activity'
@@ -112,8 +114,10 @@ class Logger {
   private getSecuritySeverity(event: SecurityEvent): 'low' | 'medium' | 'high' | 'critical' {
     const severityMap: Record<SecurityEvent, 'low' | 'medium' | 'high' | 'critical'> = {
       'password_reset_requested': 'low',
+      'password_reset_code_sent': 'low',
       'password_reset_completed': 'low',
       'password_reset_failed': 'medium',
+      'password_reset_verification_failed': 'medium',
       'invalid_token_attempt': 'high',
       'rate_limit_exceeded': 'medium',
       'suspicious_activity': 'high',
