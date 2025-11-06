@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generatePasswordResetToken, getTokenExpirationTime, generatePasswordResetLink } from '@/lib/token'
-import { sendPasswordResetEmail } from '@/lib/email'
-import { invalidateUserTokens } from '@/lib/token-validation'
+import { createAndSendVerificationCode } from '@/lib/email-verification'
 import { rateLimiters, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { validateRequest, createErrorResponse, createSuccessResponse } from '@/lib/security'
 import { logger, logSecurityEvent } from '@/lib/logger'
@@ -63,61 +61,37 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('해당 이메일로 등록된 사용자가 없습니다.', 404)
     }
 
-    // 5. 기존 토큰 무효화 (사용자가 여러 번 요청한 경우)
-    await invalidateUserTokens(user.id)
-
-    // 6. 새로운 비밀번호 재설정 토큰 생성
-    const token = generatePasswordResetToken()
-    const expiresAt = getTokenExpirationTime(1) // 1시간 후 만료
-
-    // 7. 토큰을 데이터베이스에 저장
-    await prisma.passwordResetToken.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt
-      }
-    })
-
-    // 8. 비밀번호 재설정 링크 생성
-    const resetLink = generatePasswordResetLink(token)
-    
-    // 9. 이메일 전송
+    // 5. 비밀번호 재설정용 인증번호 생성 및 전송
     try {
-      await sendPasswordResetEmail(email, resetLink, user.name)
+      await createAndSendVerificationCode(email)
       
       // 성공 로깅
-      logSecurityEvent('password_reset_requested', 'Password reset email sent successfully', {
+      logSecurityEvent('password_reset_code_sent', 'Password reset verification code sent successfully', {
         ip: clientIP,
         userAgent,
         userId: user.id,
         email: user.email
       })
       
-      logger.info('Password reset email sent', {
+      logger.info('Password reset verification code sent', {
         userId: user.id,
         email: user.email,
         ip: clientIP
       })
       
     } catch (emailError) {
-      logger.error('이메일 전송 실패', {
+      logger.error('인증번호 전송 실패', {
         error: emailError,
         userId: user.id,
         email: user.email,
         ip: clientIP
       })
       
-      // 이메일 전송 실패 시 생성된 토큰을 삭제
-      await prisma.passwordResetToken.delete({
-        where: { token }
-      })
-      
-      return createErrorResponse('이메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요.', 500)
+      return createErrorResponse('인증번호 전송에 실패했습니다. 잠시 후 다시 시도해주세요.', 500)
     }
     
     return createSuccessResponse({
-      message: '비밀번호 재설정 링크가 전송되었습니다.',
+      message: '비밀번호 재설정 인증번호가 전송되었습니다.',
       email: email
     })
 

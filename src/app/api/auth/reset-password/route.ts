@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validatePasswordResetToken } from '@/lib/token-validation'
-import { resetUserPassword } from '@/lib/password-update'
+import { prisma } from '@/lib/prisma'
+import { verifyEmailCode } from '@/lib/email-verification'
+import { updateUserPassword } from '@/lib/password-update'
 import { rateLimiters, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { validateRequest, createErrorResponse, createSuccessResponse } from '@/lib/security'
 import { logger, logSecurityEvent } from '@/lib/logger'
@@ -33,34 +34,58 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const { token, password } = await request.json()
+    const { email, code, password } = await request.json()
 
-    if (!token || !password) {
-      return createErrorResponse('토큰과 비밀번호가 필요합니다.')
+    if (!email || !code || !password) {
+      return createErrorResponse('이메일, 인증번호, 비밀번호가 모두 필요합니다.')
     }
 
-    // 3. 토큰 검증
-    const tokenValidation = await validatePasswordResetToken(token)
+    // 3. 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return createErrorResponse('올바른 이메일 형식을 입력해주세요.')
+    }
+
+    // 4. 인증번호 형식 검증 (6자리 숫자)
+    if (!/^\d{6}$/.test(code)) {
+      return createErrorResponse('인증번호는 6자리 숫자여야 합니다.')
+    }
+
+    // 5. 사용자 존재 여부 확인
+    const user = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (!user) {
+      // 보안상 존재하지 않는 이메일에 대해서도 동일한 응답 시간 유지
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return createErrorResponse('해당 이메일로 등록된 사용자가 없습니다.', 404)
+    }
+
+    // 6. 인증번호 검증
+    const verificationResult = await verifyEmailCode(email, code)
     
-    if (!tokenValidation.isValid) {
-      logSecurityEvent('invalid_token_attempt', 'Invalid token used for password reset', {
+    if (!verificationResult.success) {
+      logSecurityEvent('password_reset_verification_failed', 'Password reset verification code failed', {
         ip: clientIP,
         userAgent,
-        token: token.substring(0, 8) + '...', // 토큰 일부만 로깅
-        error: tokenValidation.error
+        email,
+        remainingAttempts: verificationResult.remainingAttempts
       })
-      return createErrorResponse(tokenValidation.error!)
+      return createErrorResponse(verificationResult.message, 400, {
+        'X-Remaining-Attempts': verificationResult.remainingAttempts?.toString() || '0'
+      })
     }
 
-    // 4. 비밀번호 재설정
-    const result = await resetUserPassword(token, password)
+    // 7. 비밀번호 재설정
+    const result = await updateUserPassword(user.id, password, user.password)
     
     if (!result.success) {
       logSecurityEvent('password_reset_failed', 'Password reset failed', {
         ip: clientIP,
         userAgent,
-        userId: tokenValidation.user?.id,
-        email: tokenValidation.user?.email,
+        userId: user.id,
+        email: user.email,
         error: result.error
       })
       return createErrorResponse(result.error!, 400, {
@@ -72,13 +97,13 @@ export async function POST(request: NextRequest) {
     logSecurityEvent('password_reset_completed', 'Password reset completed successfully', {
       ip: clientIP,
       userAgent,
-      userId: tokenValidation.user!.id,
-      email: tokenValidation.user!.email
+      userId: user.id,
+      email: user.email
     })
     
     logger.info('비밀번호 재설정 완료', {
-      userId: tokenValidation.user!.id,
-      email: tokenValidation.user!.email,
+      userId: user.id,
+      email: user.email,
       ip: clientIP
     })
     
