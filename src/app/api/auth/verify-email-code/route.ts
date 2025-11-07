@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const { email, code } = await request.json()
+    const { email, code, purpose } = await request.json()
 
     // 입력값 검증
     if (!email || !code) {
@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 인증번호 검증
-    const verificationResult = await verifyEmailCode(email, code)
+    const consumeOnSuccess = purpose !== 'password_reset'
+    const verificationResult = await verifyEmailCode(email, code, { consumeOnSuccess })
 
     if (verificationResult.success) {
       logger.info('Email verification successful', {

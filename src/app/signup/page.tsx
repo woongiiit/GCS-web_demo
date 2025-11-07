@@ -89,7 +89,8 @@ export default function SignupPage() {
         },
         body: JSON.stringify({ 
           email: formData.email, 
-          code: formData.verificationCode 
+          code: formData.verificationCode,
+          purpose: 'signup'
         })
       })
 

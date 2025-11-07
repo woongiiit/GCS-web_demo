@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, code: verificationCode }),
+        body: JSON.stringify({ email, code: verificationCode, purpose: 'password_reset' }),
       })
 
       const data = await response.json()

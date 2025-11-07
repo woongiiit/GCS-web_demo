@@ -77,17 +77,27 @@ export async function createAndSendVerificationCode(email: string): Promise<stri
   }
 }
 
+export interface VerifyEmailCodeOptions {
+  consumeOnSuccess?: boolean
+}
+
 /**
  * 이메일 인증번호를 검증합니다.
  * @param email 이메일 주소
  * @param code 입력된 인증번호
  * @returns 검증 결과
  */
-export async function verifyEmailCode(email: string, code: string): Promise<{
+export async function verifyEmailCode(
+  email: string,
+  code: string,
+  options: VerifyEmailCodeOptions = {}
+): Promise<{
   success: boolean
   message: string
   remainingAttempts?: number
 }> {
+  const { consumeOnSuccess = true } = options
+
   try {
     // 인증번호 조회
     const verificationCode = await prisma.emailVerificationCode.findFirst({
@@ -164,11 +174,22 @@ export async function verifyEmailCode(email: string, code: string): Promise<{
       }
     }
 
-    // 인증 성공 - 해당 이메일의 모든 인증번호 만료 처리
-    await prisma.emailVerificationCode.updateMany({
-      where: { email },
-      data: { used: true }
-    })
+    if (consumeOnSuccess) {
+      await prisma.emailVerificationCode.updateMany({
+        where: { email },
+        data: { used: true }
+      })
+    } else {
+      await prisma.emailVerificationCode.updateMany({
+        where: {
+          email,
+          id: {
+            not: verificationCode.id
+          }
+        },
+        data: { used: true }
+      })
+    }
 
     logger.info('Email verification code verified successfully', {
       email,

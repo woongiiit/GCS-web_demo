@@ -566,10 +566,10 @@ async function main() {
 
   // 관리자 계정 생성
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@gcs-demo.com' },
+    where: { email: 'gcsweb01234@gcsweb.kr' },
     update: {},
     create: {
-      email: 'admin@gcs-demo.com',
+      email: 'gcsweb01234@gcsweb.kr',
       password: adminPassword,
       name: '관리자',
       studentId: 'ADMIN001',
@@ -617,7 +617,7 @@ async function main() {
   console.log('ℹ️  뉴스 데이터: 빈 상태 (관리자/학생회원이 직접 등록)')
 
   console.log('✅ 사용자 데이터 생성 완료')
-  console.log('👤 관리자 계정: admin@gcs-demo.com / GCS_Admin_2024!')
+  console.log('👤 관리자 계정: gcsweb01234@gcsweb.kr / GCS_Admin_2024!')
   console.log('👤 일반회원 (구매만 가능): general@gcs-demo.com / GCS_User_2024!')
   console.log('👤 학생회원 (구매+글쓰기): student@gcs-demo.com / GCS_User_2024!')
 

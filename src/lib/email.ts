@@ -224,7 +224,7 @@ function generatePasswordResetEmailTemplate(userName: string, resetLink: string)
           <p>이 이메일은 GCS:Web 시스템에서 자동으로 발송되었습니다.</p>
           <p>문의사항이 있으시면 관리자에게 연락해주세요.</p>
           <p>
-            <a href="mailto:admin@gcs-demo.com" class="link">admin@gcs-demo.com</a>
+            <a href="mailto:gcsweb01234@gcsweb.kr" class="link">gcsweb01234@gcsweb.kr</a>
           </p>
         </div>
       </div>
@@ -424,7 +424,7 @@ function generateEmailVerificationTemplate(code: string): string {
           <p>이 이메일은 GCS:Web 시스템에서 자동으로 발송되었습니다.</p>
           <p>문의사항이 있으시면 관리자에게 연락해주세요.</p>
           <p>
-            <a href="mailto:admin@gcs-demo.com" class="link">admin@gcs-demo.com</a>
+            <a href="mailto:gcsweb01234@gcsweb.kr" class="link">gcsweb01234@gcsweb.kr</a>
           </p>
         </div>
       </div>
