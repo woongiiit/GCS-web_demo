@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
         images: true,
         brand: true,
         isActive: true,
-        isBestItem: true,
+        likeCount: true,
+        options: true,
         category: {
           select: {
             id: true,

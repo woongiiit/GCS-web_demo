@@ -225,7 +225,40 @@ export default function ProductDetailPage() {
             <p className="text-sm text-gray-600 mb-2">{product.brand || 'GCS'}</p>
             <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
             <p className="text-sm text-gray-700 mb-6 whitespace-pre-line">{product.shortDescription || product.description}</p>
-            <p className="text-2xl font-bold mb-8">{product.price.toLocaleString()}원</p>
+            <p className="text-2xl font-bold mb-4">{product.price.toLocaleString()}원</p>
+            {typeof product.likeCount === 'number' && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
+                </svg>
+                <span>{product.likeCount}명이 좋아합니다.</span>
+              </div>
+            )}
+
+            {Array.isArray(product.options) && product.options.length > 0 && (
+              <div className="mb-8 space-y-4">
+                <h3 className="text-base font-semibold text-black">상품 옵션</h3>
+                {product.options.map((option: any, index: number) => (
+                  <div key={`${option.name ?? 'option'}-${index}`}>
+                    <p className="text-sm font-medium text-gray-700">{option.name}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {Array.isArray(option.values) && option.values.length > 0 ? (
+                        option.values.map((value: string, valueIndex: number) => (
+                          <span
+                            key={`${option.name ?? 'option'}-${index}-value-${valueIndex}`}
+                            className="px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-700"
+                          >
+                            {value}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-500">등록된 선택지가 없습니다.</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* 버튼 그룹 */}
             <div className="flex gap-3 mb-4">

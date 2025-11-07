@@ -167,12 +167,9 @@ model Product {
   images      String[] // 상품 대표 이미지 배열
   contentImages String[] // 본문용 이미지 배열
   brand       String?  // 브랜드명 (DEUX 등)
-  tags        String[] // 태그 배열
-  features    String[] // 특징 배열
-  sizes       String[] // 사이즈 배열 (의류용)
-  colors      String[] // 색상 배열 (의류용)
+  options     Json?
+  likeCount   Int      @default(0)
   isActive    Boolean  @default(true)
-  isBestItem  Boolean  @default(false) // Best Item 여부
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   authorId    String?  // 상품 등록자 ID (관리자 또는 판매자)
@@ -185,11 +182,10 @@ model Product {
   productDetails ProductDetail[]
 
   @@index([categoryId, isActive])
-  @@index([isBestItem], map: "idx_products_best_item")
   @@index([isActive, createdAt])
-  @@index([isActive, isBestItem, createdAt])
   @@index([isActive, categoryId, createdAt])
-  @@index([isBestItem, isActive])
+  @@index([isActive, likeCount])
+  @@index([likeCount])
   @@map("products")
 }
 

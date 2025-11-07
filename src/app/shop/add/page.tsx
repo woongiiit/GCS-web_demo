@@ -7,6 +7,12 @@ import { permissions } from '@/lib/permissions'
 import Link from 'next/link'
 import RichTextEditor from '@/components/TinyMCEEditor'
 
+type ProductOptionInput = {
+  id: string
+  name: string
+  values: string[]
+}
+
 export default function ShopAddPage() {
   const router = useRouter()
   const { role, isSeller } = usePermissions()
@@ -19,13 +25,9 @@ export default function ShopAddPage() {
     originalPrice: '',
     discount: '',
     categoryId: '',
-    project: '',
-    tags: '',
-    features: '',
-    sizes: '',
-    colors: '',
-    isBestItem: false,
+    brand: '',
   })
+  const [customOptions, setCustomOptions] = useState<ProductOptionInput[]>([])
   // 상품 대표 이미지들 (상단 갤러리용)
   const [coverImages, setCoverImages] = useState<File[]>([])
   const [coverImagePreviews, setCoverImagePreviews] = useState<string[]>([])
@@ -76,16 +78,18 @@ export default function ShopAddPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/shop/categories')
+      const response = await fetch('/api/shop/categories', { cache: 'no-store' })
       const data = await response.json()
-      
-      if (data.success) {
+
+      if (data.success && Array.isArray(data.data)) {
         setCategories(data.data)
       } else {
         console.error('카테고리 조회 실패:', data.error)
+        setCategories([])
       }
     } catch (error) {
       console.error('카테고리 조회 오류:', error)
+      setCategories([])
     }
   }
 
@@ -116,19 +120,75 @@ export default function ShopAddPage() {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked
-      setFormData(prev => ({ ...prev, [name]: checked }))
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }))
-    }
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   // React Quill 에디터 핸들러
   const handleEditorChange = (content: string) => {
     setEditorContent(content)
     setFormData(prev => ({ ...prev, description: content }))
+  }
+
+  const createOptionId = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID()
+    }
+    return `${Date.now()}-${Math.random()}`
+  }
+
+  const addOption = () => {
+    setCustomOptions(prev => ([
+      ...prev,
+      { id: createOptionId(), name: '', values: [''] }
+    ]))
+  }
+
+  const removeOption = (optionId: string) => {
+    setCustomOptions(prev => prev.filter(option => option.id !== optionId))
+  }
+
+  const updateOptionName = (optionId: string, value: string) => {
+    setCustomOptions(prev => prev.map(option => {
+      if (option.id !== optionId) return option
+      return {
+        ...option,
+        name: value
+      }
+    }))
+  }
+
+  const updateOptionValue = (optionId: string, valueIndex: number, value: string) => {
+    setCustomOptions(prev => prev.map(option => {
+      if (option.id !== optionId) return option
+      const newValues = [...option.values]
+      newValues[valueIndex] = value
+      return {
+        ...option,
+        values: newValues
+      }
+    }))
+  }
+
+  const addOptionValue = (optionId: string) => {
+    setCustomOptions(prev => prev.map(option => {
+      if (option.id !== optionId) return option
+      return {
+        ...option,
+        values: [...option.values, '']
+      }
+    }))
+  }
+
+  const removeOptionValue = (optionId: string, valueIndex: number) => {
+    setCustomOptions(prev => prev.map(option => {
+      if (option.id !== optionId) return option
+      const newValues = option.values.filter((_, index) => index !== valueIndex)
+      return {
+        ...option,
+        values: newValues.length > 0 ? newValues : ['']
+      }
+    }))
   }
 
 
@@ -141,6 +201,28 @@ export default function ShopAddPage() {
     setMessage('')
 
     try {
+      const sanitizedOptions = customOptions
+        .map(option => ({
+          name: option.name.trim(),
+          values: option.values.map(value => value.trim()).filter(value => value.length > 0)
+        }))
+        .filter(option => option.name.length > 0 && option.values.length > 0)
+
+      const hasIncompleteOption = customOptions.some(option => {
+        const trimmedName = option.name.trim()
+        const trimmedValues = option.values.map(value => value.trim())
+        const hasName = trimmedName.length > 0
+        const hasAnyValue = trimmedValues.some(value => value.length > 0)
+        return (hasName && !hasAnyValue) || (!hasName && hasAnyValue)
+      })
+
+      if (hasIncompleteOption) {
+        setMessage('옵션을 추가하려면 옵션 이름과 선택지를 모두 입력해주세요.')
+        setMessageType('error')
+        setIsSubmitting(false)
+        return
+      }
+
       // 상품 대표 이미지들을 Base64로 인코딩
       const coverImagesBase64: string[] = []
       for (const file of coverImages) {
@@ -162,15 +244,15 @@ export default function ShopAddPage() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          description: formData.description,
+          shortDescription: formData.shortDescription,
           price: parseInt(formData.price),
           originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : null,
           discount: formData.discount ? parseInt(formData.discount) : null,
-          brand: formData.project, // project를 brand로 매핑
-          tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
-          features: formData.features ? formData.features.split(',').map(f => f.trim()) : [],
-          sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()) : [],
-          colors: formData.colors ? formData.colors.split(',').map(c => c.trim()) : [],
+          categoryId: formData.categoryId,
+          brand: formData.brand,
+          options: sanitizedOptions,
           images: coverImagesBase64, // 상품 대표 이미지들
         })
       })
@@ -180,6 +262,20 @@ export default function ShopAddPage() {
       if (response.ok) {
         setMessage('상품이 성공적으로 등록되었습니다.')
         setMessageType('success')
+        setFormData({
+          name: '',
+          description: '',
+          shortDescription: '',
+          price: '',
+          originalPrice: '',
+          discount: '',
+          categoryId: '',
+          brand: '',
+        })
+        setEditorContent('')
+        setCoverImages([])
+        setCoverImagePreviews([])
+        setCustomOptions([])
         
         // 성공 후 Shop 페이지로 이동
         setTimeout(() => {
@@ -315,12 +411,16 @@ export default function ShopAddPage() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
                         value={formData.categoryId}
                         onChange={handleInputChange}
+                        disabled={categories.length === 0}
                       >
                         <option value="">카테고리를 선택하세요</option>
                         {categories.map(cat => (
                           <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
                       </select>
+                      {categories.length === 0 && (
+                        <p className="mt-2 text-xs text-red-500">등록된 카테고리가 없습니다. 관리자에게 카테고리 생성을 요청해주세요.</p>
+                      )}
                     </div>
 
                     {/* 상품명 */}
@@ -340,19 +440,19 @@ export default function ShopAddPage() {
                       />
                     </div>
 
-                    {/* 프로젝트 */}
+                    {/* 브랜드 / 프로젝트 */}
                     <div>
-                      <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
-                        프로젝트
+                      <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-2">
+                        브랜드 / 프로젝트
                       </label>
                       <input
-                        id="project"
-                        name="project"
+                        id="brand"
+                        name="brand"
                         type="text"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.project}
+                        value={formData.brand}
                         onChange={handleInputChange}
-                        placeholder="프로젝트명을 입력하세요"
+                        placeholder="브랜드 또는 프로젝트명을 입력하세요"
                       />
                     </div>
 
@@ -450,87 +550,84 @@ export default function ShopAddPage() {
 
                 {/* 상품 옵션 */}
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold text-black mb-4">상품 옵션</h3>
-                  
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                    <h3 className="text-lg font-semibold text-black">상품 옵션</h3>
+                    <button
+                      type="button"
+                      onClick={addOption}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <span>옵션 추가</span>
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-gray-600 mb-4">
+                    상품마다 필요한 옵션과 선택지를 자유롭게 추가해주세요. 예: 옵션 이름은 "색상", 선택지는 "블랙", "화이트" 등으로 입력할 수 있습니다.
+                  </p>
+
                   <div className="space-y-4">
-                    {/* 태그 */}
-                    <div>
-                      <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-                        태그 (쉼표로 구분)
-                      </label>
-                      <input
-                        id="tags"
-                        name="tags"
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.tags}
-                        onChange={handleInputChange}
-                        placeholder="신상품, 인기, 한정판"
-                      />
-                    </div>
+                    {customOptions.length === 0 && (
+                      <div className="bg-white border border-dashed border-gray-300 rounded-lg px-4 py-6 text-center text-sm text-gray-500">
+                        옵션이 필요하지 않다면 이 단계를 건너뛰어도 됩니다. 옵션이 필요한 경우 상단의 "옵션 추가" 버튼을 눌러주세요.
+                      </div>
+                    )}
 
-                    {/* 사이즈 */}
-                    <div>
-                      <label htmlFor="sizes" className="block text-sm font-medium text-gray-700 mb-2">
-                        사이즈 (쉼표로 구분)
-                      </label>
-                      <input
-                        id="sizes"
-                        name="sizes"
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.sizes}
-                        onChange={handleInputChange}
-                        placeholder="S, M, L, XL"
-                      />
-                    </div>
+                    {customOptions.map((option, optionIndex) => (
+                      <div key={option.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              옵션명
+                            </label>
+                            <input
+                              type="text"
+                              value={option.name}
+                              onChange={(e) => updateOptionName(option.id, e.target.value)}
+                              placeholder={`예: 옵션 ${optionIndex + 1}`}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeOption(option.id)}
+                            className="inline-flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            삭제
+                          </button>
+                        </div>
 
-                    {/* 색상 */}
-                    <div>
-                      <label htmlFor="colors" className="block text-sm font-medium text-gray-700 mb-2">
-                        색상 (쉼표로 구분)
-                      </label>
-                      <input
-                        id="colors"
-                        name="colors"
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.colors}
-                        onChange={handleInputChange}
-                        placeholder="검정, 흰색, 회색"
-                      />
-                    </div>
+                        <div className="space-y-3">
+                          <label className="block text-sm font-medium text-gray-700">선택지</label>
+                          {option.values.map((value, valueIndex) => (
+                            <div key={`${option.id}-value-${valueIndex}`} className="flex flex-col sm:flex-row gap-3">
+                              <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => updateOptionValue(option.id, valueIndex, e.target.value)}
+                                placeholder="선택지를 입력하세요"
+                                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeOptionValue(option.id, valueIndex)}
+                                className="inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                                disabled={option.values.length === 1}
+                              >
+                                제거
+                              </button>
+                            </div>
+                          ))}
 
-                    {/* 특징 */}
-                    <div>
-                      <label htmlFor="features" className="block text-sm font-medium text-gray-700 mb-2">
-                        특징 (쉼표로 구분)
-                      </label>
-                      <input
-                        id="features"
-                        name="features"
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.features}
-                        onChange={handleInputChange}
-                        placeholder="면 100%, 세탁 가능, 국내 제작"
-                      />
-                    </div>
-
-                    {/* Best Item 체크박스 */}
-                    <div className="flex items-center">
-                      <input
-                        id="isBestItem"
-                        name="isBestItem"
-                        type="checkbox"
-                        checked={formData.isBestItem}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
-                      />
-                      <label htmlFor="isBestItem" className="ml-2 block text-sm text-gray-700">
-                        Best Item으로 설정
-                      </label>
-                    </div>
+                          <button
+                            type="button"
+                            onClick={() => addOptionValue(option.id)}
+                            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                          >
+                            선택지 추가
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

@@ -61,7 +61,7 @@ export default function Home() {
       const [projectsRes, newsRes, productsRes] = await Promise.all([
         fetch('/api/archive/projects?featured=true'),
         fetch('/api/archive/news'),
-        fetch('/api/shop/products?bestItem=true')
+        fetch('/api/shop/products?sort=likes&limit=3')
       ])
 
       const [projectsData, newsData, productsData] = await Promise.all([
@@ -276,6 +276,12 @@ export default function Home() {
                           </div>
                           <p className="text-xs font-semibold line-clamp-1">{product.name}</p>
                           <p className="text-xs text-gray-500 line-clamp-1">{product.brand || 'GCS'}</p>
+                          <p className="text-[11px] text-gray-500 flex items-center justify-center gap-1 mt-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
+                            </svg>
+                            <span>{product.likeCount ?? 0}</span>
+                          </p>
                         </div>
                       </Link>
                     ))}

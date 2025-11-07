@@ -31,17 +31,46 @@ export async function POST(request: Request) {
       categoryId,
       images,
       brand,
-      tags,
-      features,
-      sizes,
-      colors,
-      isBestItem,
+      options
     } = body
 
     // 유효성 검사
     if (!name || !description || !price || !categoryId) {
       return NextResponse.json(
         { error: '필수 항목을 입력해주세요.' },
+        { status: 400 }
+      )
+    }
+
+    const parsedPrice = typeof price === 'number' ? price : parseInt(price, 10)
+    const parsedOriginalPrice = typeof originalPrice === 'number'
+      ? originalPrice
+      : originalPrice
+        ? parseInt(originalPrice, 10)
+        : null
+    const parsedDiscount = typeof discount === 'number'
+      ? discount
+      : discount
+        ? parseInt(discount, 10)
+        : null
+
+    if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
+      return NextResponse.json(
+        { error: '유효한 판매가를 입력해주세요.' },
+        { status: 400 }
+      )
+    }
+
+    if (parsedOriginalPrice !== null && Number.isNaN(parsedOriginalPrice)) {
+      return NextResponse.json(
+        { error: '유효한 정가를 입력해주세요.' },
+        { status: 400 }
+      )
+    }
+
+    if (parsedDiscount !== null && Number.isNaN(parsedDiscount)) {
+      return NextResponse.json(
+        { error: '유효한 할인율을 입력해주세요.' },
         { status: 400 }
       )
     }
@@ -58,24 +87,43 @@ export async function POST(request: Request) {
       )
     }
 
+    const parsedOptions = Array.isArray(options)
+      ? options
+          .map((option: any) => {
+            if (!option || typeof option !== 'object') return null
+            const optionName = typeof option.name === 'string' ? option.name.trim() : ''
+            const optionValues = Array.isArray(option.values)
+              ? option.values
+                  .map((value: any) => (typeof value === 'string' ? value.trim() : ''))
+                  .filter((value: string) => value.length > 0)
+              : []
+
+            if (!optionName || optionValues.length === 0) {
+              return null
+            }
+
+            return {
+              name: optionName,
+              values: optionValues
+            }
+          })
+          .filter(Boolean)
+      : []
+
     // 상품 생성
     const product = await prisma.product.create({
       data: {
         name,
         description,
         shortDescription: shortDescription || null,
-        price: parseInt(price),
-        originalPrice: originalPrice ? parseInt(originalPrice) : null,
-        discount: discount ? parseInt(discount) : null,
+        price: parsedPrice,
+        originalPrice: parsedOriginalPrice,
+        discount: parsedDiscount,
         stock: 0, // 재고 수량은 항상 0으로 설정
         categoryId,
-        images: images || [], // 상품 대표 이미지들 저장
-        brand: brand || null,
-        tags: tags || [],
-        features: features || [],
-        sizes: sizes || [],
-        colors: colors || [],
-        isBestItem: isBestItem || false,
+        images: Array.isArray(images) ? images : [], // 상품 대표 이미지들 저장
+        brand: typeof brand === 'string' && brand.trim().length > 0 ? brand.trim() : null,
+        options: parsedOptions.length > 0 ? parsedOptions : null,
         isActive: true,
         authorId: user.id, // 상품 등록자 ID 저장
       },
@@ -86,7 +134,6 @@ export async function POST(request: Request) {
 
     // 상품 등록 후 관련 캐시 무효화
     invalidateCache('products:.*');
-    invalidateCache('products:bestItem:true');
 
     return NextResponse.json(
       { 
@@ -126,13 +173,15 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const categorySlug = searchParams.get('category')
-    const isBestItem = searchParams.get('bestItem') === 'true'
+    const sortParam = (searchParams.get('sort') || 'recent').toLowerCase()
+    const limitParam = searchParams.get('limit')
+    const limit = limitParam ? Math.max(1, Math.min(parseInt(limitParam, 10) || 0, 100)) : (sortParam === 'likes' ? 10 : 100)
 
     // 캐시 키 생성
     const cacheKey = generateCacheKey(
       'products',
       categorySlug || 'all',
-      isBestItem ? 'bestItem' : 'all'
+      `sort:${sortParam}:limit:${limit}`
     )
 
     // 캐시와 함께 데이터 가져오기
@@ -150,10 +199,9 @@ export async function GET(request: Request) {
           whereClause.categoryId = category.id
         }
       }
-
-      if (isBestItem) {
-        whereClause.isBestItem = true
-      }
+      const orderBy = sortParam === 'likes'
+        ? [{ likeCount: 'desc' as const }, { createdAt: 'desc' as const }]
+        : [{ createdAt: 'desc' as const }]
 
       const products = await prisma.product.findMany({
         where: whereClause,
@@ -166,10 +214,8 @@ export async function GET(request: Request) {
             }
           },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: isBestItem ? 10 : 100 // bestItem은 최대 10개, 전체는 최대 100개로 제한
+        orderBy,
+        take: limit
       })
 
       return {

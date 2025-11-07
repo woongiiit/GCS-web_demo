@@ -20,14 +20,14 @@ export default function ShopPage() {
     setIsLoading(true)
     try {
       // Best Item 조회
-      const bestRes = await fetch('/api/shop/products?bestItem=true')
+      const bestRes = await fetch('/api/shop/products?sort=likes&limit=10', { cache: 'no-store' })
       const bestData = await bestRes.json()
       if (bestData.success) {
         setBestProducts(bestData.data)
       }
 
       // 카테고리별 상품 조회
-      const categoryRes = await fetch(`/api/shop/products?category=${activeTab}`)
+      const categoryRes = await fetch(`/api/shop/products?category=${encodeURIComponent(activeTab)}`, { cache: 'no-store' })
       const categoryData = await categoryRes.json()
       if (categoryData.success) {
         setCategoryProducts(categoryData.data)
@@ -138,6 +138,7 @@ export default function ShopPage() {
               {/* Best Item 타이틀 */}
               <div className="relative z-10 mb-6">
                 <h2 className="text-2xl font-bold text-black">Best Item</h2>
+                <p className="text-sm text-gray-600 mt-1">좋아요 수가 높은 상품 순으로 정리했어요.</p>
                 <div className="w-16 h-1 bg-black mt-1"></div>
               </div>
               
@@ -168,7 +169,15 @@ export default function ShopPage() {
                         </div>
                         <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
                         <p className="text-gray-500 text-xs line-clamp-1">{product.brand || 'GCS'}</p>
-                        <p className="text-black font-semibold text-sm mt-1">{product.price.toLocaleString()}원</p>
+                        <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
+                          <span className="text-black font-semibold text-sm">{product.price.toLocaleString()}원</span>
+                          <span className="flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
+                            </svg>
+                            <span>{product.likeCount ?? 0}</span>
+                          </span>
+                        </div>
                       </Link>
                     ))}
                   </div>
@@ -224,7 +233,15 @@ export default function ShopPage() {
                     <div className="p-3">
                       <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
                       <p className="text-gray-600 text-xs mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
-                      <p className="text-black font-bold text-base">{product.price.toLocaleString()}원</p>
+                      <div className="flex items-center justify-between text-xs text-gray-600">
+                        <span className="text-black font-bold text-base">{product.price.toLocaleString()}원</span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
+                          </svg>
+                          <span>{product.likeCount ?? 0}</span>
+                        </span>
+                      </div>
                     </div>
                   </Link>
                 ))}
