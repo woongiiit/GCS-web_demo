@@ -111,22 +111,27 @@ export async function POST(request: Request) {
       : []
 
     // 상품 생성
+    const productData: any = {
+      name,
+      description,
+      shortDescription: shortDescription || null,
+      price: parsedPrice,
+      originalPrice: parsedOriginalPrice,
+      discount: parsedDiscount,
+      stock: 0, // 재고 수량은 항상 0으로 설정
+      categoryId,
+      images: Array.isArray(images) ? images : [], // 상품 대표 이미지들 저장
+      brand: typeof brand === 'string' && brand.trim().length > 0 ? brand.trim() : null,
+      isActive: true,
+      authorId: user.id, // 상품 등록자 ID 저장
+    }
+
+    if (parsedOptions.length > 0) {
+      productData.options = parsedOptions
+    }
+
     const product = await prisma.product.create({
-      data: {
-        name,
-        description,
-        shortDescription: shortDescription || null,
-        price: parsedPrice,
-        originalPrice: parsedOriginalPrice,
-        discount: parsedDiscount,
-        stock: 0, // 재고 수량은 항상 0으로 설정
-        categoryId,
-        images: Array.isArray(images) ? images : [], // 상품 대표 이미지들 저장
-        brand: typeof brand === 'string' && brand.trim().length > 0 ? brand.trim() : null,
-        options: parsedOptions.length > 0 ? parsedOptions : null,
-        isActive: true,
-        authorId: user.id, // 상품 등록자 ID 저장
-      },
+      data: productData,
       include: {
         category: true,
       }
