@@ -95,6 +95,7 @@ export async function verifyEmailCode(
   success: boolean
   message: string
   remainingAttempts?: number
+  codeId?: string
 }> {
   const { consumeOnSuccess = true } = options
 
@@ -198,7 +199,8 @@ export async function verifyEmailCode(
 
     return {
       success: true,
-      message: '이메일 인증이 완료되었습니다.'
+      message: '이메일 인증이 완료되었습니다.',
+      codeId: verificationCode.id
     }
 
   } catch (error) {
@@ -208,6 +210,21 @@ export async function verifyEmailCode(
       error: error instanceof Error ? error.message : 'Unknown error'
     })
     throw new Error('인증번호 검증에 실패했습니다.')
+  }
+}
+
+export async function consumeVerificationCode(codeId: string): Promise<void> {
+  try {
+    await prisma.emailVerificationCode.update({
+      where: { id: codeId },
+      data: { used: true }
+    })
+  } catch (error) {
+    logger.error('Failed to consume verification code', {
+      codeId,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
+    throw new Error('인증번호 사용 처리에 실패했습니다.')
   }
 }
 

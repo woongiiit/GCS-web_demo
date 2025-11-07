@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyEmailCode } from '@/lib/email-verification'
+import { verifyEmailCode, consumeVerificationCode } from '@/lib/email-verification'
 import { updateUserPassword, resetUserPassword } from '@/lib/password-update'
 import { rateLimiters, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { validateRequest, createErrorResponse, createSuccessResponse } from '@/lib/security'
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. 인증번호 검증
-    const verificationResult = await verifyEmailCode(email, code)
+    const verificationResult = await verifyEmailCode(email, code, { consumeOnSuccess: false })
     
     if (!verificationResult.success) {
       logSecurityEvent('password_reset_verification_failed', 'Password reset verification code failed', {
@@ -147,6 +147,21 @@ export async function POST(request: NextRequest) {
       })
     }
     
+    // 인증번호 사용 처리
+    if (verificationResult.codeId) {
+      try {
+        await consumeVerificationCode(verificationResult.codeId)
+      } catch (error) {
+        logger.error('비밀번호 재설정 후 인증번호 사용 처리 실패', {
+          email,
+          codeId: verificationResult.codeId,
+          error,
+          ip: clientIP,
+          userAgent
+        })
+      }
+    }
+
     // 성공 로깅
     logSecurityEvent('password_reset_completed', 'Password reset completed successfully', {
       ip: clientIP,
