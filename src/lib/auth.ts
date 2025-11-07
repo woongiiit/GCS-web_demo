@@ -9,6 +9,7 @@ interface JWTPayload {
   userId: string
   email: string
   role: UserRole
+  isSeller?: boolean
 }
 
 /**
@@ -36,6 +37,7 @@ export async function getCurrentUser() {
         major: true,
         phone: true,
         role: true,
+        isSeller: true,
         verificationStatus: true,
         verificationImageUrl: true,
         verificationRequestedAt: true,

@@ -92,7 +92,8 @@ export async function POST(request: NextRequest) {
       { 
         userId: user.id, 
         email: user.email, 
-        role: user.role 
+        role: user.role,
+        isSeller: user.isSeller
       },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '24h' }
@@ -104,7 +105,8 @@ export async function POST(request: NextRequest) {
       userAgent,
       userId: user.id,
       email: user.email,
-      role: user.role
+      role: user.role,
+      isSeller: user.isSeller
     })
 
     logSecurityEvent('login_success', 'User logged in successfully', {
@@ -112,7 +114,8 @@ export async function POST(request: NextRequest) {
       userAgent,
       userId: user.id,
       email: user.email,
-      role: user.role
+      role: user.role,
+      isSeller: user.isSeller
     })
 
     // 응답 생성
@@ -125,7 +128,9 @@ export async function POST(request: NextRequest) {
         studentId: user.studentId,
         major: user.major,
         phone: user.phone,
-        role: user.role
+        role: user.role,
+        isSeller: user.isSeller,
+        verificationStatus: user.verificationStatus
       }
     })
 

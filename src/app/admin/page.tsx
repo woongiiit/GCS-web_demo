@@ -183,19 +183,26 @@ function UserManagement() {
   }
 
   const handleRoleChange = async (userId: string, newRole: string) => {
+    const targetUser = users.find(user => user.id === userId)
+    if (!targetUser) {
+      setMessage('사용자 정보를 찾을 수 없습니다.')
+      setMessageType('error')
+      return
+    }
+
     try {
       const response = await fetch('/api/admin/users/role', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId, role: newRole })
+        body: JSON.stringify({ userId, role: newRole, isSeller: !!targetUser.isSeller })
       })
 
       const data = await response.json()
       
       if (data.success) {
-        setMessage('사용자 역할이 성공적으로 변경되었습니다.')
+        setMessage(data.message || '사용자 역할이 성공적으로 변경되었습니다.')
         setMessageType('success')
         fetchUsers() // 목록 새로고침
       } else {
@@ -209,11 +216,44 @@ function UserManagement() {
     }
   }
 
+  const handleSellerToggle = async (userId: string, newValue: boolean) => {
+    const targetUser = users.find(user => user.id === userId)
+    if (!targetUser) {
+      setMessage('사용자 정보를 찾을 수 없습니다.')
+      setMessageType('error')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/users/role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, role: targetUser.role, isSeller: newValue })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage(newValue ? '판매자 권한이 활성화되었습니다.' : '판매자 권한이 해제되었습니다.')
+        setMessageType('success')
+        fetchUsers()
+      } else {
+        setMessage(data.error || '판매자 권한 변경 중 오류가 발생했습니다.')
+        setMessageType('error')
+      }
+    } catch (error) {
+      console.error('판매자 권한 변경 오류:', error)
+      setMessage('서버 오류가 발생했습니다.')
+      setMessageType('error')
+    }
+  }
+
   const getRoleLabel = (role: string, verificationStatus?: string) => {
     switch (role) {
       case 'ADMIN': return '관리자'
       case 'MAJOR': return '전공회원'
-      case 'SELLER': return '판매자'
       case 'GENERAL': 
         return verificationStatus === 'REQUESTED' ? '일반회원 (인증 대기 중)' : '일반회원'
       default: return '비회원'
@@ -224,7 +264,6 @@ function UserManagement() {
     switch (role) {
       case 'ADMIN': return 'bg-red-100 text-red-800'
       case 'MAJOR': return 'bg-purple-100 text-purple-800'
-      case 'SELLER': return 'bg-green-100 text-green-800'
       case 'GENERAL': return 'bg-blue-100 text-blue-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -266,7 +305,7 @@ function UserManagement() {
               <option value="ALL">모든 역할</option>
               <option value="ADMIN">관리자</option>
               <option value="MAJOR">전공회원</option>
-              <option value="SELLER">판매자</option>
+              <option value="SELLER">판매자 권한</option>
               <option value="GENERAL">일반회원</option>
             </select>
           </div>
@@ -290,6 +329,9 @@ function UserManagement() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     역할
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    판매자 권한
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     인증 상태
@@ -318,9 +360,34 @@ function UserManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                        {getRoleLabel(user.role, user.verificationStatus)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                          {getRoleLabel(user.role, user.verificationStatus)}
+                        </span>
+                        {user.isSeller && (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            판매자 권한
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <button
+                          type="button"
+                          onClick={() => handleSellerToggle(user.id, !user.isSeller)}
+                          className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black ${user.isSeller ? 'bg-green-500' : 'bg-gray-300'}`}
+                          aria-pressed={user.isSeller}
+                        >
+                          <span className="sr-only">판매자 권한 토글</span>
+                          <span
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${user.isSeller ? 'translate-x-6' : 'translate-x-1'}`}
+                          ></span>
+                        </button>
+                        <span className={`font-medium ${user.isSeller ? 'text-green-600' : 'text-gray-500'}`}>
+                          {user.isSeller ? '활성화됨' : '비활성화'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -346,7 +413,6 @@ function UserManagement() {
                         >
                           <option value="GENERAL">일반회원</option>
                           <option value="MAJOR">전공회원</option>
-                          <option value="SELLER">판매자</option>
                           <option value="ADMIN">관리자</option>
                         </select>
                       </div>

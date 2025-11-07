@@ -31,7 +31,14 @@ export async function GET(request: NextRequest) {
         studentId: true,
         major: true,
         phone: true,
-        role: true
+        role: true,
+        isSeller: true,
+        verificationStatus: true,
+        verificationImageUrl: true,
+        verificationRequestedAt: true,
+        verificationApprovedAt: true,
+        verificationRejectedAt: true,
+        verificationNote: true,
       }
     })
 

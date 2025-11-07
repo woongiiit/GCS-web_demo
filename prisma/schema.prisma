@@ -21,6 +21,7 @@ model User {
   major       String?
   phone       String
   role        UserRole @default(GENERAL)
+  isSeller    Boolean  @default(false)
   participatedProjectIds String[] // 참여한 프로젝트의 ID 배열
   
   // 학생 인증 관련 필드
@@ -47,6 +48,7 @@ model User {
   newsLikes   NewsLike[]
 
   @@index([role])
+  @@index([isSeller])
   @@index([verificationStatus, createdAt])
   @@map("users")
 }
@@ -452,8 +454,7 @@ model AdminContentItem {
 // Enums
 enum UserRole {
   GENERAL   // 일반회원 (상품 구매만 가능)
-  MAJOR     // 전공회원 (상품 구매 + 글쓰기 가능)
-  SELLER    // 판매자 (상품 등록 및 판매 가능)
+  MAJOR     // 전공회원 (상품 구매 + 글쓰기 가능)  
   ADMIN     // 운영자 (모든 권한)
 }
 

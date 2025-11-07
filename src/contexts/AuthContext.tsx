@@ -11,6 +11,7 @@ interface User {
   major: string
   phone: string
   role: UserRole
+  isSeller: boolean
   verificationStatus?: VerificationStatus
   verificationImageUrl?: string
   verificationRequestedAt?: string
@@ -100,7 +101,7 @@ export function usePermissions() {
     isGuest: !user,
     isGeneral: user?.role === 'GENERAL',
     isMajor: user?.role === 'MAJOR',
-    isSeller: user?.role === 'SELLER',
+    isSeller: !!user?.isSeller,
     isAdmin: user?.role === 'ADMIN',
     isVerified: user?.verificationStatus === 'APPROVED',
     isVerificationPending: user?.verificationStatus === 'PENDING',

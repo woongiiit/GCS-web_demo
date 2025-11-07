@@ -13,18 +13,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { userId, role } = await request.json()
+    const { userId, role, isSeller } = await request.json()
 
     // 입력값 검증
-    if (!userId || !role) {
+    if (!userId || !role || typeof isSeller === 'undefined') {
       return NextResponse.json(
-        { error: '사용자 ID와 역할을 입력해주세요.' },
+        { error: '사용자 ID, 역할, 판매자 권한을 모두 전달해주세요.' },
         { status: 400 }
       )
     }
 
     // 유효한 역할인지 확인
-    const validRoles = ['GENERAL', 'MAJOR', 'SELLER', 'ADMIN']
+    const validRoles = ['GENERAL', 'MAJOR', 'ADMIN']
     if (!validRoles.includes(role)) {
       return NextResponse.json(
         { error: '유효하지 않은 역할입니다.' },
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       where: { id: userId },
       data: { 
         role,
+        isSeller,
         // 역할이 MAJOR로 변경되면 인증 상태를 APPROVED로 설정
         ...(role === 'MAJOR' && { 
           verificationStatus: 'APPROVED',
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
         name: true,
         email: true,
         role: true,
+        isSeller: true,
         verificationStatus: true
       }
     })

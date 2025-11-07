@@ -9,7 +9,7 @@ import RichTextEditor from '@/components/TinyMCEEditor'
 
 export default function ShopAddPage() {
   const router = useRouter()
-  const { role } = usePermissions()
+  const { role, isSeller } = usePermissions()
   const [categories, setCategories] = useState<any[]>([])
   const [formData, setFormData] = useState({
     name: '',
@@ -38,10 +38,10 @@ export default function ShopAddPage() {
 
   // 상품 등록 권한이 없는 경우 접근 차단
   useEffect(() => {
-    if (!permissions.canAddProduct(role)) {
+    if (!permissions.canAddProduct(role, isSeller)) {
       router.push('/shop')
     }
-  }, [role, router])
+  }, [role, isSeller, router])
 
   // 카테고리 목록 불러오기
   useEffect(() => {
@@ -198,7 +198,7 @@ export default function ShopAddPage() {
     }
   }
 
-  if (!permissions.canAddProduct(role)) {
+  if (!permissions.canAddProduct(role, isSeller)) {
     return null
   }
 

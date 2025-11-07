@@ -6,9 +6,10 @@
  * - 일반회원 (GENERAL): 상품 구매만 가능
  * - 전공회원 (MAJOR): 상품 구매 + Community 글쓰기 가능 (Board, Lounge만)
  * - 운영자 (ADMIN): 모든 권한
+ * - 판매자 권한 (isSeller): 선택적으로 부여되는 상품 등록 권한
  */
 
-export type UserRole = 'GENERAL' | 'MAJOR' | 'SELLER' | 'ADMIN';
+export type UserRole = 'GENERAL' | 'MAJOR' | 'ADMIN';
 export type VerificationStatus = 'PENDING' | 'REQUESTED' | 'APPROVED' | 'REJECTED';
 
 export const permissions = {
@@ -98,8 +99,9 @@ export const permissions = {
    * @param role - 사용자 역할
    * @returns 상품 등록 가능 여부
    */
-  canAddProduct: (role?: UserRole): boolean => {
-    return role === 'ADMIN' || role === 'SELLER';
+  canAddProduct: (role?: UserRole, isSeller?: boolean): boolean => {
+    if (role === 'ADMIN') return true;
+    return !!isSeller;
   },
 
   /**
@@ -189,9 +191,10 @@ export const permissions = {
 export const roleDescriptions: Record<UserRole, string> = {
   GENERAL: '일반회원 - 상품 구매만 가능',
   MAJOR: '전공회원 - 상품 구매 및 Community 글쓰기 가능 (Board, Lounge만)',
-  SELLER: '판매자 - 상품 등록 및 판매 가능',
   ADMIN: '운영자 - 모든 권한 보유'
 };
+
+export const sellerDescription = '판매자 권한 - 상품 등록 및 판매 가능';
 
 /**
  * 인증 상태별 설명

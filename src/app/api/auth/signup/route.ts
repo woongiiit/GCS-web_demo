@@ -134,7 +134,8 @@ export async function POST(request: NextRequest) {
       { 
         userId: user.id, 
         email: user.email, 
-        role: user.role 
+        role: user.role,
+        isSeller: user.isSeller
       },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '24h' }
@@ -153,6 +154,7 @@ export async function POST(request: NextRequest) {
           major: user.major,
           phone: user.phone,
           role: user.role,
+          isSeller: user.isSeller,
           verificationStatus: user.verificationStatus
         }
       },

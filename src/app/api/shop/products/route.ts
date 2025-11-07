@@ -12,8 +12,8 @@ export async function POST(request: Request) {
     // 인증 확인 및 사용자 정보 가져오기
     const user = await requireAuth()
 
-    // 상품 등록 권한 확인 (ADMIN, SELLER만 가능)
-    if (!permissions.canAddProduct(user.role as any)) {
+    // 상품 등록 권한 확인 (관리자 또는 판매자 권한 보유자만 가능)
+    if (!permissions.canAddProduct(user.role as any, user.isSeller)) {
       return NextResponse.json(
         { error: permissionErrors.adminOnly },
         { status: 403 }

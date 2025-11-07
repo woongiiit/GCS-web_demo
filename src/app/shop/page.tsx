@@ -6,7 +6,7 @@ import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 
 export default function ShopPage() {
-  const { role } = usePermissions()
+  const { role, isSeller } = usePermissions()
   const [activeTab, setActiveTab] = useState<'apparel' | 'stationary' | 'bag' | 'life' | 'accessory'>('apparel')
   const [bestProducts, setBestProducts] = useState<any[]>([])
   const [categoryProducts, setCategoryProducts] = useState<any[]>([])
@@ -109,7 +109,7 @@ export default function ShopPage() {
               </div>
               
               {/* 상품 등록 버튼 (관리자, 판매자) */}
-              {permissions.canAddProduct(role) && (
+              {permissions.canAddProduct(role, isSeller) && (
                 <Link 
                   href="/shop/add"
                   className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium whitespace-nowrap ml-4"

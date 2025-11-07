@@ -37,7 +37,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (role !== 'ALL') {
-      where.role = role
+      if (role === 'SELLER') {
+        where.isSeller = true
+      } else {
+        where.role = role
+      }
     }
 
     // 사용자 목록 조회
@@ -52,6 +56,7 @@ export async function GET(request: NextRequest) {
           major: true,
           phone: true,
           role: true,
+          isSeller: true,
           verificationStatus: true,
           verificationImageUrl: true,
           verificationRequestedAt: true,
