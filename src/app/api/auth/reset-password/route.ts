@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyEmailCode } from '@/lib/email-verification'
-import { updateUserPassword } from '@/lib/password-update'
+import { updateUserPassword, resetUserPassword } from '@/lib/password-update'
 import { rateLimiters, checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { validateRequest, createErrorResponse, createSuccessResponse } from '@/lib/security'
 import { logger, logSecurityEvent } from '@/lib/logger'
+import { validatePasswordResetToken } from '@/lib/token-validation'
 
 export async function POST(request: NextRequest) {
   const clientIP = getClientIP(request)
@@ -34,9 +35,62 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const { email, code, password } = await request.json()
+    const { email, code, password, token } = await request.json()
 
-    if (!email || !code || !password) {
+    if (!password) {
+      return createErrorResponse('비밀번호를 입력해주세요.')
+    }
+
+    // 토큰 기반 비밀번호 재설정 처리
+    if (token) {
+      const tokenValidation = await validatePasswordResetToken(token)
+
+      if (!tokenValidation.isValid || !tokenValidation.user) {
+        logSecurityEvent('password_reset_token_invalid', 'Invalid password reset token provided', {
+          ip: clientIP,
+          userAgent,
+          error: tokenValidation.error
+        })
+
+        return createErrorResponse(tokenValidation.error || '유효하지 않은 토큰입니다.')
+      }
+
+      const result = await resetUserPassword(token, password)
+
+      if (!result.success) {
+        logSecurityEvent('password_reset_failed', 'Password reset failed', {
+          ip: clientIP,
+          userAgent,
+          userId: tokenValidation.user.id,
+          email: tokenValidation.user.email,
+          error: result.error
+        })
+
+        return createErrorResponse(result.error || '비밀번호 재설정에 실패했습니다.', 400, {
+          ...(result.validationResult ? { 'X-Validation-Result': JSON.stringify(result.validationResult) } : {})
+        })
+      }
+
+      logSecurityEvent('password_reset_completed', 'Password reset completed successfully', {
+        ip: clientIP,
+        userAgent,
+        userId: tokenValidation.user.id,
+        email: tokenValidation.user.email
+      })
+
+      logger.info('비밀번호 재설정 완료', {
+        userId: tokenValidation.user.id,
+        email: tokenValidation.user.email,
+        ip: clientIP
+      })
+
+      return createSuccessResponse({
+        message: '비밀번호가 성공적으로 재설정되었습니다.',
+        validationResult: result.validationResult
+      })
+    }
+
+    if (!email || !code) {
       return createErrorResponse('이메일, 인증번호, 비밀번호가 모두 필요합니다.')
     }
 
