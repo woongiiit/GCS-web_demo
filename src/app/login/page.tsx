@@ -151,8 +151,12 @@ export default function LoginPage() {
 
                 {/* 링크들 */}
                 <div className="text-right pt-4 space-y-2">
-                  <div>
-                    <Link href="/forgot-password" className="text-black text-sm underline hover:text-gray-600">
+                  <div className="flex justify-end gap-4 text-sm">
+                    <Link href="/forgot-id" className="text-black underline hover:text-gray-600">
+                      Forgot ID?
+                    </Link>
+                    <span className="text-gray-300">|</span>
+                    <Link href="/forgot-password" className="text-black underline hover:text-gray-600">
                       Forgot password?
                     </Link>
                   </div>
