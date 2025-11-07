@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       const tokenValidation = await validatePasswordResetToken(token)
 
       if (!tokenValidation.isValid || !tokenValidation.user) {
-        logSecurityEvent('password_reset_token_invalid', 'Invalid password reset token provided', {
+        logSecurityEvent('invalid_token_attempt', 'Invalid password reset token provided', {
           ip: clientIP,
           userAgent,
           error: tokenValidation.error
