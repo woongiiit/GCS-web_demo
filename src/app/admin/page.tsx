@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -8,7 +8,7 @@ import Link from 'next/link'
 export default function AdminPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'users' | 'content'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'content' | 'profile' | 'cart' | 'archive'>('users')
 
   // 로그인하지 않은 경우 또는 관리자가 아닌 경우 리다이렉트
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function AdminPage() {
         {/* 탭 메뉴 - 흰색 배경 영역 */}
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            <div className="flex justify-center space-x-8 py-4">
+            <div className="flex flex-wrap justify-center gap-6 py-4">
               <button
                 onClick={() => setActiveTab('users')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
@@ -80,6 +80,36 @@ export default function AdminPage() {
               >
                 콘텐츠 관리
               </button>
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`pb-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'profile'
+                    ? 'text-black border-black'
+                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                }`}
+              >
+                개인정보수정
+              </button>
+              <button
+                onClick={() => setActiveTab('cart')}
+                className={`pb-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'cart'
+                    ? 'text-black border-black'
+                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                }`}
+              >
+                장바구니
+              </button>
+              <button
+                onClick={() => setActiveTab('archive')}
+                className={`pb-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'archive'
+                    ? 'text-black border-black'
+                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                }`}
+              >
+                내 아카이브
+              </button>
             </div>
           </div>
         </div>
@@ -88,9 +118,8 @@ export default function AdminPage() {
         <div className="bg-white min-h-screen">
           <div className="max-w-6xl mx-auto px-4 py-6 sm:px-0">
             <div className="bg-white px-4 py-8">
-              {activeTab === 'users' ? (
-                <UserManagement />
-              ) : (
+              {activeTab === 'users' && <UserManagement />}
+              {activeTab === 'content' && (
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-black mb-6">콘텐츠 관리</h2>
                   <p className="text-gray-600 mb-6">About 페이지의 각 섹션 콘텐츠를 관리합니다.</p>
@@ -102,6 +131,9 @@ export default function AdminPage() {
                   </Link>
                 </div>
               )}
+              {activeTab === 'profile' && <AdminProfileTab user={user} />}
+              {activeTab === 'cart' && <AdminCartTab />}
+              {activeTab === 'archive' && <AdminArchiveTab user={user} />}
             </div>
           </div>
         </div>
@@ -133,6 +165,364 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AdminProfileTab({ user }: { user: any }) {
+  const [formData, setFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage('비밀번호가 성공적으로 변경되었습니다.')
+        setMessageType('success')
+        setFormData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        })
+      } else {
+        setMessage(data.error || '비밀번호 변경 중 오류가 발생했습니다.')
+        setMessageType('error')
+      }
+    } catch (error) {
+      console.error('비밀번호 변경 오류:', error)
+      setMessage('서버 오류가 발생했습니다. 다시 시도해주세요.')
+      setMessageType('error')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-black mb-6">개인정보</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <InfoField label="이름" value={user.name} />
+        <InfoField label="학번" value={user.studentId || '-'} />
+        <InfoField label="주전공" value={user.major || '-'} />
+        <InfoField label="전화번호" value={user.phone || '-'} />
+        <InfoField label="이메일" value={user.email} />
+        <InfoField
+          label="역할"
+          value={`관리자${user.isSeller ? ' / 판매자 권한' : ''}`}
+        />
+      </div>
+
+      <div>
+        <h3 className="text-xl font-bold text-black mb-6">비밀번호 변경</h3>
+
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            messageType === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-700'
+              : 'bg-red-50 border border-red-200 text-red-700'
+          }`}>
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <PasswordInput
+            id="currentPassword"
+            name="currentPassword"
+            label="현재 비밀번호"
+            value={formData.currentPassword}
+            onChange={handleChange}
+          />
+          <PasswordInput
+            id="newPassword"
+            name="newPassword"
+            label="새 비밀번호"
+            value={formData.newPassword}
+            onChange={handleChange}
+          />
+          <PasswordInput
+            id="confirmPassword"
+            name="confirmPassword"
+            label="새 비밀번호 확인"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+          />
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full py-4 px-6 rounded-lg font-medium text-white transition-colors ${
+              isSubmitting
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2'
+            }`}
+          >
+            {isSubmitting ? '변경 중...' : '비밀번호 변경'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function InfoField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
+        {value}
+      </div>
+    </div>
+  )
+}
+
+function PasswordInput({
+  id,
+  name,
+  label,
+  value,
+  onChange
+}: {
+  id: string
+  name: string
+  label: string
+  value: string
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
+        {label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        type="password"
+        required
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+        value={value}
+        onChange={onChange}
+      />
+    </div>
+  )
+}
+
+function AdminCartTab() {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-black mb-6">장바구니</h2>
+      <div className="text-center py-12">
+        <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">장바구니가 비어있습니다</h3>
+        <p className="text-gray-500 mb-6">원하는 상품을 장바구니에 담아보세요.</p>
+        <Link
+          href="/shop"
+          className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          쇼핑하러 가기
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function AdminArchiveTab({ user }: { user: any }) {
+  const [myProjects, setMyProjects] = useState<any[]>([])
+  const [myProducts, setMyProducts] = useState<any[]>([])
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true)
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+
+  useEffect(() => {
+    fetchMyProjects()
+    fetchMyProducts()
+  }, [])
+
+  const fetchMyProjects = async () => {
+    try {
+      setIsLoadingProjects(true)
+      const response = await fetch('/api/mypage/projects')
+      const data = await response.json()
+
+      if (data.success) {
+        setMyProjects(data.data)
+      }
+    } catch (error) {
+      console.error('내 프로젝트 조회 오류:', error)
+    } finally {
+      setIsLoadingProjects(false)
+    }
+  }
+
+  const fetchMyProducts = async () => {
+    try {
+      setIsLoadingProducts(true)
+      const response = await fetch('/api/mypage/products')
+      const data = await response.json()
+
+      if (data.success) {
+        setMyProducts(data.data)
+      }
+    } catch (error) {
+      console.error('내 상품 조회 오류:', error)
+    } finally {
+      setIsLoadingProducts(false)
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-black mb-6">내 아카이브</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="border-r-0 md:border-r-2 border-gray-200 pr-0 md:pr-6">
+          <h3 className="text-xl font-bold text-black mb-4">내 프로젝트</h3>
+
+          {isLoadingProjects ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+            </div>
+          ) : myProjects.length > 0 ? (
+            <div className="space-y-4">
+              {myProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/archive/projects/${project.id}`}
+                  className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-4">
+                    {project.images && project.images[0] && (
+                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                        <img
+                          src={project.images[0]}
+                          alt={project.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            if (e.currentTarget.parentElement) {
+                              e.currentTarget.parentElement.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-[#f57520] text-white text-sm font-bold">GCS</span>'
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 mb-1 truncate">{project.title}</h4>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{project.description}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span>{project.year}년</span>
+                        {project.teamMembers && project.teamMembers.length > 0 && (
+                          <span>{project.teamMembers.length}명 참여</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>참여한 프로젝트가 없습니다.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="pl-0 md:pl-6">
+          <h3 className="text-xl font-bold text-black mb-4">내 상품</h3>
+
+          {isLoadingProducts ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+            </div>
+          ) : myProducts.length > 0 ? (
+            <div className="space-y-4">
+              {myProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/shop/${product.id}`}
+                  className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-4">
+                    {product.images && product.images[0] && (
+                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            if (e.currentTarget.parentElement) {
+                              e.currentTarget.parentElement.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-gray-300 text-gray-600 text-xs">No Image</span>'
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h4>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="font-semibold text-black">{product.price.toLocaleString()}원</span>
+                        {product.category && (
+                          <span>{product.category.name}</span>
+                        )}
+                        {!product.isActive && (
+                          <span className="text-red-500">판매 중단</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>등록한 상품이 없습니다.</p>
+              {user?.role === 'ADMIN' && (
+                <Link
+                  href="/shop/add"
+                  className="inline-block mt-4 text-sm text-black underline hover:text-gray-600"
+                >
+                  상품 등록하러 가기
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
