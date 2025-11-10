@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -40,7 +40,7 @@ interface CartItem {
   product: CartProductInfo
 }
 
-export default function MyPage() {
+function MyPageContent() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1244,5 +1244,24 @@ function MyArchiveTab({ user }: { user: any }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function MyPageSuspenseFallback() {
+  return (
+    <div className="fixed inset-0 bg-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+        <p className="text-gray-600">로딩 중...</p>
+      </div>
+    </div>
+  )
+}
+
+export default function MyPage() {
+  return (
+    <Suspense fallback={<MyPageSuspenseFallback />}>
+      <MyPageContent />
+    </Suspense>
   )
 }

@@ -171,7 +171,14 @@ export async function POST(request: Request) {
         phone,
         notes: notes || null,
         orderItems: {
-          create: orderItems
+          create: orderItems.map((item) => ({
+            product: {
+              connect: { id: item.productId }
+            },
+            quantity: item.quantity,
+            price: item.price,
+            selectedOptions: item.selectedOptions ?? undefined
+          }))
         }
       },
       include: {
