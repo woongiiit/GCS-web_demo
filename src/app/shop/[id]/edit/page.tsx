@@ -147,7 +147,7 @@ export default function ProductEditPage() {
           setCustomOptions(
             fetchedProduct.options.map((option: any) => {
               const normalizedValues = Array.isArray(option.values)
-                ? option.values
+                ? (option.values as any[])
                     .map((value: any) => {
                       if (typeof value === 'string') {
                         const label = value.trim()

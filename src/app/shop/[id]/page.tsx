@@ -675,6 +675,9 @@ function normalizeProductOptions(product: any): NormalizedProductOption[] {
         values: normalizedValues
       }
     })
-    .filter((option): option is NormalizedProductOption => option !== null)
+    .filter(
+      (option: NormalizedProductOption | null): option is NormalizedProductOption =>
+        option !== null
+    )
 }
 
