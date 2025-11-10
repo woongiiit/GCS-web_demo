@@ -1,10 +1,27 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
+
+type RawProductOptionValue = string | { label?: string; priceAdjustment?: number | string }
+
+type RawProductOption = {
+  name?: string
+  values?: RawProductOptionValue[]
+}
+
+type NormalizedOptionValue = {
+  label: string
+  priceAdjustment: number
+}
+
+type NormalizedProductOption = {
+  name: string
+  values: NormalizedOptionValue[]
+}
 
 export default function ProductDetailPage() {
   const params = useParams()
@@ -14,6 +31,7 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (productId) {
@@ -38,6 +56,74 @@ export default function ProductDetailPage() {
     }
   }
 
+  const canEditProduct =
+    !!user &&
+    !!product &&
+    permissions.canEditProduct(user.role, user.isSeller, product.authorId, user.id)
+
+  const productOptions = useMemo(() => normalizeProductOptions(product), [product])
+
+  useEffect(() => {
+    if (productOptions.length === 0) {
+      setSelectedOptions({})
+      return
+    }
+
+    const initialSelections: Record<string, string> = {}
+    productOptions.forEach((option, index) => {
+      const key = getOptionKey(option, index)
+      initialSelections[key] = ''
+    })
+
+    setSelectedOptions(initialSelections)
+  }, [productOptions])
+
+  const handleOptionChange = (option: NormalizedProductOption, optionIndex: number, value: string) => {
+    const key = getOptionKey(option, optionIndex)
+    setSelectedOptions(prev => ({
+      ...prev,
+      [key]: value
+    }))
+  }
+
+  const isAllOptionsSelected = productOptions.every((option, index) => {
+    const key = getOptionKey(option, index)
+    return selectedOptions[key] && selectedOptions[key].length > 0
+  })
+
+  const selectedOptionDetails = useMemo(() => {
+    if (!isAllOptionsSelected) return []
+
+    return productOptions
+      .map((option, index) => {
+        const key = getOptionKey(option, index)
+        const selectedLabel = selectedOptions[key]
+        if (!selectedLabel) return null
+
+        const matchedValue = option.values.find((value) => value.label === selectedLabel)
+        if (!matchedValue) return null
+
+        return {
+          name: option.name,
+          label: matchedValue.label,
+          priceAdjustment: matchedValue.priceAdjustment
+        }
+      })
+      .filter(
+        (value): value is { name: string; label: string; priceAdjustment: number } =>
+          value !== null
+      )
+  }, [isAllOptionsSelected, productOptions, selectedOptions])
+
+  const basePrice = typeof product?.price === 'number' ? product.price : 0
+  const totalAdjustment = selectedOptionDetails.reduce(
+    (sum, option) => sum + option.priceAdjustment,
+    0
+  )
+  const finalPrice = basePrice + totalAdjustment
+  const showSummary =
+    isAllOptionsSelected && selectedOptionDetails.length === productOptions.length
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center pt-32">
@@ -48,11 +134,6 @@ export default function ProductDetailPage() {
       </div>
     )
   }
-
-  const canEditProduct =
-    !!user &&
-    !!product &&
-    permissions.canEditProduct(user.role, user.isSeller, product.authorId, user.id)
 
   if (!product) {
     return (
@@ -243,37 +324,72 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {Array.isArray(product.options) && product.options.length > 0 && (
+            {productOptions.length > 0 && (
               <div className="mb-8 space-y-4">
-                <h3 className="text-base font-semibold text-black">상품 옵션</h3>
-                {product.options.map((option: any, index: number) => (
-                  <div key={`${option.name ?? 'option'}-${index}`}>
-                    <p className="text-sm font-medium text-gray-700">{option.name}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {Array.isArray(option.values) && option.values.length > 0 ? (
-                        option.values.map((value: string, valueIndex: number) => (
-                          <span
-                            key={`${option.name ?? 'option'}-${index}-value-${valueIndex}`}
-                            className="px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-700"
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-black">상품 옵션</h3>
+                  {!isAllOptionsSelected && (
+                    <span className="text-xs text-red-500">모든 옵션을 선택해주세요.</span>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {productOptions.map((option, index) => {
+                    const key = getOptionKey(option, index)
+                    const optionValues = option.values
+                    const selectedValue = selectedOptions[key] ?? ''
+
+                    return (
+                      <div key={key}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {option.name}
+                        </label>
+                        <select
+                          value={selectedValue}
+                          onChange={(e) => handleOptionChange(option, index, e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors bg-white"
                           >
-                            {value}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs text-gray-500">등록된 선택지가 없습니다.</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                          <option value="" disabled>
+                            선택하세요
+                          </option>
+                          {optionValues.map((value) => (
+                            <option key={`${key}-${value.label}`} value={value.label}>
+                              {value.label}
+                              {value.priceAdjustment !== 0 ? ` (${formatPriceAdjustment(value.priceAdjustment)})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )
+                  })}
+                </div>
+                {productOptions.some(option => option.values.some(value => value.priceAdjustment !== 0)) && (
+                  <p className="text-xs text-gray-500">
+                    * 옵션에 따라 표시된 가격 변동이 기본 판매가에 추가 또는 차감됩니다.
+                  </p>
+                )}
               </div>
             )}
 
             {/* 버튼 그룹 */}
             <div className="flex gap-3 mb-4">
-              <button className="flex-1 bg-black text-white py-3 px-6 rounded hover:bg-gray-800 transition-colors">
+              <button
+                className={`flex-1 py-3 px-6 rounded transition-colors ${
+                  isAllOptionsSelected
+                    ? 'bg-black text-white hover:bg-gray-800'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+                disabled={!isAllOptionsSelected}
+              >
                 (Buy)
               </button>
-              <button className="flex-1 border border-black text-black py-3 px-6 rounded hover:bg-gray-50 transition-colors">
+              <button
+                className={`flex-1 border py-3 px-6 rounded transition-colors ${
+                  isAllOptionsSelected
+                    ? 'border-black text-black hover:bg-gray-50'
+                    : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                }`}
+                disabled={!isAllOptionsSelected}
+              >
                 (Add to cart)
               </button>
               <button className="border border-black text-black p-3 rounded hover:bg-gray-50 transition-colors">
@@ -282,6 +398,43 @@ export default function ProductDetailPage() {
                 </svg>
               </button>
             </div>
+            {showSummary && (
+              <div className="mb-8 rounded-lg border border-gray-200 bg-white p-4 space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2">선택한 옵션</h4>
+                  <div className="space-y-2">
+                    {selectedOptionDetails.map((option) => (
+                      <div key={option.name} className="flex items-center justify-between text-sm text-gray-700">
+                        <span>
+                          {option.name} :{' '}
+                          <span className="font-medium text-black">{option.label}</span>
+                        </span>
+                        {option.priceAdjustment !== 0 && (
+                          <span className="text-gray-500">{formatPriceAdjustment(option.priceAdjustment)}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="border-t border-gray-100 pt-3 space-y-2 text-sm text-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span>상품 기본가</span>
+                    <span className="font-medium text-black">{formatCurrency(basePrice)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>옵션 변동가</span>
+                    <span className={totalAdjustment >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                      {totalAdjustment >= 0 ? '+' : '-'}
+                      {formatCurrency(Math.abs(totalAdjustment))}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <span className="text-base font-semibold text-gray-900">최종 결제 금액</span>
+                    <span className="text-base font-bold text-black">{formatCurrency(finalPrice)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
             {canEditProduct && (
               <div className="mb-6">
                 <Link
@@ -452,5 +605,76 @@ export default function ProductDetailPage() {
       </div>
     </div>
   )
+}
+
+function formatPriceAdjustment(price: number) {
+  if (!price) return ''
+  const absValue = Math.abs(price).toLocaleString()
+  if (price > 0) {
+    return `+${absValue}원`
+  }
+  return `-${absValue}원`
+}
+
+function getOptionKey(option: { name?: string }, index: number) {
+  return `${option.name ?? 'option'}-${index}`
+}
+
+function formatCurrency(price: number) {
+  return `${price.toLocaleString()}원`
+}
+
+function normalizeProductOptions(product: any): NormalizedProductOption[] {
+  if (!product || !Array.isArray(product.options)) {
+    return []
+  }
+
+  return product.options
+    .map((option: RawProductOption) => {
+      if (!option || typeof option !== 'object') return null
+      const optionName = typeof option.name === 'string' ? option.name.trim() : ''
+      if (!optionName) return null
+
+      const rawValues = Array.isArray(option.values) ? option.values : []
+      const normalizedValues = rawValues
+        .map((value) => {
+          if (typeof value === 'string') {
+            const label = value.trim()
+            if (!label) return null
+            return { label, priceAdjustment: 0 }
+          }
+
+          if (!value || typeof value !== 'object') return null
+
+          const label = typeof value.label === 'string' ? value.label.trim() : ''
+          if (!label) return null
+
+          const rawPrice = (value as { priceAdjustment?: number | string }).priceAdjustment
+          let priceAdjustment = 0
+
+          if (typeof rawPrice === 'number') {
+            priceAdjustment = rawPrice
+          } else if (typeof rawPrice === 'string') {
+            const cleaned = rawPrice.trim().replace(/,/g, '')
+            if (cleaned) {
+              const parsedPrice = Number(cleaned)
+              if (!Number.isNaN(parsedPrice)) {
+                priceAdjustment = parsedPrice
+              }
+            }
+          }
+
+          return { label, priceAdjustment }
+        })
+        .filter((value): value is NormalizedOptionValue => value !== null)
+
+      if (normalizedValues.length === 0) return null
+
+      return {
+        name: optionName,
+        values: normalizedValues
+      }
+    })
+    .filter((option): option is NormalizedProductOption => option !== null)
 }
 

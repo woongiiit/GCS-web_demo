@@ -7,10 +7,16 @@ import { permissions } from '@/lib/permissions'
 import Link from 'next/link'
 import RichTextEditor from '@/components/TinyMCEEditor'
 
+type ProductOptionValueInput = {
+  id: string
+  label: string
+  priceAdjustment: string
+}
+
 type ProductOptionInput = {
   id: string
   name: string
-  values: string[]
+  values: ProductOptionValueInput[]
 }
 
 export default function ShopAddPage() {
@@ -140,7 +146,15 @@ export default function ShopAddPage() {
   const addOption = () => {
     setCustomOptions(prev => ([
       ...prev,
-      { id: createOptionId(), name: '', values: [''] }
+      {
+        id: createOptionId(),
+        name: '',
+        values: [{
+          id: createOptionId(),
+          label: '',
+          priceAdjustment: ''
+        }]
+      }
     ]))
   }
 
@@ -158,11 +172,16 @@ export default function ShopAddPage() {
     }))
   }
 
-  const updateOptionValue = (optionId: string, valueIndex: number, value: string) => {
+  const updateOptionValue = (optionId: string, valueIndex: number, field: 'label' | 'priceAdjustment', value: string) => {
     setCustomOptions(prev => prev.map(option => {
       if (option.id !== optionId) return option
-      const newValues = [...option.values]
-      newValues[valueIndex] = value
+      const newValues = option.values.map((optionValue, index) => {
+        if (index !== valueIndex) return optionValue
+        return {
+          ...optionValue,
+          [field]: value
+        }
+      })
       return {
         ...option,
         values: newValues
@@ -175,7 +194,14 @@ export default function ShopAddPage() {
       if (option.id !== optionId) return option
       return {
         ...option,
-        values: [...option.values, '']
+        values: [
+          ...option.values,
+          {
+            id: createOptionId(),
+            label: '',
+            priceAdjustment: ''
+          }
+        ]
       }
     }))
   }
@@ -186,7 +212,11 @@ export default function ShopAddPage() {
       const newValues = option.values.filter((_, index) => index !== valueIndex)
       return {
         ...option,
-        values: newValues.length > 0 ? newValues : ['']
+        values: newValues.length > 0 ? newValues : [{
+          id: createOptionId(),
+          label: '',
+          priceAdjustment: ''
+        }]
       }
     }))
   }
@@ -201,23 +231,72 @@ export default function ShopAddPage() {
     setMessage('')
 
     try {
-      const sanitizedOptions = customOptions
-        .map(option => ({
-          name: option.name.trim(),
-          values: option.values.map(value => value.trim()).filter(value => value.length > 0)
-        }))
-        .filter(option => option.name.length > 0 && option.values.length > 0)
+      let hasIncompleteOption = false
+      let hasInvalidPrice = false
 
-      const hasIncompleteOption = customOptions.some(option => {
-        const trimmedName = option.name.trim()
-        const trimmedValues = option.values.map(value => value.trim())
-        const hasName = trimmedName.length > 0
-        const hasAnyValue = trimmedValues.some(value => value.length > 0)
-        return (hasName && !hasAnyValue) || (!hasName && hasAnyValue)
-      })
+      const sanitizedOptions = customOptions
+        .map(option => {
+          const trimmedName = option.name.trim()
+          const sanitizedValues = option.values
+            .map(value => {
+              const label = value.label.trim()
+              const priceText = value.priceAdjustment.trim()
+
+              if (!label && !priceText) {
+                return null
+              }
+
+              if (!label) {
+                hasIncompleteOption = true
+                return null
+              }
+
+              const parsedPrice = priceText === ''
+                ? 0
+                : Number(priceText.replace(/,/g, ''))
+
+              if (Number.isNaN(parsedPrice)) {
+                hasInvalidPrice = true
+                return null
+              }
+
+              return {
+                label,
+                priceAdjustment: parsedPrice
+              }
+            })
+            .filter((value): value is { label: string; priceAdjustment: number } => value !== null)
+
+          if (!trimmedName && sanitizedValues.length === 0) {
+            return null
+          }
+
+          if (!trimmedName && sanitizedValues.length > 0) {
+            hasIncompleteOption = true
+            return null
+          }
+
+          if (trimmedName && sanitizedValues.length === 0) {
+            hasIncompleteOption = true
+            return null
+          }
+
+          return {
+            name: trimmedName,
+            values: sanitizedValues
+          }
+        })
+        .filter((option): option is { name: string; values: { label: string; priceAdjustment: number }[] } => option !== null)
 
       if (hasIncompleteOption) {
-        setMessage('옵션을 추가하려면 옵션 이름과 선택지를 모두 입력해주세요.')
+        setMessage('옵션을 추가하려면 옵션 이름과 선택지 이름을 모두 입력해주세요.')
+        setMessageType('error')
+        setIsSubmitting(false)
+        return
+      }
+
+      if (hasInvalidPrice) {
+        setMessage('가격 변동에는 숫자만 입력해주세요.')
         setMessageType('error')
         setIsSubmitting(false)
         return
@@ -598,23 +677,41 @@ export default function ShopAddPage() {
 
                         <div className="space-y-3">
                           <label className="block text-sm font-medium text-gray-700">선택지</label>
+                          <p className="text-xs text-gray-500">
+                            선택지 이름과 가격 변동을 입력하세요. 가격 변동이 없으면 0 또는 빈 값으로 두세요. (예: +2000, -1000)
+                          </p>
                           {option.values.map((value, valueIndex) => (
-                            <div key={`${option.id}-value-${valueIndex}`} className="flex flex-col sm:flex-row gap-3">
-                              <input
-                                type="text"
-                                value={value}
-                                onChange={(e) => updateOptionValue(option.id, valueIndex, e.target.value)}
-                                placeholder="선택지를 입력하세요"
-                                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeOptionValue(option.id, valueIndex)}
-                                className="inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                                disabled={option.values.length === 1}
-                              >
-                                제거
-                              </button>
+                            <div key={`${option.id}-value-${valueIndex}`} className="flex flex-col lg:flex-row gap-3">
+                              <div className="flex-1">
+                                <input
+                                  type="text"
+                                  value={value.label}
+                                  onChange={(e) => updateOptionValue(option.id, valueIndex, 'label', e.target.value)}
+                                  placeholder="선택지를 입력하세요 (예: 블랙)"
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                                />
+                              </div>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-600">가격 변동</span>
+                                  <input
+                                    type="number"
+                                    value={value.priceAdjustment}
+                                    onChange={(e) => updateOptionValue(option.id, valueIndex, 'priceAdjustment', e.target.value)}
+                                    placeholder="0"
+                                    className="w-32 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                                  />
+                                  <span className="text-sm text-gray-600">원</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeOptionValue(option.id, valueIndex)}
+                                  className="inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                  disabled={option.values.length === 1}
+                                >
+                                  제거
+                                </button>
+                              </div>
                             </div>
                           ))}
 

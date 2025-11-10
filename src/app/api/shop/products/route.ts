@@ -92,11 +92,44 @@ export async function POST(request: Request) {
           .map((option: any) => {
             if (!option || typeof option !== 'object') return null
             const optionName = typeof option.name === 'string' ? option.name.trim() : ''
-            const optionValues = Array.isArray(option.values)
-              ? option.values
-                  .map((value: any) => (typeof value === 'string' ? value.trim() : ''))
-                  .filter((value: string) => value.length > 0)
-              : []
+
+            if (!Array.isArray(option.values)) return null
+
+            const optionValues = option.values
+              .map((value: any) => {
+                if (typeof value === 'string') {
+                  const label = value.trim()
+                  if (!label) return null
+                  return { label, priceAdjustment: 0 }
+                }
+
+                if (!value || typeof value !== 'object') return null
+
+                const label = typeof value.label === 'string' ? value.label.trim() : ''
+                if (!label) return null
+
+                const rawPrice = value.priceAdjustment
+                let parsedPrice = 0
+
+                if (rawPrice === undefined || rawPrice === null || rawPrice === '') {
+                  parsedPrice = 0
+                } else if (typeof rawPrice === 'number') {
+                  parsedPrice = rawPrice
+                } else if (typeof rawPrice === 'string') {
+                  const cleaned = rawPrice.trim().replace(/,/g, '')
+                  if (!cleaned) {
+                    parsedPrice = 0
+                  } else {
+                    parsedPrice = Number(cleaned)
+                    if (Number.isNaN(parsedPrice)) return null
+                  }
+                } else {
+                  return null
+                }
+
+                return { label, priceAdjustment: parsedPrice }
+              })
+              .filter((value: any) => value !== null)
 
             if (!optionName || optionValues.length === 0) {
               return null
@@ -107,7 +140,7 @@ export async function POST(request: Request) {
               values: optionValues
             }
           })
-          .filter(Boolean)
+          .filter((option: any) => option !== null)
       : []
 
     // 상품 생성
