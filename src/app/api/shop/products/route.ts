@@ -229,13 +229,25 @@ export async function GET(request: Request) {
       }
 
       if (categorySlug) {
-        const category = await prisma.category.findUnique({
-          where: { slug: categorySlug }
+        const category = await prisma.category.findFirst({
+          where: {
+            slug: {
+              equals: categorySlug,
+              mode: 'insensitive'
+            }
+          },
+          select: { id: true }
         })
-        
-        if (category) {
-          whereClause.categoryId = category.id
+
+        if (!category) {
+          return {
+            success: true,
+            data: [],
+            count: 0
+          }
         }
+
+        whereClause.categoryId = category.id
       }
       const orderBy = sortParam === 'likes'
         ? [{ likeCount: 'desc' as const }, { createdAt: 'desc' as const }]
