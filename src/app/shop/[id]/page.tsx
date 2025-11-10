@@ -3,10 +3,13 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { permissions } from '@/lib/permissions'
 
 export default function ProductDetailPage() {
   const params = useParams()
   const productId = params.id as string
+  const { user } = useAuth()
   const [product, setProduct] = useState<any>(null)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -45,6 +48,11 @@ export default function ProductDetailPage() {
       </div>
     )
   }
+
+  const canEditProduct =
+    !!user &&
+    !!product &&
+    permissions.canEditProduct(user.role, user.isSeller, product.authorId, user.id)
 
   if (!product) {
     return (
@@ -274,6 +282,16 @@ export default function ProductDetailPage() {
                 </svg>
               </button>
             </div>
+            {canEditProduct && (
+              <div className="mb-6">
+                <Link
+                  href={`/shop/${productId}/edit`}
+                  className="inline-flex items-center justify-center w-full border border-black text-black py-3 px-6 rounded hover:bg-gray-50 transition-colors font-medium"
+                >
+                  상품 수정
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

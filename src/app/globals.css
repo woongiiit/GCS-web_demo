@@ -29,11 +29,48 @@
 }
 
 /* 이미지 컨테이너 정렬 */
-.ql-editor p {
-  text-align: center;
-}
-
 .ql-editor p img {
   display: inline-block;
   margin: 8px auto;
+}
+
+/* 정렬 클래스가 저장된 이후에도 동일하게 적용되도록 글로벌 정의 */
+.ql-align-left {
+  text-align: left !important;
+}
+
+.ql-align-center {
+  text-align: center !important;
+}
+
+.ql-align-right {
+  text-align: right !important;
+}
+
+.ql-align-justify {
+  text-align: justify !important;
+}
+
+.ql-align-center img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ql-align-right img {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.ql-align-left img {
+  display: block;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.ql-align-justify img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }

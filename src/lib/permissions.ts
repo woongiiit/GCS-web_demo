@@ -109,8 +109,11 @@ export const permissions = {
    * @param role - 사용자 역할
    * @returns 상품 수정/삭제 가능 여부
    */
-  canEditProduct: (role?: UserRole): boolean => {
-    return role === 'ADMIN';
+  canEditProduct: (role?: UserRole, isSeller?: boolean, authorId?: string | null, userId?: string | null): boolean => {
+    if (!role || !userId) return false;
+    if (role === 'ADMIN') return true;
+    if (isSeller && authorId && authorId === userId) return true;
+    return false;
   },
 
   /**
