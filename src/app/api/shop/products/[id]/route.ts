@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, getCurrentUser } from '@/lib/auth'
 import { permissions, permissionErrors } from '@/lib/permissions'
 import { invalidateCache } from '@/lib/cache'
 
@@ -10,6 +10,7 @@ export async function GET(
 ) {
   try {
     const productId = params.id
+    const currentUser = await getCurrentUser()
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
@@ -39,12 +40,26 @@ export async function GET(
       }
     })
 
+    let liked = false
+    if (currentUser) {
+      const existingLike = await prisma.productLike.findUnique({
+        where: {
+          productId_userId: {
+            productId,
+            userId: currentUser.id
+          }
+        }
+      })
+      liked = !!existingLike
+    }
+
     return NextResponse.json(
       { 
         success: true, 
         data: {
           product,
-          relatedProducts
+          relatedProducts,
+          liked
         }
       },
       { status: 200 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useMemo } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 
@@ -25,6 +25,7 @@ type NormalizedProductOption = {
 
 export default function ProductDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const productId = params.id as string
   const { user } = useAuth()
   const [product, setProduct] = useState<any>(null)
@@ -32,6 +33,9 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
+  const [likeCount, setLikeCount] = useState(0)
+  const [isLiking, setIsLiking] = useState(false)
+  const [hasLiked, setHasLiked] = useState(false)
 
   useEffect(() => {
     if (productId) {
@@ -48,6 +52,8 @@ export default function ProductDetailPage() {
       if (data.success) {
         setProduct(data.data.product)
         setRelatedProducts(data.data.relatedProducts)
+        setLikeCount(data.data.product?.likeCount ?? 0)
+        setHasLiked(Boolean(data.data?.liked))
       }
     } catch (error) {
       console.error('상품 조회 오류:', error)
@@ -123,6 +129,41 @@ export default function ProductDetailPage() {
   const finalPrice = basePrice + totalAdjustment
   const showSummary =
     isAllOptionsSelected && selectedOptionDetails.length === productOptions.length
+
+  const handleLikeClick = async () => {
+    if (hasLiked || isLiking) return
+
+    if (!user) {
+      alert('로그인이 필요합니다. 로그인 후 이용해주세요.')
+      router.push('/login')
+      return
+    }
+
+    setIsLiking(true)
+    try {
+      const response = await fetch(`/api/shop/products/${productId}/like`, {
+        method: 'POST'
+      })
+      const data = await response.json()
+      if (response.ok && data.success) {
+        const updatedLikeCount = data.data?.likeCount
+        const liked = data.data?.liked
+        if (typeof updatedLikeCount === 'number') {
+          setLikeCount(updatedLikeCount)
+        }
+        if (typeof liked === 'boolean') {
+          setHasLiked(liked)
+        }
+      } else {
+        alert(data.error || '좋아요 처리 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('좋아요 처리 오류:', error)
+      alert('좋아요 처리 중 오류가 발생했습니다.')
+    } finally {
+      setIsLiking(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -315,14 +356,11 @@ export default function ProductDetailPage() {
             <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
             <p className="text-sm text-gray-700 mb-6 whitespace-pre-line">{product.shortDescription || product.description}</p>
             <p className="text-2xl font-bold mb-4">{product.price.toLocaleString()}원</p>
-            {typeof product.likeCount === 'number' && (
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
-                </svg>
-                <span>{product.likeCount}명이 좋아합니다.</span>
-              </div>
-            )}
+            <div className="flex items-center gap-3 text-sm text-gray-600 mb-6">
+              <span className="text-base text-gray-700">
+                {likeCount.toLocaleString()}명이 좋아합니다.
+              </span>
+            </div>
 
             {productOptions.length > 0 && (
               <div className="mb-8 space-y-4">
@@ -392,9 +430,24 @@ export default function ProductDetailPage() {
               >
                 (Add to cart)
               </button>
-              <button className="border border-black text-black p-3 rounded hover:bg-gray-50 transition-colors">
+              <button
+                type="button"
+                onClick={handleLikeClick}
+                disabled={isLiking}
+                className={`border p-3 rounded transition-colors ${
+                  hasLiked
+                    ? 'bg-red-500 border-red-500 text-white hover:bg-red-600'
+                    : 'border-black text-black hover:bg-gray-50'
+                } ${isLiking ? 'cursor-not-allowed opacity-70' : ''}`}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                    fill={hasLiked ? 'currentColor' : 'none'}
+                  />
                 </svg>
               </button>
             </div>

@@ -20,10 +20,10 @@ export default function ShopPage() {
     setIsLoading(true)
     try {
       // Best Item 조회
-      const bestRes = await fetch('/api/shop/products?sort=likes&limit=10', { cache: 'no-store' })
+      const bestRes = await fetch('/api/shop/products?sort=likes&limit=3', { cache: 'no-store' })
       const bestData = await bestRes.json()
       if (bestData.success) {
-        setBestProducts(bestData.data)
+        setBestProducts(Array.isArray(bestData.data) ? bestData.data.slice(0, 3) : [])
       }
 
       // 카테고리별 상품 조회

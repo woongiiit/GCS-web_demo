@@ -46,6 +46,7 @@ model User {
   postLikes   PostLike[]
   projectLikes ProjectLike[]
   newsLikes   NewsLike[]
+  productLikes ProductLike[]
 
   @@index([role])
   @@index([isSeller])
@@ -137,6 +138,20 @@ model NewsLike {
   @@map("news_likes")
 }
 
+model ProductLike {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([productId, userId])
+  @@index([productId, createdAt])
+  @@index([userId, createdAt])
+  @@map("product_likes")
+}
+
 // 상품 카테고리 모델
 model Category {
   id          String   @id @default(cuid())
@@ -180,6 +195,7 @@ model Product {
   // 관계
   orderItems  OrderItem[]
   productDetails ProductDetail[]
+  likes       ProductLike[]
 
   @@index([categoryId, isActive])
   @@index([isActive, createdAt])

@@ -31,7 +31,7 @@ export default function ShopAddPage() {
     originalPrice: '',
     discount: '',
     categoryId: '',
-    brand: '',
+    brand: '', 
   })
   const [customOptions, setCustomOptions] = useState<ProductOptionInput[]>([])
   // 상품 대표 이미지들 (상단 갤러리용)
