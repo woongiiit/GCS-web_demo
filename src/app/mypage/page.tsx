@@ -62,7 +62,7 @@ function MyPageContent() {
   })
 
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [isCartLoading, setIsCartLoading] = useState(false)
+  const [isCartLoading, setIsCartLoading] = useState(true)
   const [cartError, setCartError] = useState('')
   const [cartMessage, setCartMessage] = useState('')
   const [cartMessageType, setCartMessageType] = useState<'success' | 'error'>('success')
@@ -82,14 +82,6 @@ function MyPageContent() {
 
   const formatCurrency = (price: number) => `${price.toLocaleString()}원`
 
-  const handleTabChange = useCallback((tab: 'profile' | 'cart' | 'archive' | 'verification') => {
-    setActiveTab(tab)
-    const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
-    params.set('tab', tab)
-    const queryString = params.toString()
-    router.replace(queryString ? `/mypage?${queryString}` : '/mypage', { scroll: false })
-  }, [router, searchParams])
-
   const fetchCartItems = useCallback(async () => {
     setIsCartLoading(true)
     setCartError('')
@@ -97,7 +89,8 @@ function MyPageContent() {
     try {
       const response = await fetch('/api/shop/cart', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store'
       })
       const data = await response.json()
       if (response.ok && data.success) {
@@ -114,6 +107,18 @@ function MyPageContent() {
       setIsCartLoading(false)
     }
   }, [])
+
+  const handleTabChange = useCallback((tab: 'profile' | 'cart' | 'archive' | 'verification') => {
+    setActiveTab(tab)
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
+    params.set('tab', tab)
+    const queryString = params.toString()
+    router.replace(queryString ? `/mypage?${queryString}` : '/mypage', { scroll: false })
+
+    if (tab === 'cart') {
+      fetchCartItems()
+    }
+  }, [router, searchParams, fetchCartItems])
 
   const handleCartItemToggle = useCallback((cartItemId: string) => {
     setSelectedCartIds((prev) => {
