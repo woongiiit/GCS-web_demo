@@ -36,6 +36,7 @@ export default function ProductEditPage() {
     discount: '',
     categoryId: '',
     brand: '',
+    stock: '',
   })
   const [customOptions, setCustomOptions] = useState<ProductOptionInput[]>([])
   const [existingImages, setExistingImages] = useState<string[]>([])
@@ -139,6 +140,7 @@ export default function ProductEditPage() {
           discount: fetchedProduct.discount ? fetchedProduct.discount.toString() : '',
           categoryId: fetchedProduct.categoryId || '',
           brand: fetchedProduct.brand || '',
+          stock: typeof fetchedProduct.stock === 'number' ? fetchedProduct.stock.toString() : '',
         })
         setEditorContent(fetchedProduct.description || '')
         setExistingImages(Array.isArray(fetchedProduct.images) ? fetchedProduct.images : [])
@@ -423,6 +425,22 @@ export default function ProductEditPage() {
         newImagesBase64.push(base64String)
       }
 
+      if (formData.stock.trim() === '') {
+        setMessage('재고 수량을 입력해주세요.')
+        setMessageType('error')
+        setIsSubmitting(false)
+        return
+      }
+
+      const parsedStock = parseInt(formData.stock, 10)
+
+      if (Number.isNaN(parsedStock) || parsedStock < 0) {
+        setMessage('재고 수량은 0 이상의 정수를 입력해주세요.')
+        setMessageType('error')
+        setIsSubmitting(false)
+        return
+      }
+
       const response = await fetch(`/api/shop/products/${productId}`, {
         method: 'PATCH',
         headers: {
@@ -440,6 +458,7 @@ export default function ProductEditPage() {
           brand: formData.brand,
           options: sanitizedOptions,
           images: [...existingImages, ...newImagesBase64],
+          stock: parsedStock,
         })
       })
 
@@ -665,6 +684,20 @@ export default function ProductEditPage() {
                         max="100"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
                         placeholder="할인율을 입력하세요"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">재고 수량 *</label>
+                      <input
+                        type="number"
+                        name="stock"
+                        value={formData.stock}
+                        onChange={handleInputChange}
+                        required
+                        min="0"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                        placeholder="재고 수량을 입력하세요"
                       />
                     </div>
 

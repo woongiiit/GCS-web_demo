@@ -114,6 +114,7 @@ export async function PATCH(
       options,
       images,
       isActive,
+      stock,
     } = body
 
     const updateData: any = {}
@@ -192,6 +193,24 @@ export async function PATCH(
 
     if (brand !== undefined) {
       updateData.brand = typeof brand === 'string' && brand.trim().length > 0 ? brand.trim() : null
+    }
+
+    if (stock !== undefined) {
+      const stockString = String(stock).trim()
+      const parsedStock = stockString === ''
+        ? NaN
+        : typeof stock === 'number'
+          ? stock
+          : parseInt(stockString, 10)
+
+      if (Number.isNaN(parsedStock) || parsedStock < 0 || !Number.isInteger(parsedStock)) {
+        return NextResponse.json(
+          { error: '유효한 재고 수량을 입력해주세요.' },
+          { status: 400 }
+        )
+      }
+
+      updateData.stock = parsedStock
     }
 
     if (Array.isArray(options)) {

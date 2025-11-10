@@ -47,6 +47,7 @@ model User {
   projectLikes ProjectLike[]
   newsLikes   NewsLike[]
   productLikes ProductLike[]
+  cartItems   CartItem[]
 
   @@index([role])
   @@index([isSeller])
@@ -196,6 +197,7 @@ model Product {
   orderItems  OrderItem[]
   productDetails ProductDetail[]
   likes       ProductLike[]
+  cartItems   CartItem[]
 
   @@index([categoryId, isActive])
   @@index([isActive, createdAt])
@@ -256,10 +258,30 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Int     // 주문 당시 가격
+  selectedOptions Json?
 
   @@index([orderId])
   @@index([productId])
   @@map("order_items")
+}
+
+model CartItem {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  quantity      Int      @default(1)
+  unitPrice     Int
+  selectedOptions Json?
+  optionsHash   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@unique([userId, productId, optionsHash])
+  @@map("cart_items")
 }
 
 // 프로젝트 모델 (아카이브)

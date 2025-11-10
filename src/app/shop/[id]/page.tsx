@@ -36,6 +36,7 @@ export default function ProductDetailPage() {
   const [likeCount, setLikeCount] = useState(0)
   const [isLiking, setIsLiking] = useState(false)
   const [hasLiked, setHasLiked] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
 
   useEffect(() => {
     if (productId) {
@@ -162,6 +163,58 @@ export default function ProductDetailPage() {
       alert('좋아요 처리 중 오류가 발생했습니다.')
     } finally {
       setIsLiking(false)
+    }
+  }
+
+  const handleAddToCart = async () => {
+    if (!product) return
+    if (!product.isActive) {
+      alert('판매 중단된 상품입니다.')
+      return
+    }
+
+    if (productOptions.length > 0 && !isAllOptionsSelected) {
+      alert('모든 옵션을 선택해주세요.')
+      return
+    }
+
+    if (!user) {
+      alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (isAddingToCart) return
+
+    setIsAddingToCart(true)
+    try {
+      const response = await fetch('/api/shop/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          productId,
+          quantity: 1,
+          selectedOptions: selectedOptionDetails
+        })
+      })
+
+      const data = await response.json()
+      if (response.ok && data.success) {
+        const goToCart = window.confirm('상품을 장바구니에 담았습니다. 장바구니로 이동할까요?')
+        if (goToCart) {
+          router.push('/mypage?tab=cart')
+        }
+      } else {
+        alert(data.error || '장바구니에 담지 못했습니다.')
+      }
+    } catch (error) {
+      console.error('장바구니 담기 오류:', error)
+      alert('장바구니에 담지 못했습니다.')
+    } finally {
+      setIsAddingToCart(false)
     }
   }
 
@@ -421,14 +474,16 @@ export default function ProductDetailPage() {
                 (Buy)
               </button>
               <button
+                type="button"
+                onClick={handleAddToCart}
                 className={`flex-1 border py-3 px-6 rounded transition-colors ${
-                  isAllOptionsSelected
+                  isAllOptionsSelected && !isAddingToCart
                     ? 'border-black text-black hover:bg-gray-50'
                     : 'border-gray-300 text-gray-400 cursor-not-allowed'
                 }`}
-                disabled={!isAllOptionsSelected}
+                disabled={!isAllOptionsSelected || isAddingToCart}
               >
-                (Add to cart)
+                {isAddingToCart ? '담는 중...' : '장바구니 담기'}
               </button>
               <button
                 type="button"

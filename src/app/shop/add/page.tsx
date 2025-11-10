@@ -32,6 +32,7 @@ export default function ShopAddPage() {
     discount: '',
     categoryId: '',
     brand: '', 
+    stock: '',
   })
   const [customOptions, setCustomOptions] = useState<ProductOptionInput[]>([])
   // 상품 대표 이미지들 (상단 갤러리용)
@@ -302,6 +303,22 @@ export default function ShopAddPage() {
         return
       }
 
+      if (formData.stock.trim() === '') {
+        setMessage('재고 수량을 입력해주세요.')
+        setMessageType('error')
+        setIsSubmitting(false)
+        return
+      }
+
+      const parsedStock = parseInt(formData.stock, 10)
+
+      if (Number.isNaN(parsedStock) || parsedStock < 0) {
+        setMessage('재고 수량은 0 이상의 정수를 입력해주세요.')
+        setMessageType('error')
+        setIsSubmitting(false)
+        return
+      }
+
       // 상품 대표 이미지들을 Base64로 인코딩
       const coverImagesBase64: string[] = []
       for (const file of coverImages) {
@@ -333,6 +350,7 @@ export default function ShopAddPage() {
           brand: formData.brand,
           options: sanitizedOptions,
           images: coverImagesBase64, // 상품 대표 이미지들
+          stock: parsedStock,
         })
       })
 
@@ -350,6 +368,7 @@ export default function ShopAddPage() {
           discount: '',
           categoryId: '',
           brand: '',
+          stock: '',
         })
         setEditorContent('')
         setCoverImages([])
@@ -574,7 +593,7 @@ export default function ShopAddPage() {
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <h3 className="text-lg font-semibold text-black mb-4">가격 정보</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* 판매가 */}
                     <div>
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
@@ -621,6 +640,24 @@ export default function ShopAddPage() {
                         value={formData.discount}
                         readOnly
                         placeholder="정가와 판매가를 입력하면 자동으로 계산됩니다"
+                      />
+                    </div>
+
+                    {/* 재고 수량 */}
+                    <div>
+                      <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
+                        재고 수량 *
+                      </label>
+                      <input
+                        id="stock"
+                        name="stock"
+                        type="number"
+                        min={0}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                        value={formData.stock}
+                        onChange={handleInputChange}
+                        placeholder="재고 수량을 입력하세요"
                       />
                     </div>
                   </div>

@@ -31,7 +31,8 @@ export async function POST(request: Request) {
       categoryId,
       images,
       brand,
-      options
+      options,
+      stock
     } = body
 
     // 유효성 검사
@@ -71,6 +72,19 @@ export async function POST(request: Request) {
     if (parsedDiscount !== null && Number.isNaN(parsedDiscount)) {
       return NextResponse.json(
         { error: '유효한 할인율을 입력해주세요.' },
+        { status: 400 }
+      )
+    }
+
+    const parsedStock = typeof stock === 'number'
+      ? stock
+      : stock !== undefined && stock !== null && `${stock}`.trim() !== ''
+        ? parseInt(`${stock}`.trim(), 10)
+        : 0
+
+    if (Number.isNaN(parsedStock) || parsedStock < 0 || !Number.isInteger(parsedStock)) {
+      return NextResponse.json(
+        { error: '유효한 재고 수량을 입력해주세요.' },
         { status: 400 }
       )
     }
@@ -151,7 +165,7 @@ export async function POST(request: Request) {
       price: parsedPrice,
       originalPrice: parsedOriginalPrice,
       discount: parsedDiscount,
-      stock: 0, // 재고 수량은 항상 0으로 설정
+      stock: parsedStock,
       categoryId,
       images: Array.isArray(images) ? images : [], // 상품 대표 이미지들 저장
       brand: typeof brand === 'string' && brand.trim().length > 0 ? brand.trim() : null,
