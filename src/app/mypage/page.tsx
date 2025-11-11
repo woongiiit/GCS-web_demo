@@ -4,7 +4,14 @@ import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { PRODUCT_TYPES } from '@/lib/shop/product-types'
+import { normalizeProductType, getProductTypeMeta } from '@/lib/shop/product-types'
+
+function getProductTypeLabel(typeId?: string | null) {
+  if (!typeId) return ''
+  const normalizedType = normalizeProductType(typeId)
+  if (!normalizedType) return ''
+  return getProductTypeMeta(normalizedType)?.name ?? ''
+}
 
 interface UserInfo {
   id: string
@@ -79,12 +86,6 @@ function MyPageContent() {
       value === 'orders'
     )
   }
-
-  const getProductTypeLabel = useCallback((typeId?: string | null) => {
-    if (!typeId) return ''
-    const meta = PRODUCT_TYPES.find((type) => type.id === typeId)
-    return meta?.name ?? ''
-  }, [])
 
   const formatCurrency = (price: number) => `${price.toLocaleString()}원`
 

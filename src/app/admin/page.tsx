@@ -12,11 +12,13 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { getProductTypeMeta } from '@/lib/shop/product-types'
+import { getProductTypeMeta, normalizeProductType } from '@/lib/shop/product-types'
 
 function getProductTypeLabel(typeId?: string | null) {
   if (!typeId) return ''
-  return getProductTypeMeta(typeId)?.name ?? ''
+  const normalizedType = normalizeProductType(typeId)
+  if (!normalizedType) return ''
+  return getProductTypeMeta(normalizedType)?.name ?? ''
 }
 
 export default function AdminPage() {
