@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Suspense,
   useState,
   useEffect,
   useCallback,
@@ -13,6 +14,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function AdminPage() {
+  return (
+    <Suspense fallback={<AdminPageSuspenseFallback />}>
+      <AdminPageContent />
+    </Suspense>
+  )
+}
+
+function AdminPageContent() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'users' | 'content' | 'profile' | 'cart' | 'archive'>('users')
@@ -225,6 +234,17 @@ type CartItem = {
   unitPrice: number
   selectedOptions?: CartOptionSummary[] | null
   product: CartProductInfo
+}
+
+function AdminPageSuspenseFallback() {
+  return (
+    <div className="fixed inset-0 bg-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+        <p className="text-gray-600">로딩 중...</p>
+      </div>
+    </div>
+  )
 }
 
 function AdminProfileTab({ user }: { user: any }) {
