@@ -12,7 +12,12 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { PRODUCT_TYPES } from '@/lib/shop/product-types'
+import { getProductTypeMeta } from '@/lib/shop/product-types'
+
+function getProductTypeLabel(typeId?: string | null) {
+  if (!typeId) return ''
+  return getProductTypeMeta(typeId)?.name ?? ''
+}
 
 export default function AdminPage() {
   return (
@@ -29,12 +34,6 @@ function AdminPageContent() {
     'users' | 'content' | 'profile' | 'cart' | 'archive' | 'orders' | 'my-orders'
   >('users')
   const searchParams = useSearchParams()
-
-  const getProductTypeLabel = useCallback((typeId?: string | null) => {
-    if (!typeId) return ''
-    const meta = PRODUCT_TYPES.find((type) => type.id === typeId)
-    return meta?.name ?? ''
-  }, [])
 
   const isValidTab = (
     value: string | null
