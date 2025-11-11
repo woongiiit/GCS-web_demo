@@ -55,6 +55,12 @@ type CheckoutItem = {
   selectedOptions: NormalizedOptionValueWithName[]
 }
 
+type PaymentConfig = {
+  merchantCode: string
+  pgId: string
+  channelKey: string | null
+}
+
 type PortOneResponse = {
   success: boolean
   imp_uid: string
@@ -86,6 +92,8 @@ export default function CheckoutPage() {
   const [orderMemo, setOrderMemo] = useState('')
   const [isPaying, setIsPaying] = useState(false)
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null)
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null)
+  const [isPaymentConfigLoading, setIsPaymentConfigLoading] = useState(true)
 
   useEffect(() => {
     if (user) {
@@ -140,6 +148,28 @@ export default function CheckoutPage() {
     }
   }, [isAuthLoading, payloadReady, router, user])
 
+  useEffect(() => {
+    const fetchPaymentConfig = async () => {
+      try {
+        const response = await fetch('/api/config/payment', { cache: 'no-store' })
+        const data = await response.json()
+        if (response.ok && data.success) {
+          setPaymentConfig(data.data as PaymentConfig)
+        } else {
+          console.error('결제 설정 조회 실패:', data.error)
+          setError(data.error || '결제 설정을 불러오지 못했습니다. 관리자에게 문의해주세요.')
+        }
+      } catch (configError) {
+        console.error('결제 설정 조회 오류:', configError)
+        setError('결제 설정을 불러오지 못했습니다. 관리자에게 문의해주세요.')
+      } finally {
+        setIsPaymentConfigLoading(false)
+      }
+    }
+
+    fetchPaymentConfig()
+  }, [])
+
   const totalAmount = useMemo(() => {
     return items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
   }, [items])
@@ -176,6 +206,10 @@ export default function CheckoutPage() {
     setIsPaying(true)
 
     try {
+      if (!paymentConfig) {
+        throw new Error('결제 설정을 불러오는 중입니다. 잠시 후 다시 시도해주세요.')
+      }
+
       const IMP = await loadPortOne()
       if (!IMP) {
         throw new Error('결제 모듈을 로드하지 못했습니다.')
@@ -185,19 +219,9 @@ export default function CheckoutPage() {
         window.crypto?.randomUUID?.() ??
         `gcs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       const amount = totalAmount
-      const merchantCode = process.env.NEXT_PUBLIC_PORTONE_MERCHANT_CODE || 'imp10391932'
-      const pgId = process.env.NEXT_PUBLIC_PORTONE_PG_ID || 'html5_inicis.INIpayTest'
-      const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY
+      const { merchantCode, pgId, channelKey } = paymentConfig
 
       IMP.init(merchantCode)
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug('PortOne payment configuration', {
-          merchantCode,
-          pgId,
-          hasChannelKey: Boolean(channelKey)
-        })
-      }
 
       const paymentParams = {
         pg: pgId,
@@ -288,7 +312,7 @@ export default function CheckoutPage() {
     router.push(mode === 'cart' ? '/mypage?tab=cart' : '/shop')
   }
 
-  if (loading) {
+  if (loading || isPaymentConfigLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
