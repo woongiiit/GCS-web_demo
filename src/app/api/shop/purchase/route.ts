@@ -12,6 +12,7 @@ import {
   cancelPortOnePayment,
   getPortOnePayment
 } from '@/lib/shop/payment'
+import type { Prisma } from '@prisma/client'
 
 export async function POST(request: Request) {
   try {
@@ -214,7 +215,7 @@ export async function POST(request: Request) {
       }
     }
 
-    let paymentInfo: Record<string, unknown> | null = null
+    let paymentInfo: Prisma.JsonObject | null = null
     let orderStatus: 'PENDING' | 'CONFIRMED' = 'PENDING'
 
     if (payment) {
@@ -245,6 +246,7 @@ export async function POST(request: Request) {
         }
 
         orderStatus = 'CONFIRMED'
+        const serializedPaymentData = JSON.parse(JSON.stringify(paymentData)) as Prisma.JsonValue
         paymentInfo = {
           impUid: payment.impUid,
           merchantUid: payment.merchantUid,
@@ -252,13 +254,13 @@ export async function POST(request: Request) {
           currency: paymentData.currency ?? 'KRW',
           payMethod: paymentData.pay_method,
           status: paymentData.status,
-          cardName: payment.cardName ?? paymentData.card_name,
-          buyerName: payment.buyerName ?? paymentData.buyer_name,
-          buyerEmail: payment.buyerEmail ?? paymentData.buyer_email,
-          buyerTel: payment.buyerTel ?? paymentData.buyer_tel,
-          receiptUrl: payment.receiptUrl ?? paymentData.receipt_url,
+          cardName: payment.cardName ?? paymentData.card_name ?? null,
+          buyerName: payment.buyerName ?? paymentData.buyer_name ?? null,
+          buyerEmail: payment.buyerEmail ?? paymentData.buyer_email ?? null,
+          buyerTel: payment.buyerTel ?? paymentData.buyer_tel ?? null,
+          receiptUrl: payment.receiptUrl ?? paymentData.receipt_url ?? null,
           paidAt: paymentData.paid_at ? new Date(paymentData.paid_at * 1000).toISOString() : null,
-          raw: paymentData
+          raw: serializedPaymentData
         }
       } catch (verificationError) {
         console.error('PortOne 결제 검증 오류:', verificationError)
@@ -278,7 +280,7 @@ export async function POST(request: Request) {
         shippingAddress,
         phone,
         notes: notes || null,
-        paymentInfo,
+        paymentInfo: paymentInfo ?? undefined,
         paymentVerifiedAt: paymentInfo ? new Date() : null,
         orderItems: {
           create: orderItems.map((item) => ({
