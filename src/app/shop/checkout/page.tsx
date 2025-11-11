@@ -76,6 +76,14 @@ type PortOneResponse = {
   error_msg?: string
 }
 
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: any) => { open: (config?: any) => void }
+    }
+  }
+}
+
 export default function CheckoutPage() {
   const router = useRouter()
   const { user, isLoading: isAuthLoading } = useAuth()
@@ -94,6 +102,7 @@ export default function CheckoutPage() {
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null)
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null)
   const [isPaymentConfigLoading, setIsPaymentConfigLoading] = useState(true)
+  const [isAddressSearchLoading, setIsAddressSearchLoading] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -139,7 +148,7 @@ export default function CheckoutPage() {
     } finally {
       setPayloadReady(true)
     }
-  }, [])
+  }, [setShippingAddress])
 
   useEffect(() => {
     if (!isAuthLoading && !user && payloadReady) {
@@ -308,6 +317,47 @@ export default function CheckoutPage() {
     }
   }
 
+  const handleAddressSearch = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    try {
+      setIsAddressSearchLoading(true)
+      const daum = await loadDaumPostcode()
+
+      if (!daum?.Postcode) {
+        alert('주소 검색 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
+        setIsAddressSearchLoading(false)
+        return
+      }
+
+      new daum.Postcode({
+        oncomplete: (data: any) => {
+          try {
+            let address = data.address
+            if (data.addressType === 'R') {
+              const extra: string[] = []
+              if (data.bname) extra.push(data.bname)
+              if (data.buildingName) extra.push(data.buildingName)
+              if (extra.length > 0) {
+                address += ` (${extra.join(', ')})`
+              }
+            }
+            const formatted = `[${data.zonecode}] ${address}`
+            setShippingAddress(formatted.trim())
+          } finally {
+            setIsAddressSearchLoading(false)
+          }
+        },
+        onclose: () => {
+          setIsAddressSearchLoading(false)
+        }
+      }).open()
+    } catch (searchError) {
+      console.error('주소 검색 오류:', searchError)
+      alert('주소 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      setIsAddressSearchLoading(false)
+    }
+  }, [])
+
   const getCartPath = useCallback(() => {
     return user?.role === 'ADMIN' ? '/admin?tab=cart' : '/mypage?tab=cart'
   }, [user])
@@ -381,6 +431,8 @@ export default function CheckoutPage() {
                   onBuyerPhoneChange={setBuyerPhone}
                   onShippingAddressChange={setShippingAddress}
                   onOrderMemoChange={setOrderMemo}
+                  onAddressSearch={handleAddressSearch}
+                  isAddressSearchLoading={isAddressSearchLoading}
                 />
               </div>
               <aside>
@@ -617,7 +669,24 @@ function ShippingForm(props: {
   onBuyerPhoneChange: (value: string) => void
   onShippingAddressChange: (value: string) => void
   onOrderMemoChange: (value: string) => void
+  onAddressSearch?: () => void
+  isAddressSearchLoading?: boolean
 }) {
+  const {
+    buyerName,
+    buyerEmail,
+    buyerPhone,
+    shippingAddress,
+    orderMemo,
+    onBuyerNameChange,
+    onBuyerEmailChange,
+    onBuyerPhoneChange,
+    onShippingAddressChange,
+    onOrderMemoChange,
+    onAddressSearch,
+    isAddressSearchLoading
+  } = props
+
   return (
     <div className="border border-gray-200 rounded-lg p-6 space-y-6">
       <h2 className="text-xl font-semibold text-black">배송지 정보</h2>
@@ -625,31 +694,58 @@ function ShippingForm(props: {
         <FormField
           label="받는 분 성함"
           required
-          value={props.buyerName}
-          onChange={props.onBuyerNameChange}
+          value={buyerName}
+          onChange={onBuyerNameChange}
           placeholder="받는 분 성함을 입력해주세요."
         />
         <FormField
           label="연락처"
           required
-          value={props.buyerPhone}
-          onChange={props.onBuyerPhoneChange}
+          value={buyerPhone}
+          onChange={onBuyerPhoneChange}
           placeholder="연락 가능한 전화번호를 입력해주세요."
         />
         <FormField
           label="이메일"
-          value={props.buyerEmail}
-          onChange={props.onBuyerEmailChange}
+          value={buyerEmail}
+          onChange={onBuyerEmailChange}
           placeholder="주문 확인용 이메일을 입력해주세요."
           type="email"
         />
-        <FormField
-          label="배송지 주소"
-          required
-          value={props.shippingAddress}
-          onChange={props.onShippingAddressChange}
-          placeholder="배송지를 입력해주세요."
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            배송지 주소<span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="text"
+              value={shippingAddress}
+              onChange={(e) => onShippingAddressChange(e.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="배송지를 입력해주세요."
+            />
+            {onAddressSearch && (
+              <button
+                type="button"
+                onClick={onAddressSearch}
+                disabled={isAddressSearchLoading}
+                className={`shrink-0 rounded-lg px-4 py-3 text-sm font-medium transition-colors border ${
+                  isAddressSearchLoading
+                    ? 'border-gray-300 bg-gray-200 text-gray-500 cursor-wait'
+                    : 'border-black text-black hover:bg-black hover:text-white'
+                }`}
+              >
+                {isAddressSearchLoading ? '검색 중...' : '도로명 주소 검색'}
+              </button>
+            )}
+          </div>
+          {onAddressSearch && (
+            <p className="mt-2 text-xs text-gray-500">
+              도로명 주소 검색 버튼을 눌러 자동 입력하거나 직접 입력할 수 있습니다.
+            </p>
+          )}
+        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             요청사항 (선택)
@@ -657,8 +753,8 @@ function ShippingForm(props: {
           <textarea
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black resize-none"
             rows={3}
-            value={props.orderMemo}
-            onChange={(e) => props.onOrderMemoChange(e.target.value)}
+            value={orderMemo}
+            onChange={(e) => onOrderMemoChange(e.target.value)}
             placeholder="배송 관련 요청사항이 있다면 입력해주세요."
           />
         </div>
@@ -798,5 +894,30 @@ async function loadPortOne(): Promise<typeof window.IMP | null> {
   }
 
   return portOneLoader
+}
+
+let daumPostcodeLoader: Promise<Window['daum'] | null> | null = null
+
+async function loadDaumPostcode(): Promise<Window['daum'] | null> {
+  if (typeof window === 'undefined') return null
+  if (window.daum?.Postcode) return window.daum
+
+  if (!daumPostcodeLoader) {
+    daumPostcodeLoader = new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+      script.async = true
+      script.onload = () => {
+        resolve(window.daum ?? null)
+      }
+      script.onerror = () => {
+        daumPostcodeLoader = null
+        reject(new Error('우편번호 검색 스크립트를 불러오지 못했습니다.'))
+      }
+      document.body.appendChild(script)
+    })
+  }
+
+  return daumPostcodeLoader
 }
 
