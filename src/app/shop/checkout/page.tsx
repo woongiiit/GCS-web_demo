@@ -187,8 +187,17 @@ export default function CheckoutPage() {
       const amount = totalAmount
       const merchantCode = process.env.NEXT_PUBLIC_PORTONE_MERCHANT_CODE || 'imp10391932'
       const pgId = process.env.NEXT_PUBLIC_PORTONE_PG_ID || 'html5_inicis.INIpayTest'
+      const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY
 
       IMP.init(merchantCode)
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('PortOne payment configuration', {
+          merchantCode,
+          pgId,
+          hasChannelKey: Boolean(channelKey)
+        })
+      }
 
       const paymentParams = {
         pg: pgId,
@@ -199,7 +208,8 @@ export default function CheckoutPage() {
         buyer_name: buyerName,
         buyer_email: buyerEmail,
         buyer_tel: buyerPhone,
-        buyer_addr: shippingAddress
+        buyer_addr: shippingAddress,
+        ...(channelKey ? { channel_key: channelKey } : {})
       }
 
       IMP.request_pay(paymentParams, async (rsp: PortOneResponse) => {
