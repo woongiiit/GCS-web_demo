@@ -172,10 +172,10 @@ model Product {
   likeCount             Int         @default(0)
   isActive              Boolean     @default(true)
   type                  ProductType @default(FUND)
-  fundingGoalAmount     Int?
-  fundingCurrentAmount  Int         @default(0)
-  fundingSupporterCount Int         @default(0)
-  fundingDeadline       DateTime?
+  fundingGoalAmount     Int?        @map("funding_goal_amount")
+  fundingCurrentAmount  Int         @default(0) @map("funding_current_amount")
+  fundingSupporterCount Int         @default(0) @map("funding_supporter_count")
+  fundingDeadline       DateTime?   @map("funding_deadline")
   authorId              String? // 상품 등록자 ID (관리자 또는 판매자)
   author                User?       @relation(fields: [authorId], references: [id])
   createdAt             DateTime    @default(now())
