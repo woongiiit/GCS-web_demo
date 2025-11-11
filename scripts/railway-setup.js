@@ -30,7 +30,6 @@ try {
   console.log('   - users (사용자)');
   console.log('   - posts (게시글)');
   console.log('   - comments (댓글)');
-  console.log('   - categories (상품 카테고리)');
   console.log('   - products (상품)');
   console.log('   - orders (주문)');
   console.log('   - order_items (주문 상품)');

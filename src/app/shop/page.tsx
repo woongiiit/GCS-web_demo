@@ -4,12 +4,13 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
+import { PRODUCT_TYPES } from '@/lib/shop/product-types'
 
 export default function ShopPage() {
   const { role, isSeller } = usePermissions()
-  const [activeTab, setActiveTab] = useState<'apparel' | 'stationary' | 'bag' | 'life' | 'accessory'>('apparel')
+  const [activeTab, setActiveTab] = useState<'FUND' | 'PARTNER_UP'>('FUND')
   const [bestProducts, setBestProducts] = useState<any[]>([])
-  const [categoryProducts, setCategoryProducts] = useState<any[]>([])
+  const [typeProducts, setTypeProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -26,11 +27,11 @@ export default function ShopPage() {
         setBestProducts(Array.isArray(bestData.data) ? bestData.data.slice(0, 3) : [])
       }
 
-      // 카테고리별 상품 조회
-      const categoryRes = await fetch(`/api/shop/products?category=${encodeURIComponent(activeTab)}`, { cache: 'no-store' })
-      const categoryData = await categoryRes.json()
-      if (categoryData.success) {
-        setCategoryProducts(categoryData.data)
+      // 유형별 상품 조회
+      const typeRes = await fetch(`/api/shop/products?type=${encodeURIComponent(activeTab.toLowerCase())}`, { cache: 'no-store' })
+      const typeData = await typeRes.json()
+      if (typeData.success) {
+        setTypeProducts(typeData.data)
       }
     } catch (error) {
       console.error('상품 조회 오류:', error)
@@ -40,26 +41,26 @@ export default function ShopPage() {
   }
 
 
-  const getCategoryName = (category: string) => {
-    switch (category) {
-      case 'apparel': return 'Apparel'
-      case 'stationary': return 'Stationary'
-      case 'bag': return 'Bag & Pouch'
-      case 'life': return 'Life'
-      case 'accessory': return 'Accessory'
-      default: return ''
-    }
+  const activeTypeMeta = PRODUCT_TYPES.find((type) => type.id === activeTab) ?? PRODUCT_TYPES[0]
+
+  const getTypeMeta = (typeId: string | null | undefined) => {
+    if (!typeId) return null
+    return PRODUCT_TYPES.find((type) => type.id === typeId) ?? null
   }
 
-  const getCategoryDescription = (category: string) => {
-    switch (category) {
-      case 'apparel': return 'GCS 브랜드 의류 컬렉션'
-      case 'stationary': return '학습과 업무에 필요한 문구류'
-      case 'bag': return '일상생활과 캠퍼스 라이프를 위한 가방'
-      case 'life': return '생활용품과 유틸리티 아이템'
-      case 'accessory': return '스타일을 완성하는 액세서리'
-      default: return ''
+  const calculateFundingProgress = (product: any) => {
+    if (!product || product.type !== 'FUND') return null
+    const goal = typeof product.fundingGoalAmount === 'number' ? product.fundingGoalAmount : 0
+    const current = typeof product.fundingCurrentAmount === 'number' ? product.fundingCurrentAmount : 0
+    if (!goal || goal <= 0) return 0
+    return Math.min(100, Math.round((current / goal) * 100))
+  }
+
+  const formatCurrency = (value: number | null | undefined) => {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return '0'
     }
+    return value.toLocaleString()
   }
 
   return (
@@ -92,20 +93,20 @@ export default function ShopPage() {
             <div className="flex justify-between items-center py-4">
               {/* 카테고리 탭들 */}
               <div className="flex justify-center gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex-1">
-              {['apparel', 'stationary', 'bag', 'life', 'accessory'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as any)}
+                {PRODUCT_TYPES.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as 'FUND' | 'PARTNER_UP')}
                     className={`pb-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
-                    activeTab === tab
-                      ? 'text-black border-black'
-                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
-                  }`}
+                      activeTab === tab.id
+                        ? 'text-black border-black'
+                        : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                    }`}
                     style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
-                >
-                  {getCategoryName(tab)}
-                </button>
-              ))}
+                  >
+                    {tab.name}
+                  </button>
+                ))}
               </div>
               
               {/* 상품 등록 버튼 (관리자, 판매자) */}
@@ -154,32 +155,55 @@ export default function ShopPage() {
                   </div>
                 ) : bestProducts.length > 0 ? (
                   <div className="flex gap-6 min-w-max">
-                    {bestProducts.map((product) => (
-                      <Link key={product.id} href={`/shop/${product.id}`} className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
-                        <div className="w-full aspect-square bg-gray-100 rounded mb-3 overflow-hidden">
-                          {product.images && product.images[0] ? (
-                            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
-                              e.currentTarget.src = '/images/placeholder-product.jpg'
-                            }} />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                              <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                    {bestProducts.map((product) => {
+                      const typeMeta = getTypeMeta(product.type)
+                      const fundingProgress = calculateFundingProgress(product)
+                      return (
+                        <Link key={product.id} href={`/shop/${product.id}`} className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                          <div className="w-full aspect-square bg-gray-100 rounded mb-3 overflow-hidden relative">
+                            {typeMeta && (
+                              <span className="absolute top-2 left-2 bg-black/70 text-white text-[10px] uppercase tracking-wide px-2 py-1 rounded-full">
+                                {typeMeta.name}
+                              </span>
+                            )}
+                            {product.images && product.images[0] ? (
+                              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-product.jpg'
+                              }} />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                              </div>
+                            )}
+                          </div>
+                          <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
+                          <p className="text-gray-500 text-xs line-clamp-1">{product.brand || 'GCS'}</p>
+                          <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
+                            <span className="text-black font-semibold text-sm">{product.price.toLocaleString()}원</span>
+                            <span className="flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
+                              </svg>
+                              <span>{product.likeCount ?? 0}</span>
+                            </span>
+                          </div>
+                          {typeof fundingProgress === 'number' && (
+                            <div className="mt-2">
+                              <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1 uppercase">
+                                <span>Funding</span>
+                                <span>{fundingProgress}%</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-black transition-all"
+                                  style={{ width: `${fundingProgress}%` }}
+                                />
+                              </div>
                             </div>
                           )}
-                        </div>
-                        <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
-                        <p className="text-gray-500 text-xs line-clamp-1">{product.brand || 'GCS'}</p>
-                        <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
-                          <span className="text-black font-semibold text-sm">{product.price.toLocaleString()}원</span>
-                          <span className="flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
-                            </svg>
-                            <span>{product.likeCount ?? 0}</span>
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
+                        </Link>
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
@@ -194,8 +218,8 @@ export default function ShopPage() {
 
             {/* 카테고리 설명 */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-black mb-2">{getCategoryName(activeTab)}</h2>
-              <p className="text-gray-600">{getCategoryDescription(activeTab)}</p>
+              <h2 className="text-2xl font-bold text-black mb-2">{activeTypeMeta.name}</h2>
+              <p className="text-gray-600">{activeTypeMeta.description}</p>
             </div>
 
             {/* 상품 그리드 - 2열 */}
@@ -211,40 +235,69 @@ export default function ShopPage() {
                   </div>
                 ))}
               </div>
-            ) : categoryProducts.length > 0 ? (
+            ) : typeProducts.length > 0 ? (
               <div className="grid grid-cols-2 gap-4 mb-8">
-                {categoryProducts.map((product) => (
-                  <Link 
-                    key={product.id} 
-                    href={`/shop/${product.id}`}
-                    className="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                  >
-                    <div className="w-full aspect-square bg-gray-100 overflow-hidden">
-                      {product.images && product.images[0] ? (
-                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
-                          e.currentTarget.src = '/images/placeholder-product.jpg'
-                        }} />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <div className="w-3/4 h-3/4 bg-gray-300"></div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
-                      <p className="text-gray-600 text-xs mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-600">
-                        <span className="text-black font-bold text-base">{product.price.toLocaleString()}원</span>
-                        <span className="flex items-center gap-1">
-                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
-                          </svg>
-                          <span>{product.likeCount ?? 0}</span>
-                        </span>
+                {typeProducts.map((product) => {
+                  const typeMeta = getTypeMeta(product.type)
+                  const fundingProgress = calculateFundingProgress(product)
+                  return (
+                    <Link 
+                      key={product.id} 
+                      href={`/shop/${product.id}`}
+                      className="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                    >
+                      <div className="w-full aspect-square bg-gray-100 overflow-hidden relative">
+                        {typeMeta && (
+                          <span className="absolute top-3 left-3 bg-black/80 text-white text-[11px] uppercase tracking-wide px-3 py-1 rounded-full">
+                            {typeMeta.name}
+                          </span>
+                        )}
+                        {product.images && product.images[0] ? (
+                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
+                            e.currentTarget.src = '/images/placeholder-product.jpg'
+                          }} />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                      <div className="p-3 space-y-3">
+                        <div>
+                          <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
+                          <p className="text-gray-600 text-xs line-clamp-2">{product.shortDescription || product.description}</p>
+                        </div>
+                        {typeof fundingProgress === 'number' && (
+                          <div>
+                            <div className="flex items-center justify-between text-[11px] text-gray-500 uppercase">
+                              <span>Funding progress</span>
+                              <span className="font-semibold text-black">{fundingProgress}%</span>
+                            </div>
+                            <div className="mt-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-black transition-all"
+                                style={{ width: `${fundingProgress}%` }}
+                              />
+                            </div>
+                            <div className="mt-2 text-[11px] text-gray-500 flex justify-between">
+                              <span>Raised {formatCurrency(product.fundingCurrentAmount ?? 0)}원</span>
+                              <span>Goal {formatCurrency(product.fundingGoalAmount ?? 0)}원</span>
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-gray-600">
+                          <span className="text-black font-bold text-base">{product.price.toLocaleString()}원</span>
+                          <span className="flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
+                            </svg>
+                            <span>{product.likeCount ?? 0}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500">

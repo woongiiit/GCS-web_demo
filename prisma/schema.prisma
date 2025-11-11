@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
@@ -13,42 +13,42 @@ datasource db {
 
 // 사용자 모델
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  password    String
-  name        String
-  studentId   String?  @unique
-  major       String?
-  phone       String
-  role        UserRole @default(GENERAL)
-  isSeller    Boolean  @default(false)
+  id                     String   @id @default(cuid())
+  email                  String   @unique
+  password               String
+  name                   String
+  studentId              String?  @unique
+  major                  String?
+  phone                  String
+  role                   UserRole @default(GENERAL)
+  isSeller               Boolean  @default(false)
   participatedProjectIds String[] // 참여한 프로젝트의 ID 배열
-  
+
   // 학생 인증 관련 필드
-  verificationStatus VerificationStatus @default(PENDING)
-  verificationImageUrl String?  // 학생 인증 이미지 URL
-  verificationRequestedAt DateTime?  // 인증 요청 시간
-  verificationApprovedAt DateTime?   // 인증 승인 시간
-  verificationRejectedAt DateTime?   // 인증 거부 시간
-  verificationNote String?            // 운영자 메모 (거부 사유 등)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  verificationStatus      VerificationStatus @default(PENDING)
+  verificationImageUrl    String? // 학생 인증 이미지 URL
+  verificationRequestedAt DateTime? // 인증 요청 시간
+  verificationApprovedAt  DateTime? // 인증 승인 시간
+  verificationRejectedAt  DateTime? // 인증 거부 시간
+  verificationNote        String? // 운영자 메모 (거부 사유 등)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // 관계
-  posts       Post[]
-  comments    Comment[]
-  orders      Order[]
-  projects    Project[]  // 작성한 프로젝트
-  news        News[]
-  products    Product[]  // 등록한 상품들
+  posts               Post[]
+  comments            Comment[]
+  orders              Order[]
+  projects            Project[] // 작성한 프로젝트
+  news                News[]
+  products            Product[] // 등록한 상품들
   passwordResetTokens PasswordResetToken[]
-  postLikes   PostLike[]
-  projectLikes ProjectLike[]
-  newsLikes   NewsLike[]
-  productLikes ProductLike[]
-  cartItems   CartItem[]
-  paymentRecords PaymentRecord[]
+  postLikes           PostLike[]
+  projectLikes        ProjectLike[]
+  newsLikes           NewsLike[]
+  productLikes        ProductLike[]
+  cartItems           CartItem[]
+  paymentRecords      PaymentRecord[]
 
   @@index([role])
   @@index([isSeller])
@@ -58,20 +58,20 @@ model User {
 
 // 게시글 모델 (커뮤니티)
 model Post {
-  id          String   @id @default(cuid())
-  title       String
-  content     String
-  category    PostCategory
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  images      String[] // 게시글 이미지 배열
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  views       Int      @default(0)
+  id        String       @id @default(cuid())
+  title     String
+  content   String
+  category  PostCategory
+  authorId  String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  images    String[] // 게시글 이미지 배열
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  views     Int          @default(0)
 
   // 관계
-  comments    Comment[]
-  likes       PostLike[]
+  comments Comment[]
+  likes    PostLike[]
 
   @@index([category, createdAt])
   @@index([authorId, createdAt])
@@ -154,55 +154,41 @@ model ProductLike {
   @@map("product_likes")
 }
 
-// 상품 카테고리 모델
-model Category {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  slug        String   @unique // URL용 슬러그 (apparel, stationary, bag, life, accessory)
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // 관계
-  products    Product[]
-
-  @@index([slug])
-  @@map("categories")
-}
-
 // 상품 모델
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  shortDescription String? // 짧은 설명 (제품 상세 페이지용)
-  price       Int      // 원 단위
-  originalPrice Int?
-  discount    Int?     // 할인율 (%)
-  stock       Int      @default(0)
-  imageUrl    String?
-  images      String[] // 상품 대표 이미지 배열
-  contentImages String[] // 본문용 이미지 배열
-  brand       String?  // 브랜드명 (DEUX 등)
-  options     Json?
-  likeCount   Int      @default(0)
-  isActive    Boolean  @default(true)
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  authorId    String?  // 상품 등록자 ID (관리자 또는 판매자)
-  author      User?    @relation(fields: [authorId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    String      @id @default(cuid())
+  name                  String
+  description           String
+  shortDescription      String? // 짧은 설명 (제품 상세 페이지용)
+  price                 Int // 원 단위
+  originalPrice         Int?
+  discount              Int? // 할인율 (%)
+  stock                 Int         @default(0)
+  imageUrl              String?
+  images                String[] // 상품 대표 이미지 배열
+  contentImages         String[] // 본문용 이미지 배열
+  brand                 String? // 브랜드명 (DEUX 등)
+  options               Json?
+  likeCount             Int         @default(0)
+  isActive              Boolean     @default(true)
+  type                  ProductType @default(FUND)
+  fundingGoalAmount     Int?
+  fundingCurrentAmount  Int         @default(0)
+  fundingSupporterCount Int         @default(0)
+  fundingDeadline       DateTime?
+  authorId              String? // 상품 등록자 ID (관리자 또는 판매자)
+  author                User?       @relation(fields: [authorId], references: [id])
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 
   // 관계
-  orderItems  OrderItem[]
+  orderItems     OrderItem[]
   productDetails ProductDetail[]
-  likes       ProductLike[]
-  cartItems   CartItem[]
+  likes          ProductLike[]
+  cartItems      CartItem[]
 
-  @@index([categoryId, isActive])
+  @@index([type, isActive, createdAt])
   @@index([isActive, createdAt])
-  @@index([isActive, categoryId, createdAt])
   @@index([isActive, likeCount])
   @@index([likeCount])
   @@map("products")
@@ -210,42 +196,42 @@ model Product {
 
 // 상품 상세 정보 모델
 model ProductDetail {
-  id          String   @id @default(cuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productionYear Int?  // 제작년도
-  project     String?  // 프로젝트명
-  material    String?  // 제품 소재
-  color       String?  // 제품 색상
-  size        String?  // 사이즈
-  printingMethod String? // 프린팅 방식
-  manufacturer String? // 제조 협력업체
-  shippingInfo String? // 배송 안내 및 반품 고지
+  id              String   @id @default(cuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productionYear  Int? // 제작년도
+  project         String? // 프로젝트명
+  material        String? // 제품 소재
+  color           String? // 제품 색상
+  size            String? // 사이즈
+  printingMethod  String? // 프린팅 방식
+  manufacturer    String? // 제조 협력업체
+  shippingInfo    String? // 배송 안내 및 반품 고지
   qualityStandard String? // 품질 보증 기준
   customerService String? // 고객 센터 안내
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("product_details")
 }
 
 // 주문 모델
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  status      OrderStatus @default(PENDING)
-  totalAmount Int         // 총 금액
-  shippingAddress String
-  phone       String
-  notes       String?
-  paymentInfo Json?
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+  status            OrderStatus @default(PENDING)
+  totalAmount       Int // 총 금액
+  shippingAddress   String
+  phone             String
+  notes             String?
+  paymentInfo       Json?
   paymentVerifiedAt DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   // 관계
-  orderItems  OrderItem[]
+  orderItems     OrderItem[]
   paymentRecords PaymentRecord[]
 
   @@index([userId, status, createdAt])
@@ -255,13 +241,13 @@ model Order {
 
 // 주문 아이템 모델
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Int     // 주문 당시 가격
+  id              String  @id @default(cuid())
+  orderId         String
+  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product @relation(fields: [productId], references: [id])
+  quantity        Int
+  price           Int // 주문 당시 가격
   selectedOptions Json?
 
   @@index([orderId])
@@ -270,18 +256,18 @@ model OrderItem {
 }
 
 model PaymentRecord {
-  id         String   @id @default(cuid())
-  orderId    String
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  impUid     String?
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  impUid      String?
   merchantUid String?
-  amount     Int
-  method     String?
-  status     String
+  amount      Int
+  method      String?
+  status      String
   paymentData Json?
-  createdAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   @@index([orderId])
   @@index([userId, createdAt])
@@ -289,46 +275,46 @@ model PaymentRecord {
 }
 
 model CartItem {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId     String
-  product       Product  @relation(fields: [productId], references: [id])
-  quantity      Int      @default(1)
-  unitPrice     Int
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  quantity        Int      @default(1)
+  unitPrice       Int
   selectedOptions Json?
-  optionsHash   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  optionsHash     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
+  @@unique([userId, productId, optionsHash])
   @@index([userId])
   @@index([productId])
-  @@unique([userId, productId, optionsHash])
   @@map("cart_items")
 }
 
 // 프로젝트 모델 (아카이브)
 model Project {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  content     String
-  year        Int
-  semester    String?
-  teamMembers String[]
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  content      String
+  year         Int
+  semester     String?
+  teamMembers  String[]
   technologies String[]
-  githubUrl   String?
-  demoUrl     String?
-  imageUrl    String?
-  images      String[] // 프로젝트 이미지 배열
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  isFeatured  Boolean  @default(false) // 추천 프로젝트 여부
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  githubUrl    String?
+  demoUrl      String?
+  imageUrl     String?
+  images       String[] // 프로젝트 이미지 배열
+  authorId     String
+  author       User     @relation(fields: [authorId], references: [id])
+  isFeatured   Boolean  @default(false) // 추천 프로젝트 여부
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // 관계
-  likes       ProjectLike[]
+  likes ProjectLike[]
 
   @@index([isFeatured, year])
   @@index([createdAt])
@@ -341,21 +327,21 @@ model Project {
 
 // 뉴스 모델 (아카이브)
 model News {
-  id          String   @id @default(cuid())
-  title       String
-  content     String
-  summary     String?
-  year        Int
-  imageUrl    String?
-  images      String[] // 뉴스 이미지 배열
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  isFeatured  Boolean  @default(false) // 추천 뉴스 여부
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  title      String
+  content    String
+  summary    String?
+  year       Int
+  imageUrl   String?
+  images     String[] // 뉴스 이미지 배열
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  isFeatured Boolean  @default(false) // 추천 뉴스 여부
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // 관계
-  likes       NewsLike[]
+  likes NewsLike[]
 
   @@index([year, createdAt])
   @@index([isFeatured, createdAt])
@@ -375,56 +361,56 @@ model Major {
   updatedAt   DateTime @updatedAt
 
   // 관계
-  subjects    Subject[]
+  subjects Subject[]
 
   @@map("majors")
 }
 
 // 과목 모델
 model Subject {
-  id          String   @id @default(cuid())
-  name        String
-  code        String   @unique
-  description String
-  credits     Int
-  semester    String
-  year        Int
-  category    SubjectCategory // 예술, 경영, 공학
-  majorId     String
-  major       Major    @relation(fields: [majorId], references: [id])
-  professorId String
-  professor   Professor @relation(fields: [professorId], references: [id])
-  isActive    Boolean  @default(true) // 활성 과목 여부
-  displayOrder Int?    // 표시 순서
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String          @id @default(cuid())
+  name         String
+  code         String          @unique
+  description  String
+  credits      Int
+  semester     String
+  year         Int
+  category     SubjectCategory // 예술, 경영, 공학
+  majorId      String
+  major        Major           @relation(fields: [majorId], references: [id])
+  professorId  String
+  professor    Professor       @relation(fields: [professorId], references: [id])
+  isActive     Boolean         @default(true) // 활성 과목 여부
+  displayOrder Int? // 표시 순서
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@map("subjects")
 }
 
 // 교수진 모델
 model Professor {
-  id          String   @id @default(cuid())
-  name        String
-  title       String   // 직급 (교수, 부교수, 조교수, 대우교수 등)
-  email       String   @unique
-  phone       String?
-  office      String?
-  affiliation String?  // 소속 (동국대학교 경영대학 GCS연계전공 등)
-  company     String?  // 회사명 (프린팅플랫폼(주) 등)
-  position    String?  // 직책 (대표이사, 상무 등)
-  courses     String[] // 담당 과목 배열
+  id            String   @id @default(cuid())
+  name          String
+  title         String // 직급 (교수, 부교수, 조교수, 대우교수 등)
+  email         String   @unique
+  phone         String?
+  office        String?
+  affiliation   String? // 소속 (동국대학교 경영대학 GCS연계전공 등)
+  company       String? // 회사명 (프린팅플랫폼(주) 등)
+  position      String? // 직책 (대표이사, 상무 등)
+  courses       String[] // 담당 과목 배열
   researchAreas String[] // 연구 분야
-  education   String?  // 학력
-  experience  String?  // 경력
-  imageUrl    String?
-  isActive    Boolean  @default(true) // 활성 교수 여부
-  displayOrder Int?    // 표시 순서
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  education     String? // 학력
+  experience    String? // 경력
+  imageUrl      String?
+  isActive      Boolean  @default(true) // 활성 교수 여부
+  displayOrder  Int? // 표시 순서
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // 관계
-  subjects    Subject[]
+  subjects Subject[]
 
   @@map("professors")
 }
@@ -464,22 +450,22 @@ model EmailVerificationCode {
 
 // 관리자 콘텐츠 관리 모델 (개선된 구조)
 model AdminContent {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   section     ContentSection
   title       String?
-  content     String?  // HTML 콘텐츠
-  description String?  // 한글 소개글
-  subtitle    String?  // 영어 소개글
-  imageUrl    String?  // 이미지 URL
-  imageAlt    String?  // 이미지 alt 텍스트
-  order       Int      @default(0)  // 표시 순서
-  isActive    Boolean  @default(true)
-  updatedBy   String?  // 마지막 수정자 ID
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  content     String? // HTML 콘텐츠
+  description String? // 한글 소개글
+  subtitle    String? // 영어 소개글
+  imageUrl    String? // 이미지 URL
+  imageAlt    String? // 이미지 alt 텍스트
+  order       Int            @default(0) // 표시 순서
+  isActive    Boolean        @default(true)
+  updatedBy   String? // 마지막 수정자 ID
+  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime       @default(now())
 
   // 관계
-  items       AdminContentItem[]  // 하위 콘텐츠 아이템들
+  items AdminContentItem[] // 하위 콘텐츠 아이템들
 
   @@unique([section])
   @@index([section, isActive, order])
@@ -488,21 +474,21 @@ model AdminContent {
 
 // 관리자 콘텐츠 아이템 모델 (섹션 내 세부 항목들)
 model AdminContentItem {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   contentId   String
   content     AdminContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
   title       String?
-  subtitle    String?  // 부제목
-  description String?  // 설명
-  htmlContent String?  // HTML 콘텐츠
-  imageUrl    String?  // 이미지 URL
-  imageAlt    String?  // 이미지 alt 텍스트
-  order       Int      @default(0)  // 표시 순서
-  isActive    Boolean  @default(true)
-  type        String?  // 영역과 과목 구분 ('area' | 'subject')
-  updatedBy   String?  // 마지막 수정자 ID
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  subtitle    String? // 부제목
+  description String? // 설명
+  htmlContent String? // HTML 콘텐츠
+  imageUrl    String? // 이미지 URL
+  imageAlt    String? // 이미지 alt 텍스트
+  order       Int          @default(0) // 표시 순서
+  isActive    Boolean      @default(true)
+  type        String? // 영역과 과목 구분 ('area' | 'subject')
+  updatedBy   String? // 마지막 수정자 ID
+  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime     @default(now())
 
   @@index([contentId, isActive, order])
   @@map("admin_content_items")
@@ -510,16 +496,16 @@ model AdminContentItem {
 
 // Enums
 enum UserRole {
-  GENERAL   // 일반회원 (상품 구매만 가능)
-  MAJOR     // 전공회원 (상품 구매 + 글쓰기 가능)  
-  ADMIN     // 운영자 (모든 권한)
+  GENERAL // 일반회원 (상품 구매만 가능)
+  MAJOR // 전공회원 (상품 구매 + 글쓰기 가능)  
+  ADMIN // 운영자 (모든 권한)
 }
 
 enum VerificationStatus {
-  PENDING    // 인증 대기 (아직 요청하지 않음)
-  REQUESTED  // 인증 요청됨 (운영자 승인 대기)
-  APPROVED   // 승인됨 (학생 회원으로 전환됨)
-  REJECTED   // 거부됨
+  PENDING // 인증 대기 (아직 요청하지 않음)
+  REQUESTED // 인증 요청됨 (운영자 승인 대기)
+  APPROVED // 승인됨 (학생 회원으로 전환됨)
+  REJECTED // 거부됨
 }
 
 enum PostCategory {
@@ -535,15 +521,20 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum ProductType {
+  FUND
+  PARTNER_UP
+}
+
 enum SubjectCategory {
-  ART      // 예술
+  ART // 예술
   BUSINESS // 경영
   ENGINEERING // 공학
 }
 
 enum ContentSection {
-  GCS_WEB      // GCS:Web
-  MAJOR_INTRO  // 전공 소개
-  SUBJECTS     // 개설 과목
-  PROFESSORS   // 교수진
+  GCS_WEB // GCS:Web
+  MAJOR_INTRO // 전공 소개
+  SUBJECTS // 개설 과목
+  PROFESSORS // 교수진
 }

@@ -67,7 +67,6 @@ railway run npm run db:seed
 - **users**: 사용자 정보 (회원가입 데이터)
 - **posts**: 커뮤니티 게시글
 - **comments**: 댓글
-- **categories**: 상품 카테고리
 - **products**: 상품 정보
 - **orders**: 주문 정보
 - **order_items**: 주문 상품 목록
@@ -83,7 +82,6 @@ railway run npm run db:seed
 - User → Comments (1:N)
 - User → Orders (1:N)
 - Post → Comments (1:N)
-- Category → Products (1:N)
 - Order → OrderItems (1:N)
 - Product → OrderItems (1:N)
 - Major → Subjects (1:N)

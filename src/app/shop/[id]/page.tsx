@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
+import { PRODUCT_TYPES } from '@/lib/shop/product-types'
 
 type RawProductOptionValue = string | { label?: string; priceAdjustment?: number | string }
 
@@ -37,6 +38,10 @@ export default function ProductDetailPage() {
   const [isLiking, setIsLiking] = useState(false)
   const [hasLiked, setHasLiked] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+
+  const productTypeMeta = product ? getProductTypeMeta(product.type) : null
+  const fundingProgress = product ? getFundingProgress(product) : null
+  const isFundProduct = product?.type === 'FUND'
 
   useEffect(() => {
     if (productId) {
@@ -203,6 +208,10 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     if (!product) return
+    if (isFundProduct) {
+      alert('Fund 상품은 장바구니를 통해 구매할 수 없습니다. 펀딩 참여 버튼을 사용해주세요.')
+      return
+    }
     if (!product.isActive) {
       alert('판매 중단된 상품입니다.')
       return
@@ -292,44 +301,6 @@ export default function ProductDetailPage() {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
               </svg>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* 카테고리 탭 */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-0">
-          <div className="flex justify-center gap-4 md:gap-8 py-4 overflow-x-auto">
-            <Link 
-              href="/shop?tab=apparel" 
-              className="pb-2 border-b-2 border-transparent text-gray-400 hover:text-black hover:border-gray-300 font-medium transition-colors text-sm md:text-base whitespace-nowrap"
-            >
-              Apparel
-            </Link>
-            <Link 
-              href="/shop?tab=stationary" 
-              className="pb-2 border-b-2 border-transparent text-gray-400 hover:text-black hover:border-gray-300 font-medium transition-colors text-sm md:text-base whitespace-nowrap"
-            >
-              Stationary
-            </Link>
-            <Link 
-              href="/shop?tab=bag" 
-              className="pb-2 border-b-2 border-transparent text-gray-400 hover:text-black hover:border-gray-300 font-medium transition-colors text-sm md:text-base whitespace-nowrap"
-            >
-              Bag & Pouch
-            </Link>
-            <Link 
-              href="/shop?tab=life" 
-              className="pb-2 border-b-2 border-transparent text-gray-400 hover:text-black hover:border-gray-300 font-medium transition-colors text-sm md:text-base whitespace-nowrap"
-            >
-              Life
-            </Link>
-            <Link 
-              href="/shop?tab=accessory" 
-              className="pb-2 border-b-2 border-transparent text-gray-400 hover:text-black hover:border-gray-300 font-medium transition-colors text-sm md:text-base whitespace-nowrap"
-            >
-              Accessory
             </Link>
           </div>
         </div>
@@ -441,6 +412,11 @@ export default function ProductDetailPage() {
 
           {/* 오른쪽: 제품 정보 */}
           <div className="flex flex-col">
+            {productTypeMeta && (
+              <span className="self-start mb-3 bg-black text-white text-xs uppercase tracking-wider px-3 py-1 rounded-full">
+                {productTypeMeta.name}
+              </span>
+            )}
             <p className="text-sm text-gray-600 mb-2">{product.brand || 'GCS'}</p>
             <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
             <p className="text-sm text-gray-700 mb-6 whitespace-pre-line">{product.shortDescription || product.description}</p>
@@ -450,6 +426,36 @@ export default function ProductDetailPage() {
                 {likeCount.toLocaleString()}명이 좋아합니다.
               </span>
             </div>
+
+            {typeof fundingProgress === 'number' && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between text-xs text-gray-500 uppercase mb-2">
+                  <span>Funding Progress</span>
+                  <span className="font-semibold text-black">{fundingProgress}%</span>
+                </div>
+                <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-black transition-all"
+                    style={{ width: `${fundingProgress}%` }}
+                  />
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-600">
+                  <div className="bg-gray-100 rounded-lg px-3 py-2">
+                    <p className="text-[11px] uppercase text-gray-500">Raised</p>
+                    <p className="text-sm font-semibold text-black">{formatCurrency(product.fundingCurrentAmount ?? 0)}</p>
+                  </div>
+                  <div className="bg-gray-100 rounded-lg px-3 py-2">
+                    <p className="text-[11px] uppercase text-gray-500">Goal</p>
+                    <p className="text-sm font-semibold text-black">{formatCurrency(product.fundingGoalAmount ?? 0)}</p>
+                  </div>
+                </div>
+                {product.fundingDeadline && (
+                  <p className="mt-3 text-xs text-gray-500">
+                    펀딩 마감일: {new Date(product.fundingDeadline).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            )}
 
             {productOptions.length > 0 && (
               <div className="mb-8 space-y-4">
@@ -508,17 +514,17 @@ export default function ProductDetailPage() {
                 onClick={handleBuyNow}
                 disabled={!isAllOptionsSelected}
               >
-                바로 구매
+                {isFundProduct ? '펀딩 참여하기' : '바로 구매'}
               </button>
               <button
                 type="button"
                 onClick={handleAddToCart}
                 className={`flex-1 border py-3 px-6 rounded transition-colors ${
-                  isAllOptionsSelected && !isAddingToCart
+                  isAllOptionsSelected && !isAddingToCart && !isFundProduct
                     ? 'border-black text-black hover:bg-gray-50'
-                    : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                    : 'border-gray-300 text-gray-400 cursor-not-allowed bg-gray-100'
                 }`}
-                disabled={!isAllOptionsSelected || isAddingToCart}
+                disabled={!isAllOptionsSelected || isAddingToCart || isFundProduct}
               >
                 {isAddingToCart ? '담는 중...' : '장바구니 담기'}
               </button>
@@ -543,6 +549,11 @@ export default function ProductDetailPage() {
                 </svg>
               </button>
             </div>
+            {isFundProduct && (
+              <p className="text-xs text-gray-500 mb-6">
+                펀딩 목표 달성 시 등록된 결제 수단으로 자동 결제가 진행됩니다. 참여 이후에는 펀딩 상황을 My Page에서 확인할 수 있습니다.
+              </p>
+            )}
             {showSummary && (
               <div className="mb-8 rounded-lg border border-gray-200 bg-white p-4 space-y-4">
                 <div>
@@ -824,5 +835,20 @@ function normalizeProductOptions(product: any): NormalizedProductOption[] {
       (option: NormalizedProductOption | null): option is NormalizedProductOption =>
         option !== null
     )
+}
+
+function getProductTypeMeta(typeId: string | null | undefined) {
+  if (!typeId) {
+    return null
+  }
+  return PRODUCT_TYPES.find((type) => type.id === typeId) ?? null
+}
+
+function getFundingProgress(product: any) {
+  if (!product || product.type !== 'FUND') return null
+  const goal = typeof product.fundingGoalAmount === 'number' ? product.fundingGoalAmount : 0
+  const current = typeof product.fundingCurrentAmount === 'number' ? product.fundingCurrentAmount : 0
+  if (!goal) return 0
+  return Math.min(100, Math.round((current / goal) * 100))
 }
 

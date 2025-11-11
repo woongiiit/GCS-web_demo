@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth, getCurrentUser } from '@/lib/auth'
 import { permissions, permissionErrors } from '@/lib/permissions'
 import { invalidateCache } from '@/lib/cache'
+import { normalizeProductType } from '@/lib/shop/product-types'
+import { ProductType } from '@prisma/client'
 
 export async function GET(
   request: Request,
@@ -15,7 +17,6 @@ export async function GET(
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
-        category: true,
         productDetails: true,
       }
     })
@@ -30,7 +31,7 @@ export async function GET(
     // 같은 카테고리의 관련 상품 조회 (최대 4개)
     const relatedProducts = await prisma.product.findMany({
       where: {
-        categoryId: product.categoryId,
+        type: product.type,
         id: { not: productId },
         isActive: true,
       },
@@ -109,7 +110,10 @@ export async function PATCH(
       price,
       originalPrice,
       discount,
-      categoryId,
+      type,
+      fundingGoalAmount,
+      fundingCurrentAmount,
+      fundingDeadline,
       brand,
       options,
       images,
@@ -176,19 +180,75 @@ export async function PATCH(
       updateData.discount = parsedDiscount
     }
 
-    if (typeof categoryId === 'string' && categoryId !== existingProduct.categoryId) {
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId }
-      })
-
-      if (!category) {
+    let targetType: ProductType = existingProduct.type
+    if (type !== undefined) {
+      const normalizedType = normalizeProductType(type)
+      if (!normalizedType) {
         return NextResponse.json(
-          { error: '존재하지 않는 카테고리입니다.' },
-          { status: 404 }
+          { error: '유효하지 않은 상품 유형입니다.' },
+          { status: 400 }
+        )
+      }
+      targetType = normalizedType
+      updateData.type = targetType
+
+      if (targetType === ProductType.FUND) {
+        updateData.stock = 0
+      }
+    }
+
+    if (fundingGoalAmount !== undefined) {
+      const parsedFundingGoal = fundingGoalAmount === null || fundingGoalAmount === ''
+        ? null
+        : typeof fundingGoalAmount === 'number'
+          ? fundingGoalAmount
+          : parseInt(String(fundingGoalAmount).replace(/,/g, ''), 10)
+
+      if (parsedFundingGoal !== null && (Number.isNaN(parsedFundingGoal) || parsedFundingGoal <= 0)) {
+        return NextResponse.json(
+          { error: '펀딩 목표 금액은 0보다 큰 숫자여야 합니다.' },
+          { status: 400 }
         )
       }
 
-      updateData.categoryId = categoryId
+      if (targetType === ProductType.FUND && parsedFundingGoal === null) {
+        return NextResponse.json(
+          { error: 'Fund 상품은 펀딩 목표 금액이 필요합니다.' },
+          { status: 400 }
+        )
+      }
+
+      updateData.fundingGoalAmount = parsedFundingGoal
+    }
+
+    if (fundingCurrentAmount !== undefined) {
+      const parsedCurrent = typeof fundingCurrentAmount === 'number'
+        ? fundingCurrentAmount
+        : parseInt(String(fundingCurrentAmount).replace(/,/g, ''), 10)
+
+      if (Number.isNaN(parsedCurrent) || parsedCurrent < 0) {
+        return NextResponse.json(
+          { error: '펀딩 누적 금액은 0 이상의 숫자여야 합니다.' },
+          { status: 400 }
+        )
+      }
+
+      updateData.fundingCurrentAmount = parsedCurrent
+    }
+
+    if (fundingDeadline !== undefined) {
+      if (fundingDeadline === null || fundingDeadline === '') {
+        updateData.fundingDeadline = null
+      } else {
+        const deadlineDate = new Date(fundingDeadline)
+        if (Number.isNaN(deadlineDate.getTime())) {
+          return NextResponse.json(
+            { error: '유효한 펀딩 마감일을 입력해주세요.' },
+            { status: 400 }
+          )
+        }
+        updateData.fundingDeadline = deadlineDate
+      }
     }
 
     if (brand !== undefined) {
@@ -203,14 +263,17 @@ export async function PATCH(
           ? stock
           : parseInt(stockString, 10)
 
-      if (Number.isNaN(parsedStock) || parsedStock < 0 || !Number.isInteger(parsedStock)) {
-        return NextResponse.json(
-          { error: '유효한 재고 수량을 입력해주세요.' },
-          { status: 400 }
-        )
+      if (targetType === ProductType.PARTNER_UP) {
+        if (Number.isNaN(parsedStock) || parsedStock < 0 || !Number.isInteger(parsedStock)) {
+          return NextResponse.json(
+            { error: '재고 수량은 0 이상의 정수로 입력해주세요.' },
+            { status: 400 }
+          )
+        }
+        updateData.stock = parsedStock
+      } else {
+        updateData.stock = 0
       }
-
-      updateData.stock = parsedStock
     }
 
     if (Array.isArray(options)) {
@@ -292,7 +355,6 @@ export async function PATCH(
       where: { id: productId },
       data: updateData,
       include: {
-        category: true,
         productDetails: true,
       }
     })

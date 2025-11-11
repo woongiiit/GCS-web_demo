@@ -321,57 +321,6 @@ async function main() {
 
   console.log('✅ 과목 데이터 생성 완료')
 
-  // 상품 카테고리 생성
-  const categories = await Promise.all([
-    prisma.category.upsert({
-      where: { slug: 'apparel' },
-      update: {},
-      create: {
-        name: 'Apparel',
-        slug: 'apparel',
-        description: 'GCS 브랜드 의류 컬렉션'
-      }
-    }),
-    prisma.category.upsert({
-      where: { slug: 'stationary' },
-      update: {},
-      create: {
-        name: 'Stationary',
-        slug: 'stationary',
-        description: '학습과 업무에 필요한 문구류'
-      }
-    }),
-    prisma.category.upsert({
-      where: { slug: 'bag' },
-      update: {},
-      create: {
-        name: 'Bag & Pouch',
-        slug: 'bag',
-        description: '일상생활과 캠퍼스 라이프를 위한 가방'
-      }
-    }),
-    prisma.category.upsert({
-      where: { slug: 'life' },
-      update: {},
-      create: {
-        name: 'Life',
-        slug: 'life',
-        description: '생활용품과 유틸리티 아이템'
-      }
-    }),
-    prisma.category.upsert({
-      where: { slug: 'accessory' },
-      update: {},
-      create: {
-        name: 'Accessory',
-        slug: 'accessory',
-        description: '스타일을 완성하는 액세서리'
-      }
-    })
-  ])
-
-  console.log('✅ 상품 카테고리 생성 완료')
-
   // 상품은 관리자가 직접 등록하도록 빈 상태로 둠
   console.log('ℹ️  상품 데이터: 빈 상태 (관리자가 직접 등록)')
 
@@ -399,7 +348,10 @@ async function main() {
             values: ['S', 'M', 'L', 'XL']
           }
         ],
-        categoryId: categories[0].id
+        type: 'FUND',
+        fundingGoalAmount: 500000,
+        fundingCurrentAmount: 120000,
+        fundingSupporterCount: 42
       }
     })
   ])
@@ -472,7 +424,6 @@ async function main() {
   console.log(`   - 전공: ${majors.length}개`)
   console.log(`   - 교수진: ${professors.length}명`)
   console.log(`   - 과목: ${subjects.length}개`)
-  console.log(`   - 상품 카테고리: ${categories.length}개`)
   console.log(`   - 상품: 0개 (빈 상태)`)
   console.log(`   - 프로젝트: 0개 (빈 상태)`)
   console.log(`   - 뉴스: 0개 (빈 상태)`)

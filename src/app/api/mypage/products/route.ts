@@ -33,13 +33,12 @@ export async function GET(request: NextRequest) {
         isActive: true,
         likeCount: true,
         options: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          }
-        },
+        type: true,
+        stock: true,
+        fundingGoalAmount: true,
+        fundingCurrentAmount: true,
+        fundingSupporterCount: true,
+        fundingDeadline: true,
         createdAt: true,
         updatedAt: true,
       },

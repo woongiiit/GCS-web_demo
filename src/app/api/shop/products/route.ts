@@ -3,6 +3,8 @@ import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { permissions, permissionErrors } from '@/lib/permissions'
 import { withCache, generateCacheKey, invalidateCache } from '@/lib/cache'
+import { normalizeProductType } from '@/lib/shop/product-types'
+import { ProductType } from '@prisma/client'
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic'
@@ -28,7 +30,9 @@ export async function POST(request: Request) {
       price,
       originalPrice,
       discount,
-      categoryId,
+      type,
+      fundingGoalAmount,
+      fundingDeadline,
       images,
       brand,
       options,
@@ -36,12 +40,15 @@ export async function POST(request: Request) {
     } = body
 
     // 유효성 검사
-    if (!name || !description || !price || !categoryId) {
+    if (!name || !description || !price) {
       return NextResponse.json(
         { error: '필수 항목을 입력해주세요.' },
         { status: 400 }
       )
     }
+
+    const normalizedType = normalizeProductType(type ?? 'FUND')
+    const productType: ProductType = normalizedType ?? ProductType.FUND
 
     const parsedPrice = typeof price === 'number' ? price : parseInt(price, 10)
     const parsedOriginalPrice = typeof originalPrice === 'number'
@@ -76,29 +83,52 @@ export async function POST(request: Request) {
       )
     }
 
-    const parsedStock = typeof stock === 'number'
-      ? stock
-      : stock !== undefined && stock !== null && `${stock}`.trim() !== ''
-        ? parseInt(`${stock}`.trim(), 10)
-        : 0
+    let parsedStock = 0
+    if (productType === ProductType.PARTNER_UP) {
+      parsedStock = typeof stock === 'number'
+        ? stock
+        : stock !== undefined && stock !== null && `${stock}`.trim() !== ''
+          ? parseInt(`${stock}`.trim(), 10)
+          : Number.NaN
 
-    if (Number.isNaN(parsedStock) || parsedStock < 0 || !Number.isInteger(parsedStock)) {
+      if (Number.isNaN(parsedStock) || parsedStock < 0 || !Number.isInteger(parsedStock)) {
+        return NextResponse.json(
+          { error: '재고 수량은 0 이상의 정수로 입력해주세요.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    const parsedFundingGoal = fundingGoalAmount === undefined || fundingGoalAmount === null || `${fundingGoalAmount}`.trim() === ''
+      ? null
+      : typeof fundingGoalAmount === 'number'
+        ? fundingGoalAmount
+        : parseInt(`${fundingGoalAmount}`.trim().replace(/,/g, ''), 10)
+
+    if (parsedFundingGoal !== null && (Number.isNaN(parsedFundingGoal) || parsedFundingGoal <= 0)) {
       return NextResponse.json(
-        { error: '유효한 재고 수량을 입력해주세요.' },
+        { error: '펀딩 목표 금액은 0보다 큰 숫자여야 합니다.' },
         { status: 400 }
       )
     }
 
-    // 카테고리 존재 여부 확인
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId }
-    })
-
-    if (!category) {
+    if (productType === ProductType.FUND && parsedFundingGoal === null) {
       return NextResponse.json(
-        { error: '존재하지 않는 카테고리입니다.' },
-        { status: 404 }
+        { error: 'Fund 상품은 펀딩 목표 금액이 필요합니다.' },
+        { status: 400 }
       )
+    }
+
+    let parsedFundingDeadline: Date | null = null
+    if (fundingDeadline) {
+      const deadlineDate = new Date(fundingDeadline)
+      if (Number.isNaN(deadlineDate.getTime())) {
+        return NextResponse.json(
+          { error: '유효한 펀딩 마감일을 입력해주세요.' },
+          { status: 400 }
+        )
+      }
+      parsedFundingDeadline = deadlineDate
     }
 
     const parsedOptions = Array.isArray(options)
@@ -165,8 +195,10 @@ export async function POST(request: Request) {
       price: parsedPrice,
       originalPrice: parsedOriginalPrice,
       discount: parsedDiscount,
-      stock: parsedStock,
-      categoryId,
+      stock: productType === ProductType.PARTNER_UP ? parsedStock : 0,
+      type: productType,
+      fundingGoalAmount: parsedFundingGoal,
+      fundingDeadline: parsedFundingDeadline ?? undefined,
       images: Array.isArray(images) ? images : [], // 상품 대표 이미지들 저장
       brand: typeof brand === 'string' && brand.trim().length > 0 ? brand.trim() : null,
       isActive: true,
@@ -178,10 +210,7 @@ export async function POST(request: Request) {
     }
 
     const product = await prisma.product.create({
-      data: productData,
-      include: {
-        category: true,
-      }
+      data: productData
     })
 
     // 상품 등록 후 관련 캐시 무효화
@@ -224,15 +253,17 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const categorySlug = searchParams.get('category')
+    const typeParam = searchParams.get('type')
     const sortParam = (searchParams.get('sort') || 'recent').toLowerCase()
     const limitParam = searchParams.get('limit')
     const limit = limitParam ? Math.max(1, Math.min(parseInt(limitParam, 10) || 0, 100)) : (sortParam === 'likes' ? 10 : 100)
 
+    const normalizedType = typeParam ? normalizeProductType(typeParam) : null
+
     // 캐시 키 생성
     const cacheKey = generateCacheKey(
       'products',
-      categorySlug || 'all',
+      normalizedType || 'all',
       `sort:${sortParam}:limit:${limit}`
     )
 
@@ -242,26 +273,8 @@ export async function GET(request: Request) {
         isActive: true,
       }
 
-      if (categorySlug) {
-        const category = await prisma.category.findFirst({
-          where: {
-            slug: {
-              equals: categorySlug,
-              mode: 'insensitive'
-            }
-          },
-          select: { id: true }
-        })
-
-        if (!category) {
-          return {
-            success: true,
-            data: [],
-            count: 0
-          }
-        }
-
-        whereClause.categoryId = category.id
+      if (normalizedType) {
+        whereClause.type = normalizedType
       }
       const orderBy = sortParam === 'likes'
         ? [{ likeCount: 'desc' as const }, { createdAt: 'desc' as const }]
@@ -269,15 +282,6 @@ export async function GET(request: Request) {
 
       const products = await prisma.product.findMany({
         where: whereClause,
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            }
-          },
-        },
         orderBy,
         take: limit
       })

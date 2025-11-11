@@ -6,6 +6,7 @@ import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 import Link from 'next/link'
 import RichTextEditor from '@/components/TinyMCEEditor'
+import { PRODUCT_TYPES } from '@/lib/shop/product-types'
 
 type ProductOptionValueInput = {
   id: string
@@ -22,16 +23,17 @@ type ProductOptionInput = {
 export default function ShopAddPage() {
   const router = useRouter()
   const { role, isSeller } = usePermissions()
-  const [categories, setCategories] = useState<any[]>([])
   const [formData, setFormData] = useState({
+    type: 'FUND',
     name: '',
     description: '',
     shortDescription: '',
     price: '',
     originalPrice: '',
     discount: '',
-    categoryId: '',
-    brand: '', 
+    brand: '',
+    fundingGoalAmount: '',
+    fundingDeadline: '',
     stock: '',
   })
   const [customOptions, setCustomOptions] = useState<ProductOptionInput[]>([])
@@ -45,17 +47,14 @@ export default function ShopAddPage() {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
+  const selectedProductType = PRODUCT_TYPES.find((type) => type.id === formData.type) ?? PRODUCT_TYPES[0]
+
   // 상품 등록 권한이 없는 경우 접근 차단
   useEffect(() => {
     if (!permissions.canAddProduct(role, isSeller)) {
       router.push('/shop')
     }
   }, [role, isSeller, router])
-
-  // 카테고리 목록 불러오기
-  useEffect(() => {
-    fetchCategories()
-  }, [])
 
   // 할인율 자동 계산
   useEffect(() => {
@@ -82,23 +81,6 @@ export default function ShopAddPage() {
       }))
     }
   }, [formData.price, formData.originalPrice])
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/shop/categories', { cache: 'no-store' })
-      const data = await response.json()
-
-      if (data.success && Array.isArray(data.data)) {
-        setCategories(data.data)
-      } else {
-        console.error('카테고리 조회 실패:', data.error)
-        setCategories([])
-      }
-    } catch (error) {
-      console.error('카테고리 조회 오류:', error)
-      setCategories([])
-    }
-  }
 
   // 상품 대표 이미지 업로드
   const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,21 +285,55 @@ export default function ShopAddPage() {
         return
       }
 
-      if (formData.stock.trim() === '') {
-        setMessage('재고 수량을 입력해주세요.')
-        setMessageType('error')
-        setIsSubmitting(false)
-        return
+      const isFundType = formData.type === 'FUND'
+      const isPartnerUpType = formData.type === 'PARTNER_UP'
+
+      let parsedStock = 0
+      if (isPartnerUpType) {
+        if (formData.stock.trim() === '') {
+          setMessage('재고 수량을 입력해주세요.')
+          setMessageType('error')
+          setIsSubmitting(false)
+          return
+        }
+
+        parsedStock = parseInt(formData.stock, 10)
+
+        if (Number.isNaN(parsedStock) || parsedStock < 0) {
+          setMessage('재고 수량은 0 이상의 정수를 입력해주세요.')
+          setMessageType('error')
+          setIsSubmitting(false)
+          return
+        }
       }
 
-      const parsedStock = parseInt(formData.stock, 10)
+      let parsedFundingGoal: number | null = null
+      if (isFundType) {
+        if (!formData.fundingGoalAmount.trim()) {
+          setMessage('Fund 상품의 펀딩 목표 금액을 입력해주세요.')
+          setMessageType('error')
+          setIsSubmitting(false)
+          return
+        }
 
-      if (Number.isNaN(parsedStock) || parsedStock < 0) {
-        setMessage('재고 수량은 0 이상의 정수를 입력해주세요.')
-        setMessageType('error')
-        setIsSubmitting(false)
-        return
+        parsedFundingGoal = parseInt(formData.fundingGoalAmount.replace(/,/g, ''), 10)
+        if (Number.isNaN(parsedFundingGoal) || parsedFundingGoal <= 0) {
+          setMessage('펀딩 목표 금액은 0보다 큰 숫자여야 합니다.')
+          setMessageType('error')
+          setIsSubmitting(false)
+          return
+        }
+      } else if (formData.fundingGoalAmount.trim()) {
+        parsedFundingGoal = parseInt(formData.fundingGoalAmount.replace(/,/g, ''), 10)
+        if (Number.isNaN(parsedFundingGoal) || parsedFundingGoal < 0) {
+          setMessage('펀딩 목표 금액은 0 이상의 숫자여야 합니다.')
+          setMessageType('error')
+          setIsSubmitting(false)
+          return
+        }
       }
+
+      const fundingDeadlineValue = formData.fundingDeadline.trim()
 
       // 상품 대표 이미지들을 Base64로 인코딩
       const coverImagesBase64: string[] = []
@@ -346,11 +362,13 @@ export default function ShopAddPage() {
           price: parseInt(formData.price),
           originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : null,
           discount: formData.discount ? parseInt(formData.discount) : null,
-          categoryId: formData.categoryId,
+          type: formData.type,
+          fundingGoalAmount: parsedFundingGoal,
+          fundingDeadline: isFundType && fundingDeadlineValue ? fundingDeadlineValue : null,
           brand: formData.brand,
           options: sanitizedOptions,
           images: coverImagesBase64, // 상품 대표 이미지들
-          stock: parsedStock,
+          stock: isPartnerUpType ? parsedStock : 0,
         })
       })
 
@@ -360,14 +378,16 @@ export default function ShopAddPage() {
         setMessage('상품이 성공적으로 등록되었습니다.')
         setMessageType('success')
         setFormData({
+          type: 'FUND',
           name: '',
           description: '',
           shortDescription: '',
           price: '',
           originalPrice: '',
           discount: '',
-          categoryId: '',
           brand: '',
+          fundingGoalAmount: '',
+          fundingDeadline: '',
           stock: '',
         })
         setEditorContent('')
@@ -497,28 +517,28 @@ export default function ShopAddPage() {
                   <h3 className="text-lg font-semibold text-black mb-4">기본 정보</h3>
                   
                   <div className="space-y-4">
-                    {/* 카테고리 */}
+                    {/* 상품 유형 */}
                     <div>
-                      <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 mb-2">
-                        카테고리 *
+                      <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+                        상품 유형 *
                       </label>
                       <select
-                        id="categoryId"
-                        name="categoryId"
+                        id="type"
+                        name="type"
                         required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                        value={formData.categoryId}
+                        value={formData.type}
                         onChange={handleInputChange}
-                        disabled={categories.length === 0}
                       >
-                        <option value="">카테고리를 선택하세요</option>
-                        {categories.map(cat => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        {PRODUCT_TYPES.map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.name}
+                          </option>
                         ))}
                       </select>
-                      {categories.length === 0 && (
-                        <p className="mt-2 text-xs text-red-500">등록된 카테고리가 없습니다. 관리자에게 카테고리 생성을 요청해주세요.</p>
-                      )}
+                      <p className="mt-2 text-xs text-gray-500">
+                        {selectedProductType.description}
+                      </p>
                     </div>
 
                     {/* 상품명 */}
@@ -569,6 +589,46 @@ export default function ShopAddPage() {
                         placeholder="한 줄 소개"
                       />
                     </div>
+
+                    {formData.type === 'FUND' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="fundingGoalAmount" className="block text-sm font-medium text-gray-700 mb-2">
+                            펀딩 목표 금액 *
+                          </label>
+                          <input
+                            id="fundingGoalAmount"
+                            name="fundingGoalAmount"
+                            type="number"
+                            min={1}
+                            required
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                            value={formData.fundingGoalAmount}
+                            onChange={handleInputChange}
+                            placeholder="예: 500000"
+                          />
+                          <p className="mt-2 text-xs text-gray-500">
+                            펀딩이 목표 금액을 달성하면 자동 결제가 진행됩니다.
+                          </p>
+                        </div>
+                        <div>
+                          <label htmlFor="fundingDeadline" className="block text-sm font-medium text-gray-700 mb-2">
+                            펀딩 마감일
+                          </label>
+                          <input
+                            id="fundingDeadline"
+                            name="fundingDeadline"
+                            type="date"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                            value={formData.fundingDeadline}
+                            onChange={handleInputChange}
+                          />
+                          <p className="mt-2 text-xs text-gray-500">
+                            펀딩이 종료되는 날짜를 설정하세요. 설정하지 않으면 상시 펀딩으로 운영됩니다.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -646,19 +706,25 @@ export default function ShopAddPage() {
                     {/* 재고 수량 */}
                     <div>
                       <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
-                        재고 수량 *
+                        재고 수량 {formData.type === 'PARTNER_UP' ? '*' : ''}
                       </label>
                       <input
                         id="stock"
                         name="stock"
                         type="number"
                         min={0}
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                        required={formData.type === 'PARTNER_UP'}
+                        disabled={formData.type === 'FUND'}
+                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors ${formData.type === 'FUND' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                         value={formData.stock}
                         onChange={handleInputChange}
-                        placeholder="재고 수량을 입력하세요"
+                        placeholder={formData.type === 'PARTNER_UP' ? '재고 수량을 입력하세요' : 'Fund 상품은 재고를 관리하지 않습니다.'}
                       />
+                      {formData.type === 'FUND' && (
+                        <p className="mt-2 text-xs text-gray-500">
+                          펀딩 상품은 재고를 선확보하지 않으며, 목표 달성 후 제작이 시작됩니다.
+                        </p>
+                      )}
                     </div>
                   </div>
 

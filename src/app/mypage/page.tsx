@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { PRODUCT_TYPES } from '@/lib/shop/product-types'
 
 interface UserInfo {
   id: string
@@ -78,6 +79,12 @@ function MyPageContent() {
       value === 'orders'
     )
   }
+
+  const getProductTypeLabel = useCallback((typeId?: string | null) => {
+    if (!typeId) return ''
+    const meta = PRODUCT_TYPES.find((type) => type.id === typeId)
+    return meta?.name ?? ''
+  }, [])
 
   const formatCurrency = (price: number) => `${price.toLocaleString()}원`
 
@@ -1348,42 +1355,45 @@ function MyArchiveTab({ user }: { user: any }) {
             </div>
           ) : myProducts.length > 0 ? (
             <div className="space-y-4">
-              {myProducts.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/shop/${product.id}`}
-                  className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start gap-4">
-                    {product.images && product.images[0] && (
-                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                            e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-gray-300 text-gray-600 text-xs">No Image</span>'
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h4>
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
-                        <span className="font-semibold text-black">{product.price.toLocaleString()}원</span>
-                        {product.category && (
-                          <span>{product.category.name}</span>
-                        )}
-                        {!product.isActive && (
-                          <span className="text-red-500">판매 중단</span>
-                        )}
+              {myProducts.map((product) => {
+                const typeLabel = getProductTypeLabel(product.type)
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/shop/${product.id}`}
+                    className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start gap-4">
+                      {product.images && product.images[0] && (
+                        <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-gray-300 text-gray-600 text-xs">No Image</span>'
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h4>
+                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.shortDescription || product.description}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <span className="font-semibold text-black">{product.price.toLocaleString()}원</span>
+                          {typeLabel && (
+                            <span className="uppercase tracking-wide text-gray-500">{typeLabel}</span>
+                          )}
+                          {!product.isActive && (
+                            <span className="text-red-500">판매 중단</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">

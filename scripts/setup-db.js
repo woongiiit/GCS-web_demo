@@ -57,40 +57,22 @@ async function setupDatabase() {
         })
       ])
 
-      // 상품 카테고리 생성
-      const categories = await Promise.all([
-        prisma.category.upsert({
-          where: { name: 'Apparel' },
-          update: {},
-          create: {
-            name: 'Apparel',
-            description: 'GCS 브랜드 의류 컬렉션'
-          }
-        }),
-        prisma.category.upsert({
-          where: { name: 'Stationary' },
-          update: {},
-          create: {
-            name: 'Stationary',
-            description: '학습과 업무에 필요한 문구류'
-          }
-        })
-      ])
-
       // 샘플 상품 생성
       await prisma.product.create({
         data: {
           name: 'GCS 로고 티셔츠',
-          description: 'GCS 브랜드 로고가 새겨진 기본 티셔츠입니다.',
+          description: '<p>GCS 브랜드 로고가 새겨진 기본 티셔츠입니다.</p>',
+          shortDescription: 'GCS 로고가 인쇄된 베이직 티셔츠',
           price: 25000,
           originalPrice: 30000,
           discount: 17,
-          stock: 100,
-          tags: ['베스트셀러', 'NEW'],
-          features: ['100% 면 소재', '편안한 착용감'],
-          sizes: ['S', 'M', 'L', 'XL'],
-          colors: ['화이트', '블랙', '네이비'],
-          categoryId: categories[0].id
+          stock: 0,
+          images: ['/images/shop/sample-product.jpg'],
+          brand: 'GCS',
+          type: 'FUND',
+          fundingGoalAmount: 500000,
+          fundingCurrentAmount: 125000,
+          fundingSupporterCount: 58
         }
       })
 

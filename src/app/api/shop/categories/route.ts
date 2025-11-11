@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PRODUCT_TYPES } from '@/lib/shop/product-types'
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
-    const categories = await prisma.category.findMany({
-      orderBy: {
-        name: 'asc'
-      }
-    })
+    const categories = PRODUCT_TYPES.map((type) => ({
+      id: type.id,
+      name: type.name,
+      slug: type.slug,
+      description: type.description
+    }))
 
     return NextResponse.json(
       { 
