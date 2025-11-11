@@ -66,6 +66,8 @@ type PortOneResponse = {
   buyer_email?: string
   buyer_tel?: string
   receipt_url?: string
+  error_code?: string
+  error_msg?: string
 }
 
 export default function CheckoutPage() {
@@ -184,11 +186,12 @@ export default function CheckoutPage() {
         `gcs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       const amount = totalAmount
       const merchantCode = process.env.NEXT_PUBLIC_PORTONE_MERCHANT_CODE || 'imp10391932'
+      const pgId = process.env.NEXT_PUBLIC_PORTONE_PG_ID || 'html5_inicis.INIpayTest'
 
       IMP.init(merchantCode)
 
       const paymentParams = {
-        pg: 'html5_inicis.INIpayTest',
+        pg: pgId,
         pay_method: 'card',
         merchant_uid: merchantUid,
         name: mainProductName,
@@ -201,8 +204,13 @@ export default function CheckoutPage() {
 
       IMP.request_pay(paymentParams, async (rsp: PortOneResponse) => {
         if (!rsp.success) {
+          console.error('PortOne payment failed:', rsp)
           setIsPaying(false)
-          setError('결제가 취소되거나 실패했습니다. 다시 시도해주세요.')
+          setError(
+            rsp.error_msg
+              ? `결제 실패: ${rsp.error_msg}`
+              : '결제가 취소되거나 실패했습니다. 다시 시도해주세요.'
+          )
           return
         }
 
