@@ -102,6 +102,8 @@ export async function POST(request: Request) {
     }> = []
     const productsToUpdate: Array<{ productId: string; quantity: number }> = []
 
+    const productsToIncrementFunding: Array<{ productId: string; amount: number; supporterIncrement: number }> = []
+
     if (hasCartItems) {
       const cartItems = await prisma.cartItem.findMany({
         where: {
@@ -157,10 +159,19 @@ export async function POST(request: Request) {
           selectedOptions: cartItem.selectedOptions ?? undefined
         })
 
+        const contributionAmount = itemTotal
         productsToUpdate.push({
           productId: product.id,
           quantity: cartItem.quantity
         })
+
+        if (product.type === 'FUND') {
+          productsToIncrementFunding.push({
+            productId: product.id,
+            amount: contributionAmount,
+            supporterIncrement: 1
+          })
+        }
       }
     } else if (hasDirectItems) {
       for (const item of items!) {
@@ -228,6 +239,14 @@ export async function POST(request: Request) {
           productId: product.id,
           quantity: item.quantity
         })
+
+        if (product.type === 'FUND') {
+          productsToIncrementFunding.push({
+            productId: product.id,
+            amount: itemTotal,
+            supporterIncrement: 1
+          })
+        }
       }
     }
 
@@ -362,6 +381,20 @@ export async function POST(request: Request) {
     }
 
     if (orderStatus === 'CONFIRMED') {
+      for (const item of productsToIncrementFunding) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            fundingCurrentAmount: {
+              increment: item.amount
+            },
+            fundingSupporterCount: {
+              increment: item.supporterIncrement
+            }
+          }
+        })
+      }
+
       void notifySellersOfOrder(order, {
         buyerName: user.name,
         buyerEmail: user.email,
