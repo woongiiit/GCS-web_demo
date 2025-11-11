@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { permissions, permissionErrors } from '@/lib/permissions'
+import {
+  calculateUnitPrice,
+  normalizeProductOptions,
+  validateSelectedOptions,
+  type SelectedOptionInput
+} from '@/lib/shop/options'
+import {
+  cancelPortOnePayment,
+  getPortOnePayment
+} from '@/lib/shop/payment'
 
 export async function POST(request: Request) {
   try {
@@ -22,13 +32,29 @@ export async function POST(request: Request) {
       cartItemIds,
       shippingAddress,
       phone,
-      notes
+      notes,
+      payment
     } = body as {
-      items?: Array<{ productId: string; quantity: number; unitPrice?: number; selectedOptions?: unknown }>
+      items?: Array<{
+        productId: string
+        quantity: number
+        selectedOptions?: SelectedOptionInput[]
+      }>
       cartItemIds?: string[]
       shippingAddress?: string
       phone?: string
       notes?: string
+      payment?: {
+        impUid: string
+        merchantUid: string
+        amount: number
+        payMethod?: string
+        cardName?: string
+        buyerName?: string
+        buyerEmail?: string
+        buyerTel?: string
+        receiptUrl?: string
+      }
     }
 
     // 유효성 검사
@@ -51,7 +77,12 @@ export async function POST(request: Request) {
 
     // 상품 정보 조회 및 재고 확인
     let totalAmount = 0
-    const orderItems: Array<{ productId: string; quantity: number; price: number; selectedOptions?: unknown }> = []
+    const orderItems: Array<{
+      productId: string
+      quantity: number
+      price: number
+      selectedOptions?: unknown
+    }> = []
     const productsToUpdate: Array<{ productId: string; quantity: number }> = []
 
     if (hasCartItems) {
@@ -141,9 +172,30 @@ export async function POST(request: Request) {
           )
         }
 
-        const unitPrice = typeof item.unitPrice === 'number' && item.unitPrice >= 0
-          ? item.unitPrice
-          : product.price
+        const normalizedOptions = normalizeProductOptions(product.options)
+        const { normalizedSelectedOptions } = validateSelectedOptions(
+          normalizedOptions,
+          item.selectedOptions
+        )
+
+        if (
+          normalizedOptions.length > 0 &&
+          normalizedSelectedOptions.length !== normalizedOptions.length
+        ) {
+          return NextResponse.json(
+            { error: `모든 옵션을 선택해주세요. (${product.name})` },
+            { status: 400 }
+          )
+        }
+
+        const unitPrice = calculateUnitPrice(product.price, normalizedSelectedOptions)
+        if (unitPrice < 0) {
+          return NextResponse.json(
+            { error: `잘못된 옵션 가격이 계산되었습니다. (${product.name})` },
+            { status: 400 }
+          )
+        }
+
         const itemTotal = unitPrice * item.quantity
         totalAmount += itemTotal
 
@@ -151,7 +203,8 @@ export async function POST(request: Request) {
           productId: product.id,
           quantity: item.quantity,
           price: unitPrice,
-          selectedOptions: item.selectedOptions ?? undefined
+          selectedOptions:
+            normalizedSelectedOptions.length > 0 ? normalizedSelectedOptions : undefined
         })
 
         productsToUpdate.push({
@@ -161,15 +214,72 @@ export async function POST(request: Request) {
       }
     }
 
+    let paymentInfo: Record<string, unknown> | null = null
+    let orderStatus: 'PENDING' | 'CONFIRMED' = 'PENDING'
+
+    if (payment) {
+      try {
+        const paymentData = await getPortOnePayment(payment.impUid)
+
+        if (paymentData.merchant_uid !== payment.merchantUid) {
+          await cancelPortOnePayment(payment.impUid, '주문 정보와 일치하지 않는 주문 번호')
+          return NextResponse.json(
+            { error: '결제 정보가 일치하지 않습니다. (주문 번호 불일치)' },
+            { status: 400 }
+          )
+        }
+
+        if (paymentData.status !== 'paid') {
+          return NextResponse.json(
+            { error: '결제가 완료되지 않았습니다.' },
+            { status: 400 }
+          )
+        }
+
+        if (Math.round(paymentData.amount) !== Math.round(totalAmount)) {
+          await cancelPortOnePayment(payment.impUid, '결제 금액 불일치', paymentData.amount)
+          return NextResponse.json(
+            { error: '결제 금액이 주문 금액과 일치하지 않습니다.' },
+            { status: 400 }
+          )
+        }
+
+        orderStatus = 'CONFIRMED'
+        paymentInfo = {
+          impUid: payment.impUid,
+          merchantUid: payment.merchantUid,
+          amount: paymentData.amount,
+          currency: paymentData.currency ?? 'KRW',
+          payMethod: paymentData.pay_method,
+          status: paymentData.status,
+          cardName: payment.cardName ?? paymentData.card_name,
+          buyerName: payment.buyerName ?? paymentData.buyer_name,
+          buyerEmail: payment.buyerEmail ?? paymentData.buyer_email,
+          buyerTel: payment.buyerTel ?? paymentData.buyer_tel,
+          receiptUrl: payment.receiptUrl ?? paymentData.receipt_url,
+          paidAt: paymentData.paid_at ? new Date(paymentData.paid_at * 1000).toISOString() : null,
+          raw: paymentData
+        }
+      } catch (verificationError) {
+        console.error('PortOne 결제 검증 오류:', verificationError)
+        return NextResponse.json(
+          { error: '결제 검증에 실패했습니다. 관리자에게 문의해주세요.' },
+          { status: 500 }
+        )
+      }
+    }
+
     // 주문 생성
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        status: 'PENDING',
+        status: orderStatus,
         totalAmount,
         shippingAddress,
         phone,
         notes: notes || null,
+        paymentInfo,
+        paymentVerifiedAt: paymentInfo ? new Date() : null,
         orderItems: {
           create: orderItems.map((item) => ({
             product: {

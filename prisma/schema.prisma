@@ -238,6 +238,8 @@ model Order {
   shippingAddress String
   phone       String
   notes       String?
+  paymentInfo Json?
+  paymentVerifiedAt DateTime?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 

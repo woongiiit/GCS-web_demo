@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
-import type { FormEvent } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -68,14 +67,6 @@ function MyPageContent() {
   const [cartMessageType, setCartMessageType] = useState<'success' | 'error'>('success')
   const [selectedCartIds, setSelectedCartIds] = useState<string[]>([])
   const [isDeletingCartItems, setIsDeletingCartItems] = useState(false)
-  const [showOrderForm, setShowOrderForm] = useState(false)
-  const [isOrdering, setIsOrdering] = useState(false)
-  const [orderMessage, setOrderMessage] = useState('')
-  const [orderMessageType, setOrderMessageType] = useState<'success' | 'error'>('success')
-  const [shippingAddress, setShippingAddress] = useState('')
-  const [shippingPhone, setShippingPhone] = useState('')
-  const [orderNotes, setOrderNotes] = useState('')
-
   const isValidTab = (value: string | null): value is 'profile' | 'cart' | 'archive' | 'verification' => {
     return value === 'profile' || value === 'cart' || value === 'archive' || value === 'verification'
   }
@@ -156,6 +147,30 @@ function MyPageContent() {
     return selectedCartItems.some((item) => !item.product?.isActive)
   }, [selectedCartItems])
 
+  const handleProceedToCheckout = useCallback(() => {
+    if (selectedCartIds.length === 0) {
+      setCartMessageType('error')
+      setCartMessage('주문할 상품을 선택해주세요.')
+      return
+    }
+
+    if (hasInactiveSelectedItems) {
+      setCartMessageType('error')
+      setCartMessage('판매 중단된 상품은 결제할 수 없습니다. 삭제 후 다시 시도해주세요.')
+      return
+    }
+
+    if (typeof window === 'undefined') return
+
+    const payload = {
+      mode: 'cart' as const,
+      cartItemIds: selectedCartIds
+    }
+
+    window.sessionStorage.setItem('gcs_checkout_payload', JSON.stringify(payload))
+    router.push('/shop/checkout')
+  }, [hasInactiveSelectedItems, router, selectedCartIds])
+
   const handleDeleteSelectedCartItems = useCallback(async () => {
     if (selectedCartIds.length === 0) return
     const confirmed = window.confirm('선택한 상품을 삭제하시겠습니까?')
@@ -190,63 +205,6 @@ function MyPageContent() {
       setIsDeletingCartItems(false)
     }
   }, [fetchCartItems, selectedCartIds])
-
-  const handleOrderSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (selectedCartIds.length === 0) {
-      setOrderMessageType('error')
-      setOrderMessage('주문할 상품을 선택해주세요.')
-      return
-    }
-
-    if (hasInactiveSelectedItems) {
-      setOrderMessageType('error')
-      setOrderMessage('판매 중단된 상품은 주문할 수 없습니다. 삭제 후 다시 시도해주세요.')
-      return
-    }
-
-    if (!shippingAddress.trim() || !shippingPhone.trim()) {
-      setOrderMessageType('error')
-      setOrderMessage('배송지와 연락처를 모두 입력해주세요.')
-      return
-    }
-
-    setIsOrdering(true)
-    setOrderMessage('')
-    try {
-      const response = await fetch('/api/shop/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          cartItemIds: selectedCartIds,
-          shippingAddress: shippingAddress.trim(),
-          phone: shippingPhone.trim(),
-          notes: orderNotes.trim() || undefined
-        })
-      })
-      const data = await response.json()
-      if (response.ok && data.success) {
-        setOrderMessageType('success')
-        setOrderMessage('주문이 완료되었습니다.')
-        setSelectedCartIds([])
-        setShowOrderForm(false)
-        setOrderNotes('')
-        await fetchCartItems()
-      } else {
-        setOrderMessageType('error')
-        setOrderMessage(data.error || '주문 처리 중 오류가 발생했습니다.')
-      }
-    } catch (error) {
-      console.error('주문 처리 오류:', error)
-      setOrderMessageType('error')
-      setOrderMessage('주문 처리 중 오류가 발생했습니다.')
-    } finally {
-      setIsOrdering(false)
-    }
-  }, [fetchCartItems, hasInactiveSelectedItems, orderNotes, selectedCartIds, shippingAddress, shippingPhone])
 
   // 학생 인증 관련 상태
   const [verificationImage, setVerificationImage] = useState<File | null>(null)
@@ -292,23 +250,10 @@ function MyPageContent() {
   }, [user])
 
   useEffect(() => {
-    if (user?.phone) {
-      setShippingPhone(user.phone)
-    }
-  }, [user?.phone])
-
-  useEffect(() => {
     if (activeTab === 'cart') {
       fetchCartItems()
     }
   }, [activeTab, fetchCartItems])
-
-  useEffect(() => {
-    if (selectedCartIds.length === 0) {
-      setShowOrderForm(false)
-      setOrderMessage('')
-    }
-  }, [selectedCartIds])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -805,96 +750,17 @@ function MyPageContent() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              if (selectedCartIds.length === 0) return
-                              setShowOrderForm((prev) => !prev)
-                              setOrderMessage('')
-                            }}
-                            disabled={selectedCartIds.length === 0 || hasInactiveSelectedItems}
+                          onClick={handleProceedToCheckout}
+                          disabled={selectedCartIds.length === 0 || hasInactiveSelectedItems}
                             className={`flex-1 rounded-lg px-4 py-3 text-sm font-medium transition-colors md:flex-none md:px-6 ${
                               selectedCartIds.length === 0 || hasInactiveSelectedItems
                                 ? 'cursor-not-allowed bg-gray-300 text-gray-500'
                                 : 'bg-black text-white hover:bg-gray-800'
                             }`}
                           >
-                            {showOrderForm ? '주문 폼 닫기' : '주문하기'}
+                          결제하기
                           </button>
                         </div>
-
-                        {showOrderForm && (
-                          <form onSubmit={handleOrderSubmit} className="mt-6 space-y-4">
-                            {orderMessage && (
-                              <div
-                                className={`rounded-lg border px-4 py-3 text-sm ${
-                                  orderMessageType === 'success'
-                                    ? 'border-green-200 bg-green-50 text-green-700'
-                                    : 'border-red-200 bg-red-50 text-red-700'
-                                }`}
-                              >
-                                {orderMessage}
-                              </div>
-                            )}
-                            <div>
-                              <label className="mb-2 block text-sm font-medium text-gray-700">
-                                배송지 주소 *
-                              </label>
-                              <input
-                                type="text"
-                                value={shippingAddress}
-                                onChange={(e) => setShippingAddress(e.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black"
-                                placeholder="배송지를 입력해주세요."
-                              />
-                            </div>
-                            <div>
-                              <label className="mb-2 block text-sm font-medium text-gray-700">
-                                연락처 *
-                              </label>
-                              <input
-                                type="text"
-                                value={shippingPhone}
-                                onChange={(e) => setShippingPhone(e.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black"
-                                placeholder="연락 가능한 전화번호를 입력해주세요."
-                              />
-                            </div>
-                            <div>
-                              <label className="mb-2 block text-sm font-medium text-gray-700">
-                                요청사항 (선택)
-                              </label>
-                              <textarea
-                                value={orderNotes}
-                                onChange={(e) => setOrderNotes(e.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black"
-                                rows={3}
-                                placeholder="배송 관련 요청사항이 있다면 입력해주세요."
-                              />
-                            </div>
-                            <div className="flex justify-end gap-3">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setShowOrderForm(false)
-                                  setOrderMessage('')
-                                }}
-                                className="rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
-                              >
-                                취소
-                              </button>
-                              <button
-                                type="submit"
-                                disabled={isOrdering}
-                                className={`rounded-lg px-6 py-3 text-sm font-medium text-white ${
-                                  isOrdering
-                                    ? 'cursor-not-allowed bg-gray-500'
-                                    : 'bg-black hover:bg-gray-800'
-                                }`}
-                              >
-                                {isOrdering ? '주문 중...' : '주문 확정'}
-                              </button>
-                            </div>
-                          </form>
-                        )}
                       </div>
                     </div>
                   )}

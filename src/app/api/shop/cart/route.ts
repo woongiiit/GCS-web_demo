@@ -1,26 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'crypto'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { permissions, permissionErrors } from '@/lib/permissions'
+import {
+  normalizeProductOptions,
+  validateSelectedOptions,
+  type SelectedOptionInput
+} from '@/lib/shop/options'
+import { createOptionsHash } from '@/lib/shop/options-hash'
 
 export const dynamic = 'force-dynamic'
-
-type SelectedOptionInput = {
-  name: string
-  label: string
-  priceAdjustment?: number
-}
-
-type NormalizedOptionValue = {
-  label: string
-  priceAdjustment: number
-}
-
-type NormalizedProductOption = {
-  name: string
-  values: NormalizedOptionValue[]
-}
 
 export async function GET() {
   try {
@@ -273,147 +262,5 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-function normalizeProductOptions(options: unknown): NormalizedProductOption[] {
-  if (!Array.isArray(options)) {
-    return []
-  }
-
-  return options
-    .map((option) => {
-      if (!option || typeof option !== 'object') return null
-
-      const name = typeof (option as { name?: string }).name === 'string'
-        ? (option as { name: string }).name.trim()
-        : ''
-
-      if (!name) return null
-
-      const rawValues = Array.isArray((option as { values?: unknown[] }).values)
-        ? ((option as { values: unknown[] }).values)
-        : []
-
-      const values = rawValues
-        .map((value) => normalizeOptionValue(value))
-        .filter((value): value is NormalizedOptionValue => value !== null)
-
-      if (values.length === 0) return null
-
-      return {
-        name,
-        values
-      }
-    })
-    .filter((option): option is NormalizedProductOption => option !== null)
-}
-
-function normalizeOptionValue(value: unknown): NormalizedOptionValue | null {
-  if (typeof value === 'string') {
-    const label = value.trim()
-    if (!label) return null
-    return { label, priceAdjustment: 0 }
-  }
-
-  if (!value || typeof value !== 'object') {
-    return null
-  }
-
-  const label = typeof (value as { label?: string }).label === 'string'
-    ? (value as { label: string }).label.trim()
-    : ''
-
-  if (!label) return null
-
-  const rawPrice = (value as { priceAdjustment?: number | string }).priceAdjustment
-  let priceAdjustment = 0
-
-  if (typeof rawPrice === 'number') {
-    priceAdjustment = rawPrice
-  } else if (typeof rawPrice === 'string') {
-    const cleaned = rawPrice.trim().replace(/,/g, '')
-    if (cleaned) {
-      const parsed = Number(cleaned)
-      if (!Number.isNaN(parsed)) {
-        priceAdjustment = parsed
-      }
-    }
-  }
-
-  return { label, priceAdjustment }
-}
-
-function validateSelectedOptions(
-  normalizedOptions: NormalizedProductOption[],
-  selectedOptions: SelectedOptionInput[] | undefined
-) {
-  if (!Array.isArray(selectedOptions)) {
-    if (normalizedOptions.length === 0) {
-      return {
-        normalizedSelectedOptions: [],
-        totalAdjustment: 0
-      }
-    }
-    return {
-      normalizedSelectedOptions: [],
-      totalAdjustment: 0
-    }
-  }
-
-  const normalizedSelectedOptions: NormalizedOptionValueWithName[] = []
-  let totalAdjustment = 0
-
-  normalizedOptions.forEach((option) => {
-    const match = selectedOptions.find(
-      (selected) => selected.name === option.name
-    )
-
-    if (!match || !match.label) {
-      return
-    }
-
-    const optionValue = option.values.find(
-      (value) => value.label === match.label
-    )
-
-    if (!optionValue) {
-      return
-    }
-
-    normalizedSelectedOptions.push({
-      name: option.name,
-      label: optionValue.label,
-      priceAdjustment: optionValue.priceAdjustment
-    })
-    totalAdjustment += optionValue.priceAdjustment
-  })
-
-  return {
-    normalizedSelectedOptions,
-    totalAdjustment
-  }
-}
-
-type NormalizedOptionValueWithName = {
-  name: string
-  label: string
-  priceAdjustment: number
-}
-
-function createOptionsHash(options: NormalizedOptionValueWithName[]) {
-  const payload =
-    options.length === 0
-      ? 'NO_OPTIONS'
-      : JSON.stringify(
-          options
-            .map((option) => ({
-              name: option.name,
-              label: option.label,
-              priceAdjustment: option.priceAdjustment
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name))
-        )
-
-  return createHash('sha256').update(payload).digest('hex')
 }
 

@@ -131,6 +131,41 @@ export default function ProductDetailPage() {
   const showSummary =
     isAllOptionsSelected && selectedOptionDetails.length === productOptions.length
 
+  const handleBuyNow = () => {
+    if (!product) return
+
+    if (!product.isActive) {
+      alert('판매 중단된 상품입니다.')
+      return
+    }
+
+    if (productOptions.length > 0 && !isAllOptionsSelected) {
+      alert('모든 옵션을 선택해주세요.')
+      return
+    }
+
+    if (!user) {
+      alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (typeof window === 'undefined') return
+
+    const payload = {
+      mode: 'direct' as const,
+      productId,
+      quantity: 1,
+      selectedOptions: selectedOptionDetails.map((option) => ({
+        name: option.name,
+        label: option.label
+      }))
+    }
+
+    window.sessionStorage.setItem('gcs_checkout_payload', JSON.stringify(payload))
+    router.push('/shop/checkout')
+  }
+
   const handleLikeClick = async () => {
     if (hasLiked || isLiking) return
 
@@ -469,9 +504,10 @@ export default function ProductDetailPage() {
                     ? 'bg-black text-white hover:bg-gray-800'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
+                onClick={handleBuyNow}
                 disabled={!isAllOptionsSelected}
               >
-                (Buy)
+                바로 구매
               </button>
               <button
                 type="button"
