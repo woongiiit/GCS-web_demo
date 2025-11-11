@@ -24,6 +24,29 @@ if (EMAIL_METHOD === 'smtp') {
   })
 }
 
+export interface OrderNotificationEmailItem {
+  name: string
+  quantity: number
+  unitPrice: number
+  selectedOptions?: string[]
+}
+
+export interface OrderNotificationEmailParams {
+  to: string
+  sellerName: string
+  orderId: string
+  orderStatus: string
+  buyerName: string
+  buyerEmail: string
+  buyerPhone: string
+  shippingAddress: string
+  notes?: string
+  items: OrderNotificationEmailItem[]
+  orderTotalAmount: number
+  sellerSubtotal: number
+  orderedAt: Date
+}
+
 /**
  * 비밀번호 재설정 이메일을 전송합니다.
  * @param to 수신자 이메일 주소
@@ -103,6 +126,187 @@ export async function sendPasswordResetEmail(
   }
 }
 
+export async function sendOrderNotificationEmail(params: OrderNotificationEmailParams): Promise<void> {
+  const {
+    to,
+    sellerName,
+    orderId,
+    orderStatus,
+    buyerName,
+    buyerEmail,
+    buyerPhone,
+    shippingAddress,
+    notes,
+    items,
+    orderTotalAmount,
+    sellerSubtotal,
+    orderedAt
+  } = params
+
+  if (EMAIL_METHOD !== 'smtp' || !transporter || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('='.repeat(60))
+    console.log('📧 주문 알림 이메일 (개발 모드)')
+    console.log('='.repeat(60))
+    console.log(`수신자: ${to}`)
+    console.log(`판매자: ${sellerName}`)
+    console.log(`주문 번호: ${orderId}`)
+    console.log(`주문 상태: ${orderStatus}`)
+    console.log(`주문 일시: ${orderedAt.toISOString()}`)
+    console.log(`구매자: ${buyerName} (${buyerEmail}, ${buyerPhone})`)
+    console.log(`배송지: ${shippingAddress}`)
+    console.log(`판매자 소계: ${sellerSubtotal.toLocaleString()}원 / 총 결제 금액: ${orderTotalAmount.toLocaleString()}원`)
+    console.log('주문 상품:')
+    items.forEach((item, index) => {
+      console.log(
+        `  ${index + 1}. ${item.name} x ${item.quantity}개 - ${(item.unitPrice * item.quantity).toLocaleString()}원`
+      )
+      if (item.selectedOptions && item.selectedOptions.length > 0) {
+        console.log(`     옵션: ${item.selectedOptions.join(', ')}`)
+      }
+    })
+    if (notes) {
+      console.log(`요청사항: ${notes}`)
+    }
+    console.log('='.repeat(60))
+    return
+  }
+
+  const html = generateOrderNotificationEmailTemplate({
+    sellerName,
+    orderId,
+    orderStatus,
+    buyerName,
+    buyerEmail,
+    buyerPhone,
+    shippingAddress,
+    notes,
+    items,
+    orderTotalAmount,
+    sellerSubtotal,
+    orderedAt
+  })
+
+  const mailOptions = {
+    from: `"GCS:Web" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    to,
+    subject: `[GCS:Web] 새로운 주문 안내 (${orderId})`,
+    html
+  }
+
+  try {
+    await transporter.sendMail(mailOptions)
+    console.log(`✅ 주문 알림 이메일 전송 완료: ${to}`)
+  } catch (error) {
+    console.error('❌ 주문 알림 이메일 전송 실패:', error)
+  }
+}
+
+function generateOrderNotificationEmailTemplate({
+  sellerName,
+  orderId,
+  orderStatus,
+  buyerName,
+  buyerEmail,
+  buyerPhone,
+  shippingAddress,
+  notes,
+  items,
+  orderTotalAmount,
+  sellerSubtotal,
+  orderedAt
+}: Omit<OrderNotificationEmailParams, 'to'>) {
+  const orderedAtKst = new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+    timeZone: 'Asia/Seoul'
+  }).format(orderedAt)
+
+  const rows = items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #eee;">
+            <strong>${item.name}</strong>
+            ${
+              item.selectedOptions && item.selectedOptions.length > 0
+                ? `<div style="margin-top: 6px; font-size: 12px; color: #666;">
+                    ${item.selectedOptions.map((option) => `<div>• ${option}</div>`).join('')}
+                  </div>`
+                : ''
+            }
+          </td>
+          <td style="padding: 8px; border: 1px solid #eee; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px; border: 1px solid #eee; text-align: right;">${item.unitPrice.toLocaleString()}원</td>
+          <td style="padding: 8px; border: 1px solid #eee; text-align: right;">${(
+            item.unitPrice * item.quantity
+          ).toLocaleString()}원</td>
+        </tr>
+      `
+    )
+    .join('')
+
+  return `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>새로운 주문 안내</title>
+    </head>
+    <body style="margin:0; padding:24px; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background-color:#f6f6f9;">
+      <div style="max-width:640px; margin:0 auto; background:#ffffff; border-radius:16px; padding:32px;">
+        <div style="text-align:center; margin-bottom:32px;">
+          <h1 style="margin:0; font-size:24px; color:#000000;">GCS<span style="color:#f57520;">:</span>Web</h1>
+          <p style="margin-top:8px; color:#555;">${sellerName}님, 새로운 주문이 접수되었습니다.</p>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:18px; margin-bottom:12px; color:#000;">주문 정보</h2>
+          <div style="background:#fafafa; border-radius:12px; padding:16px; line-height:1.6; color:#333;">
+            <div><strong>주문 번호:</strong> ${orderId}</div>
+            <div><strong>주문 상태:</strong> ${orderStatus}</div>
+            <div><strong>주문 일시:</strong> ${orderedAtKst}</div>
+            <div><strong>구매자:</strong> ${buyerName} (${buyerEmail}, ${buyerPhone})</div>
+            <div><strong>배송지:</strong> ${shippingAddress}</div>
+            ${
+              notes
+                ? `<div><strong>요청 사항:</strong> ${notes}</div>`
+                : ''
+            }
+          </div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:18px; margin-bottom:12px; color:#000;">주문 상품</h2>
+          <table style="width:100%; border-collapse:collapse; border:1px solid #eee;">
+            <thead>
+              <tr style="background:#f1f3f5;">
+                <th style="padding:8px; border:1px solid #eee; text-align:left;">상품명</th>
+                <th style="padding:8px; border:1px solid #eee; text-align:center;">수량</th>
+                <th style="padding:8px; border:1px solid #eee; text-align:right;">단가</th>
+                <th style="padding:8px; border:1px solid #eee; text-align:right;">소계</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:#fafafa; border-radius:12px; padding:16px; line-height:1.6; color:#333;">
+          <div><strong>판매자 소계:</strong> ${sellerSubtotal.toLocaleString()}원</div>
+          <div><strong>총 결제 금액:</strong> ${orderTotalAmount.toLocaleString()}원</div>
+        </div>
+
+        <p style="margin-top:32px; font-size:13px; color:#777; text-align:center;">
+          이 메일은 GCS:Web 시스템에서 자동으로 발송되었습니다.<br/>
+          문의사항은 관리자에게 연락해주세요.
+        </p>
+      </div>
+    </body>
+    </html>
+  `
+}
 /**
  * 비밀번호 재설정 이메일 HTML 템플릿을 생성합니다.
  */

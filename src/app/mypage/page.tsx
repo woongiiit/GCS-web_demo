@@ -43,7 +43,7 @@ function MyPageContent() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<'profile' | 'cart' | 'archive' | 'verification'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'cart' | 'archive' | 'verification' | 'orders'>('profile')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -67,8 +67,16 @@ function MyPageContent() {
   const [cartMessageType, setCartMessageType] = useState<'success' | 'error'>('success')
   const [selectedCartIds, setSelectedCartIds] = useState<string[]>([])
   const [isDeletingCartItems, setIsDeletingCartItems] = useState(false)
-  const isValidTab = (value: string | null): value is 'profile' | 'cart' | 'archive' | 'verification' => {
-    return value === 'profile' || value === 'cart' || value === 'archive' || value === 'verification'
+  const isValidTab = (
+    value: string | null
+  ): value is 'profile' | 'cart' | 'archive' | 'verification' | 'orders' => {
+    return (
+      value === 'profile' ||
+      value === 'cart' ||
+      value === 'archive' ||
+      value === 'verification' ||
+      value === 'orders'
+    )
   }
 
   const formatCurrency = (price: number) => `${price.toLocaleString()}원`
@@ -99,7 +107,8 @@ function MyPageContent() {
     }
   }, [])
 
-  const handleTabChange = useCallback((tab: 'profile' | 'cart' | 'archive' | 'verification') => {
+  const handleTabChange = useCallback(
+    (tab: 'profile' | 'cart' | 'archive' | 'verification' | 'orders') => {
     setActiveTab(tab)
     const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
     params.set('tab', tab)
@@ -109,7 +118,9 @@ function MyPageContent() {
     if (tab === 'cart') {
       fetchCartItems()
     }
-  }, [router, searchParams, fetchCartItems])
+    },
+    [router, searchParams, fetchCartItems]
+  )
 
   const handleCartItemToggle = useCallback((cartItemId: string) => {
     setSelectedCartIds((prev) => {
@@ -423,6 +434,18 @@ function MyPageContent() {
               >
                 개인정보수정
               </button>
+              {(user.role === 'GENERAL' || user.role === 'MAJOR') && (
+                <button
+                  onClick={() => handleTabChange('orders')}
+                  className={`pb-2 border-b-2 font-medium transition-colors ${
+                    activeTab === 'orders'
+                      ? 'text-black border-black'
+                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                  }`}
+                >
+                  내 주문내역
+                </button>
+              )}
               <button
                 onClick={() => handleTabChange('cart')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
@@ -767,6 +790,8 @@ function MyPageContent() {
                 </div>
               ) : activeTab === 'archive' ? (
                 <MyArchiveTab user={user} />
+              ) : activeTab === 'orders' ? (
+                <MyOrdersTab />
               ) : (
                 <div>
                   {/* 학생 인증 탭 */}
@@ -946,6 +971,267 @@ function MyPageContent() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+type MyOrderItem = {
+  id: string
+  quantity: number
+  price: number
+  selectedOptions?: unknown
+  product: {
+    id: string
+    name: string
+    images?: string[]
+    author?: {
+      id: string
+      name: string | null
+      email: string | null
+    } | null
+  }
+}
+
+type MyOrder = {
+  id: string
+  status: string
+  totalAmount: number
+  shippingAddress: string
+  phone: string
+  notes?: string | null
+  createdAt: string
+  orderItems: MyOrderItem[]
+  paymentRecords: Array<{
+    id: string
+    impUid: string | null
+    merchantUid: string | null
+    amount: number
+    method: string | null
+    status: string
+    createdAt: string
+  }>
+}
+
+function MyOrdersTab() {
+  const [orders, setOrders] = useState<MyOrder[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const formatCurrency = useCallback((value: number) => `${value.toLocaleString()}원`, [])
+
+  const parseOptions = useCallback((selectedOptions: unknown): string[] => {
+    if (!selectedOptions) return []
+    if (Array.isArray(selectedOptions)) {
+      return selectedOptions
+        .map((option) => {
+          if (option && typeof option === 'object' && 'name' in option && 'label' in option) {
+            const { name, label } = option as { name?: string; label?: string }
+            if (name && label) {
+              return `${name}: ${label}`
+            }
+          }
+          return null
+        })
+        .filter((value): value is string => !!value)
+    }
+
+    try {
+      const parsed = JSON.parse(JSON.stringify(selectedOptions))
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((option) => {
+            if (option && typeof option === 'object' && option.name && option.label) {
+              return `${option.name}: ${option.label}`
+            }
+            return null
+          })
+          .filter((value): value is string => !!value)
+      }
+    } catch (optionError) {
+      console.error('내 주문 옵션 파싱 실패:', optionError)
+    }
+
+    return []
+  }, [])
+
+  const fetchMyOrders = useCallback(async () => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const response = await fetch('/api/mypage/orders', {
+        method: 'GET',
+        cache: 'no-store'
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '주문 내역을 불러오지 못했습니다.')
+      }
+      setOrders(Array.isArray(data.data) ? (data.data as MyOrder[]) : [])
+    } catch (fetchError) {
+      console.error('내 주문 내역 조회 오류:', fetchError)
+      setError(fetchError instanceof Error ? fetchError.message : '주문 내역을 불러오지 못했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchMyOrders()
+  }, [fetchMyOrders])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-black"></div>
+          <p className="text-gray-600">주문 내역을 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {error}
+      </div>
+    )
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+        주문 내역이 없습니다.
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-black mb-6">내 주문내역</h2>
+      <div className="space-y-6">
+        {orders.map((order) => (
+          <div key={order.id} className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 flex flex-wrap gap-4 justify-between items-start">
+              <div>
+                <p className="text-sm text-gray-500">주문 번호</p>
+                <p className="text-base font-semibold text-black">{order.id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">주문 일시</p>
+                <p className="text-base font-semibold text-black">
+                  {new Date(order.createdAt).toLocaleString('ko-KR')}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">상태</p>
+                <span className="inline-flex items-center rounded-full bg-black px-3 py-1 text-xs font-medium text-white">
+                  {order.status}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">결제 금액</p>
+                <p className="text-lg font-bold text-black">{formatCurrency(order.totalAmount)}</p>
+              </div>
+            </div>
+
+            <div className="px-4 py-4 space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-700">배송지</p>
+                <p className="text-sm text-gray-600 mt-1">{order.shippingAddress}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">연락처</p>
+                <p className="text-sm text-gray-600 mt-1">{order.phone}</p>
+              </div>
+              {order.notes && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700">요청 사항</p>
+                  <p className="text-sm text-gray-600 mt-1 whitespace-pre-line">{order.notes}</p>
+                </div>
+              )}
+
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-3">주문 상품</p>
+                <div className="space-y-3">
+                  {order.orderItems.map((item) => {
+                    const optionLabels = parseOptions(item.selectedOptions)
+                    const productImage = item.product.images?.[0]
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex flex-col md:flex-row md:items-center gap-4 border border-gray-200 rounded-lg p-4"
+                      >
+                        <div className="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                          {productImage ? (
+                            <img
+                              src={productImage}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-product.jpg'
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap justify-between gap-2">
+                            <p className="text-base font-semibold text-gray-900">{item.product.name}</p>
+                            <p className="text-base font-semibold text-black">
+                              {formatCurrency(item.price * item.quantity)}
+                            </p>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">수량 {item.quantity}개</p>
+                          {optionLabels.length > 0 && (
+                            <ul className="mt-2 space-y-1 text-xs text-gray-500">
+                              {optionLabels.map((label) => (
+                                <li key={`${item.id}-${label}`}>• {label}</li>
+                              ))}
+                            </ul>
+                          )}
+                          {item.product.author?.name && (
+                            <p className="text-xs text-gray-400 mt-2">
+                              판매자: {item.product.author.name}
+                              {item.product.author.email ? ` (${item.product.author.email})` : ''}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {order.paymentRecords.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-3">결제 정보</p>
+                  <div className="space-y-2">
+                    {order.paymentRecords.map((record) => (
+                      <div
+                        key={record.id}
+                        className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 border border-gray-200 rounded-lg px-3 py-2"
+                      >
+                        <span className="font-semibold text-black">{record.status}</span>
+                        <span>{formatCurrency(record.amount)}</span>
+                        {record.method && <span>결제수단: {record.method}</span>}
+                        {record.impUid && <span>impUid: {record.impUid}</span>}
+                        {record.merchantUid && <span>주문번호: {record.merchantUid}</span>}
+                        <span className="text-gray-400">
+                          {new Date(record.createdAt).toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

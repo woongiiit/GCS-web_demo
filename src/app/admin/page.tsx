@@ -24,17 +24,24 @@ export default function AdminPage() {
 function AdminPageContent() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'users' | 'content' | 'profile' | 'cart' | 'archive'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'content' | 'profile' | 'cart' | 'archive' | 'orders'>('users')
   const searchParams = useSearchParams()
 
   const isValidTab = (
     value: string | null
-  ): value is 'users' | 'content' | 'profile' | 'cart' | 'archive' => {
-    return value === 'users' || value === 'content' || value === 'profile' || value === 'cart' || value === 'archive'
+  ): value is 'users' | 'content' | 'profile' | 'cart' | 'archive' | 'orders' => {
+    return (
+      value === 'users' ||
+      value === 'content' ||
+      value === 'profile' ||
+      value === 'cart' ||
+      value === 'archive' ||
+      value === 'orders'
+    )
   }
 
   const handleTabChange = useCallback(
-    (tab: 'users' | 'content' | 'profile' | 'cart' | 'archive') => {
+    (tab: 'users' | 'content' | 'profile' | 'cart' | 'archive' | 'orders') => {
       setActiveTab(tab)
       const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
       params.set('tab', tab)
@@ -151,6 +158,16 @@ function AdminPageContent() {
               >
                 내 아카이브
               </button>
+              <button
+                onClick={() => handleTabChange('orders')}
+                className={`pb-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'orders'
+                    ? 'text-black border-black'
+                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                }`}
+              >
+                모든 주문내역
+              </button>
             </div>
           </div>
         </div>
@@ -175,6 +192,7 @@ function AdminPageContent() {
               {activeTab === 'profile' && <AdminProfileTab user={user} />}
               {activeTab === 'cart' && <AdminCartTab />}
               {activeTab === 'archive' && <AdminArchiveTab user={user} />}
+              {activeTab === 'orders' && <AdminOrdersTab />}
             </div>
           </div>
         </div>
@@ -412,6 +430,299 @@ function PasswordInput({
         value={value}
         onChange={onChange}
       />
+    </div>
+  )
+}
+
+
+type AdminOrderItem = {
+  id: string
+  quantity: number
+  price: number
+  selectedOptions?: unknown
+  product: {
+    id: string
+    name: string
+    author?: {
+      id: string
+      name: string | null
+      email: string | null
+    } | null
+  }
+}
+
+type AdminOrder = {
+  id: string
+  status: string
+  totalAmount: number
+  shippingAddress: string
+  phone: string
+  notes?: string | null
+  createdAt: string
+  user: {
+    id: string
+    name: string
+    email: string
+    phone: string
+    role: string
+  }
+  orderItems: AdminOrderItem[]
+  paymentRecords: Array<{
+    id: string
+    impUid: string | null
+    merchantUid: string | null
+    amount: number
+    method: string | null
+    status: string
+    createdAt: string
+  }>
+}
+
+function AdminOrdersTab() {
+  const [orders, setOrders] = useState<AdminOrder[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const limit = 10
+
+  const formatCurrency = useCallback((value: number) => `${value.toLocaleString()}원`, [])
+
+  const parseOptions = useCallback((selectedOptions: unknown): string[] => {
+    if (!selectedOptions) return []
+    if (Array.isArray(selectedOptions)) {
+      return selectedOptions
+        .map((option) => {
+          if (option && typeof option === 'object' && 'name' in option && 'label' in option) {
+            const { name, label } = option as { name?: string; label?: string }
+            if (name && label) {
+              return `${name}: ${label}`
+            }
+          }
+          return null
+        })
+        .filter((value): value is string => !!value)
+    }
+
+    try {
+      const parsed = JSON.parse(JSON.stringify(selectedOptions))
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((option) => {
+            if (option && typeof option === 'object' && option.name && option.label) {
+              return `${option.name}: ${option.label}`
+            }
+            return null
+          })
+          .filter((value): value is string => !!value)
+      }
+    } catch (optionError) {
+      console.error('주문 옵션 파싱 실패:', optionError)
+    }
+
+    return []
+  }, [])
+
+  const fetchOrders = useCallback(async () => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      })
+      const response = await fetch(`/api/admin/orders?${params.toString()}`, { cache: 'no-store' })
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '주문 내역을 불러오지 못했습니다.')
+      }
+
+      setOrders(Array.isArray(data.data?.orders) ? (data.data.orders as AdminOrder[]) : [])
+      setTotalPages(data.data?.pagination?.totalPages ?? 1)
+    } catch (fetchError) {
+      console.error('관리자 주문 내역 조회 오류:', fetchError)
+      setError(fetchError instanceof Error ? fetchError.message : '주문 내역을 불러오지 못했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [limit, page])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-black mb-6">모든 주문내역</h2>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-black"></div>
+            <p className="text-gray-600">주문 내역을 불러오는 중...</p>
+          </div>
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="py-12 text-center text-gray-500 border border-dashed border-gray-300 rounded-lg">
+          등록된 주문이 없습니다.
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {orders.map((order) => (
+            <div key={order.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 flex flex-wrap gap-4 justify-between items-start">
+                <div>
+                  <p className="text-sm text-gray-500">주문 번호</p>
+                  <p className="text-base font-semibold text-black">{order.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">주문자</p>
+                  <p className="text-base font-semibold text-black">
+                    {order.user.name}{' '}
+                    <span className="text-sm font-normal text-gray-500">({order.user.email})</span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">연락처</p>
+                  <p className="text-base font-semibold text-black">{order.phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">상태</p>
+                  <span className="inline-flex items-center rounded-full bg-black px-3 py-1 text-xs font-medium text-white">
+                    {order.status}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">주문 일시</p>
+                  <p className="text-base font-semibold text-black">
+                    {new Date(order.createdAt).toLocaleString('ko-KR')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">결제 금액</p>
+                  <p className="text-lg font-bold text-black">{formatCurrency(order.totalAmount)}</p>
+                </div>
+              </div>
+
+              <div className="px-4 py-4 space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">배송지</p>
+                  <p className="text-sm text-gray-600 mt-1">{order.shippingAddress}</p>
+                </div>
+                {order.notes && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">요청 사항</p>
+                    <p className="text-sm text-gray-600 mt-1 whitespace-pre-line">{order.notes}</p>
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-3">주문 상품</p>
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="hidden md:grid grid-cols-12 bg-gray-50 text-sm font-semibold text-gray-600">
+                      <div className="col-span-4 px-4 py-3">상품 정보</div>
+                      <div className="col-span-2 px-4 py-3 text-center">판매자</div>
+                      <div className="col-span-2 px-4 py-3 text-center">수량</div>
+                      <div className="col-span-2 px-4 py-3 text-right">단가</div>
+                      <div className="col-span-2 px-4 py-3 text-right">소계</div>
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      {order.orderItems.map((item) => {
+                        const optionLabels = parseOptions(item.selectedOptions)
+                        return (
+                          <div key={item.id} className="flex flex-col md:grid md:grid-cols-12">
+                            <div className="md:col-span-4 px-4 py-3">
+                              <p className="font-medium text-gray-900">{item.product.name}</p>
+                              {optionLabels.length > 0 && (
+                                <ul className="mt-2 space-y-1 text-xs text-gray-500">
+                                  {optionLabels.map((label) => (
+                                    <li key={`${item.id}-${label}`}>• {label}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            <div className="md:col-span-2 px-4 py-3 text-sm text-gray-600 md:text-center">
+                              {item.product.author?.name ?? '관리자'}
+                              {item.product.author?.email && (
+                                <div className="text-xs text-gray-400">
+                                  {item.product.author.email}
+                                </div>
+                              )}
+                            </div>
+                            <div className="md:col-span-2 px-4 py-3 text-sm text-gray-600 md:text-center">
+                              {item.quantity}개
+                            </div>
+                            <div className="md:col-span-2 px-4 py-3 text-sm text-gray-600 md:text-right">
+                              {formatCurrency(item.price)}
+                            </div>
+                            <div className="md:col-span-2 px-4 py-3 text-sm font-semibold text-black md:text-right">
+                              {formatCurrency(item.price * item.quantity)}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {order.paymentRecords.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-3">결제 정보</p>
+                    <div className="space-y-2">
+                      {order.paymentRecords.map((record) => (
+                        <div
+                          key={record.id}
+                          className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2"
+                        >
+                          <span className="font-semibold text-black">{record.status}</span>
+                          <span>{formatCurrency(record.amount)}</span>
+                          {record.method && <span>결제수단: {record.method}</span>}
+                          {record.impUid && <span>impUid: {record.impUid}</span>}
+                          {record.merchantUid && <span>주문번호: {record.merchantUid}</span>}
+                          <span className="text-gray-500">
+                            {new Date(record.createdAt).toLocaleString('ko-KR')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center gap-2">
+          <button
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            disabled={page === 1}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            이전
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">
+              {page} / {totalPages}
+            </span>
+          </div>
+          <button
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={page === totalPages}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            다음
+          </button>
+        </div>
+      )}
     </div>
   )
 }

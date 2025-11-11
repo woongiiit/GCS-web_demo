@@ -13,6 +13,22 @@ import {
   getPortOnePayment
 } from '@/lib/shop/payment'
 import type { Prisma } from '@prisma/client'
+import { sendOrderNotificationEmail } from '@/lib/email'
+
+type OrderWithRelations = Prisma.OrderGetPayload<{
+  include: {
+    orderItems: {
+      include: {
+        product: {
+          include: {
+            author: true
+          }
+        }
+      }
+    }
+    user: true
+  }
+}>
 
 export async function POST(request: Request) {
   try {
@@ -294,9 +310,14 @@ export async function POST(request: Request) {
         }
       },
       include: {
+        user: true,
         orderItems: {
           include: {
-            product: true
+            product: {
+              include: {
+                author: true
+              }
+            }
           }
         }
       }
@@ -322,6 +343,32 @@ export async function POST(request: Request) {
           },
           userId: user.id
         }
+      })
+    }
+
+    if (orderStatus === 'CONFIRMED' && paymentInfo) {
+      await prisma.paymentRecord.create({
+        data: {
+          orderId: order.id,
+          userId: user.id,
+          impUid: payment?.impUid ?? null,
+          merchantUid: payment?.merchantUid ?? null,
+          amount: totalAmount,
+          method: payment?.payMethod ?? (paymentInfo.payMethod as string | undefined) ?? null,
+          status: (paymentInfo.status as string | undefined) ?? 'paid',
+          paymentData: paymentInfo
+        }
+      })
+    }
+
+    if (orderStatus === 'CONFIRMED') {
+      void notifySellersOfOrder(order, {
+        buyerName: user.name,
+        buyerEmail: user.email,
+        buyerPhone: phone,
+        shippingAddress,
+        notes: notes ?? null,
+        totalAmount
       })
     }
 
@@ -355,6 +402,112 @@ export async function POST(request: Request) {
       { error: '서버 오류가 발생했습니다.' },
       { status: 500 }
     )
+  }
+}
+
+type SellerNotificationContext = {
+  buyerName: string
+  buyerEmail: string
+  buyerPhone: string
+  shippingAddress: string
+  notes: string | null
+  totalAmount: number
+}
+
+async function notifySellersOfOrder(order: OrderWithRelations, context: SellerNotificationContext) {
+  try {
+    const sellerMap = new Map<
+      string,
+      {
+        sellerName: string
+        sellerEmail: string
+        items: Array<{
+          name: string
+          quantity: number
+          unitPrice: number
+          selectedOptions: string[]
+        }>
+        subtotal: number
+      }
+    >()
+
+    for (const item of order.orderItems) {
+      const product = item.product
+      const seller = product.author
+      const sellerEmail = seller?.email
+      if (!sellerEmail) {
+        continue
+      }
+
+      const existing = sellerMap.get(sellerEmail) ?? {
+        sellerName: seller?.name ?? '판매자',
+        sellerEmail,
+        items: [],
+        subtotal: 0
+      }
+
+      const optionLabels: string[] = []
+      if (Array.isArray(item.selectedOptions)) {
+        for (const option of item.selectedOptions as Array<{ name?: string; label?: string }>) {
+          if (option?.name && option?.label) {
+            optionLabels.push(`${option.name}: ${option.label}`)
+          }
+        }
+      } else if (item.selectedOptions) {
+        try {
+          const parsed = JSON.parse(JSON.stringify(item.selectedOptions))
+          if (Array.isArray(parsed)) {
+            for (const option of parsed) {
+              if (option?.name && option?.label) {
+                optionLabels.push(`${option.name}: ${option.label}`)
+              }
+            }
+          }
+        } catch (error) {
+          console.error('주문 옵션 파싱 오류:', error)
+        }
+      }
+
+      existing.items.push({
+        name: product.name,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        selectedOptions: optionLabels
+      })
+      existing.subtotal += item.price * item.quantity
+      sellerMap.set(sellerEmail, existing)
+    }
+
+    if (sellerMap.size === 0) {
+      return
+    }
+
+    await Promise.allSettled(
+      Array.from(sellerMap.values()).map((entry) =>
+        sendOrderNotificationEmail({
+          to: entry.sellerEmail,
+          sellerName: entry.sellerName,
+          orderId: order.id,
+          orderStatus: order.status,
+          buyerName: context.buyerName,
+          buyerEmail: context.buyerEmail,
+          buyerPhone: context.buyerPhone,
+          shippingAddress: context.shippingAddress,
+          notes: context.notes ?? undefined,
+          items: entry.items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            selectedOptions: item.selectedOptions
+          })),
+          orderTotalAmount: context.totalAmount,
+          sellerSubtotal: entry.subtotal,
+          orderedAt: order.createdAt
+        })
+      )
+    )
+  } catch (notificationError) {
+    console.error('판매자 주문 알림 이메일 전송 오류:', notificationError)
   }
 }
 

@@ -48,6 +48,7 @@ model User {
   newsLikes   NewsLike[]
   productLikes ProductLike[]
   cartItems   CartItem[]
+  paymentRecords PaymentRecord[]
 
   @@index([role])
   @@index([isSeller])
@@ -245,6 +246,7 @@ model Order {
 
   // 관계
   orderItems  OrderItem[]
+  paymentRecords PaymentRecord[]
 
   @@index([userId, status, createdAt])
   @@index([status, createdAt])
@@ -265,6 +267,25 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@map("order_items")
+}
+
+model PaymentRecord {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  impUid     String?
+  merchantUid String?
+  amount     Int
+  method     String?
+  status     String
+  paymentData Json?
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+  @@index([userId, createdAt])
+  @@map("payment_records")
 }
 
 model CartItem {

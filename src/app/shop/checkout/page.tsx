@@ -97,6 +97,7 @@ export default function CheckoutPage() {
   const [buyerName, setBuyerName] = useState('')
   const [buyerEmail, setBuyerEmail] = useState('')
   const [buyerPhone, setBuyerPhone] = useState('')
+  const [shippingAddressDetail, setShippingAddressDetail] = useState('')
   const [orderMemo, setOrderMemo] = useState('')
   const [isPaying, setIsPaying] = useState(false)
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null)
@@ -201,6 +202,11 @@ export default function CheckoutPage() {
       return
     }
 
+    if (!shippingAddressDetail.trim()) {
+      setError('상세 주소를 입력해주세요.')
+      return
+    }
+
     if (!buyerPhone.trim()) {
       setError('연락처를 입력해주세요.')
       return
@@ -232,6 +238,8 @@ export default function CheckoutPage() {
 
       IMP.init(merchantCode)
 
+      const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
+
       const paymentParams = {
         pg: pgId,
         pay_method: 'card',
@@ -241,7 +249,7 @@ export default function CheckoutPage() {
         buyer_name: buyerName,
         buyer_email: buyerEmail,
         buyer_tel: buyerPhone,
-        buyer_addr: shippingAddress,
+        buyer_addr: fullShippingAddress,
         ...(channelKey ? { channel_key: channelKey } : {})
       }
 
@@ -249,7 +257,7 @@ export default function CheckoutPage() {
         if (!rsp.success) {
           console.error('PortOne payment failed:', rsp)
           setIsPaying(false)
-          setError(
+            setError(
             rsp.error_msg
               ? `결제 실패: ${rsp.error_msg}`
               : '결제가 취소되거나 실패했습니다. 다시 시도해주세요.'
@@ -277,7 +285,7 @@ export default function CheckoutPage() {
                       }))
                     }))
                   : undefined,
-              shippingAddress: shippingAddress.trim(),
+              shippingAddress: fullShippingAddress,
               phone: buyerPhone.trim(),
               notes: orderMemo.trim() || undefined,
               payment: {
@@ -343,6 +351,7 @@ export default function CheckoutPage() {
             }
             const formatted = `[${data.zonecode}] ${address}`
             setShippingAddress(formatted.trim())
+            setShippingAddressDetail('')
           } finally {
             setIsAddressSearchLoading(false)
           }
@@ -425,11 +434,13 @@ export default function CheckoutPage() {
                   buyerEmail={buyerEmail}
                   buyerPhone={buyerPhone}
                   shippingAddress={shippingAddress}
+                  shippingAddressDetail={shippingAddressDetail}
                   orderMemo={orderMemo}
                   onBuyerNameChange={setBuyerName}
                   onBuyerEmailChange={setBuyerEmail}
                   onBuyerPhoneChange={setBuyerPhone}
                   onShippingAddressChange={setShippingAddress}
+                  onShippingAddressDetailChange={setShippingAddressDetail}
                   onOrderMemoChange={setOrderMemo}
                   onAddressSearch={handleAddressSearch}
                   isAddressSearchLoading={isAddressSearchLoading}
@@ -663,11 +674,13 @@ function ShippingForm(props: {
   buyerEmail: string
   buyerPhone: string
   shippingAddress: string
+  shippingAddressDetail: string
   orderMemo: string
   onBuyerNameChange: (value: string) => void
   onBuyerEmailChange: (value: string) => void
   onBuyerPhoneChange: (value: string) => void
   onShippingAddressChange: (value: string) => void
+  onShippingAddressDetailChange: (value: string) => void
   onOrderMemoChange: (value: string) => void
   onAddressSearch?: () => void
   isAddressSearchLoading?: boolean
@@ -677,11 +690,13 @@ function ShippingForm(props: {
     buyerEmail,
     buyerPhone,
     shippingAddress,
+    shippingAddressDetail,
     orderMemo,
     onBuyerNameChange,
     onBuyerEmailChange,
     onBuyerPhoneChange,
     onShippingAddressChange,
+    onShippingAddressDetailChange,
     onOrderMemoChange,
     onAddressSearch,
     isAddressSearchLoading
@@ -724,6 +739,11 @@ function ShippingForm(props: {
               required
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black"
               placeholder="배송지를 입력해주세요."
+              onFocus={() => {
+                if (onAddressSearch && !isAddressSearchLoading) {
+                  onAddressSearch()
+                }
+              }}
             />
             {onAddressSearch && (
               <button
@@ -744,6 +764,21 @@ function ShippingForm(props: {
             <p className="mt-2 text-xs text-gray-500">
               도로명 주소 검색 버튼을 눌러 자동 입력하거나 직접 입력할 수 있습니다.
             </p>
+          )}
+          {shippingAddress && (
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                상세 주소<span className="text-red-500 ml-1">*</span>
+              </label>
+              <input
+                type="text"
+                value={shippingAddressDetail}
+                onChange={(e) => onShippingAddressDetailChange(e.target.value)}
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black"
+                placeholder="상세 주소를 입력해주세요. (예: 101동 1001호)"
+              />
+            </div>
           )}
         </div>
         <div>
