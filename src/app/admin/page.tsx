@@ -1,14 +1,39 @@
 'use client'
 
-import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react'
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ChangeEvent,
+  type FormEvent
+} from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function AdminPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'users' | 'content' | 'profile' | 'cart' | 'archive'>('users')
+  const searchParams = useSearchParams()
+
+  const isValidTab = (
+    value: string | null
+  ): value is 'users' | 'content' | 'profile' | 'cart' | 'archive' => {
+    return value === 'users' || value === 'content' || value === 'profile' || value === 'cart' || value === 'archive'
+  }
+
+  const handleTabChange = useCallback(
+    (tab: 'users' | 'content' | 'profile' | 'cart' | 'archive') => {
+      setActiveTab(tab)
+      const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
+      params.set('tab', tab)
+      const queryString = params.toString()
+      router.replace(queryString ? `/admin?${queryString}` : '/admin', { scroll: false })
+    },
+    [router, searchParams]
+  )
 
   // 로그인하지 않은 경우 또는 관리자가 아닌 경우 리다이렉트
   useEffect(() => {
@@ -31,6 +56,13 @@ export default function AdminPage() {
   if (!user || user.role !== 'ADMIN') {
     return null
   }
+
+  useEffect(() => {
+    const tabParam = searchParams ? searchParams.get('tab') : null
+    if (isValidTab(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam)
+    }
+  }, [searchParams, activeTab])
 
   return (
     <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
@@ -61,7 +93,7 @@ export default function AdminPage() {
           <div className="max-w-6xl mx-auto px-4 sm:px-0">
             <div className="flex flex-wrap justify-center gap-6 py-4">
               <button
-                onClick={() => setActiveTab('users')}
+                onClick={() => handleTabChange('users')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
                   activeTab === 'users'
                     ? 'text-black border-black'
@@ -71,7 +103,7 @@ export default function AdminPage() {
                 사용자 관리
               </button>
               <button
-                onClick={() => setActiveTab('content')}
+                onClick={() => handleTabChange('content')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
                   activeTab === 'content'
                     ? 'text-black border-black'
@@ -81,7 +113,7 @@ export default function AdminPage() {
                 콘텐츠 관리
               </button>
               <button
-                onClick={() => setActiveTab('profile')}
+                onClick={() => handleTabChange('profile')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
                   activeTab === 'profile'
                     ? 'text-black border-black'
@@ -91,7 +123,7 @@ export default function AdminPage() {
                 개인정보수정
               </button>
               <button
-                onClick={() => setActiveTab('cart')}
+                onClick={() => handleTabChange('cart')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
                   activeTab === 'cart'
                     ? 'text-black border-black'
@@ -101,7 +133,7 @@ export default function AdminPage() {
                 장바구니
               </button>
               <button
-                onClick={() => setActiveTab('archive')}
+                onClick={() => handleTabChange('archive')}
                 className={`pb-2 border-b-2 font-medium transition-colors ${
                   activeTab === 'archive'
                     ? 'text-black border-black'
@@ -169,6 +201,30 @@ export default function AdminPage() {
       </div>
     </div>
   )
+}
+
+type CartOptionSummary = {
+  name: string
+  label: string
+  priceAdjustment: number
+}
+
+type CartProductInfo = {
+  id: string
+  name: string
+  price: number
+  images: string[]
+  brand?: string | null
+  isActive: boolean
+}
+
+type CartItem = {
+  id: string
+  productId: string
+  quantity: number
+  unitPrice: number
+  selectedOptions?: CartOptionSummary[] | null
+  product: CartProductInfo
 }
 
 function AdminProfileTab({ user }: { user: any }) {
@@ -341,24 +397,307 @@ function PasswordInput({
 }
 
 function AdminCartTab() {
+  const router = useRouter()
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [isCartLoading, setIsCartLoading] = useState(true)
+  const [cartError, setCartError] = useState('')
+  const [cartMessage, setCartMessage] = useState('')
+  const [cartMessageType, setCartMessageType] = useState<'success' | 'error'>('success')
+  const [selectedCartIds, setSelectedCartIds] = useState<string[]>([])
+  const [isDeletingCartItems, setIsDeletingCartItems] = useState(false)
+
+  const formatCurrency = useCallback((price: number) => `${price.toLocaleString()}원`, [])
+
+  const fetchCartItems = useCallback(async () => {
+    setIsCartLoading(true)
+    setCartError('')
+    setCartMessage('')
+
+    try {
+      const response = await fetch('/api/shop/cart', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store'
+      })
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        const items = Array.isArray(data.data) ? (data.data as CartItem[]) : []
+        setCartItems(items)
+        setSelectedCartIds((prev) => prev.filter((id) => items.some((item) => item.id === id)))
+      } else {
+        setCartError(data.error || '장바구니를 불러오지 못했습니다.')
+      }
+    } catch (error) {
+      console.error('장바구니 조회 오류:', error)
+      setCartError('장바구니를 불러오지 못했습니다.')
+    } finally {
+      setIsCartLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchCartItems()
+  }, [fetchCartItems])
+
+  const handleCartItemToggle = useCallback((cartItemId: string) => {
+    setSelectedCartIds((prev) => {
+      if (prev.includes(cartItemId)) {
+        return prev.filter((id) => id !== cartItemId)
+      }
+      return [...prev, cartItemId]
+    })
+  }, [])
+
+  const allCartItemsSelected = useMemo(() => {
+    return cartItems.length > 0 && selectedCartIds.length === cartItems.length
+  }, [cartItems, selectedCartIds])
+
+  const toggleSelectAllCartItems = useCallback(() => {
+    if (allCartItemsSelected) {
+      setSelectedCartIds([])
+      return
+    }
+
+    setSelectedCartIds(cartItems.map((item) => item.id))
+  }, [allCartItemsSelected, cartItems])
+
+  const selectedCartItems = useMemo(() => {
+    return cartItems.filter((item) => selectedCartIds.includes(item.id))
+  }, [cartItems, selectedCartIds])
+
+  const selectedCartTotalAmount = useMemo(() => {
+    return selectedCartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+  }, [selectedCartItems])
+
+  const hasInactiveSelectedItems = useMemo(() => {
+    return selectedCartItems.some((item) => !item.product?.isActive)
+  }, [selectedCartItems])
+
+  const handleProceedToCheckout = useCallback(() => {
+    if (selectedCartIds.length === 0) {
+      setCartMessageType('error')
+      setCartMessage('주문할 상품을 선택해주세요.')
+      return
+    }
+
+    if (hasInactiveSelectedItems) {
+      setCartMessageType('error')
+      setCartMessage('판매 중단된 상품은 결제할 수 없습니다. 삭제 후 다시 시도해주세요.')
+      return
+    }
+
+    if (typeof window === 'undefined') return
+
+    const payload = {
+      mode: 'cart' as const,
+      cartItemIds: selectedCartIds
+    }
+
+    window.sessionStorage.setItem('gcs_checkout_payload', JSON.stringify(payload))
+    router.push('/shop/checkout')
+  }, [hasInactiveSelectedItems, router, selectedCartIds])
+
+  const handleDeleteSelectedCartItems = useCallback(async () => {
+    if (selectedCartIds.length === 0) return
+    const confirmed = window.confirm('선택한 상품을 삭제하시겠습니까?')
+    if (!confirmed) return
+
+    setIsDeletingCartItems(true)
+    setCartMessage('')
+
+    try {
+      const response = await fetch('/api/shop/cart', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ cartItemIds: selectedCartIds })
+      })
+      const data = await response.json()
+      if (response.ok && data.success) {
+        setCartMessageType('success')
+        setCartMessage(data.message || '선택한 상품을 삭제했습니다.')
+        setSelectedCartIds([])
+        await fetchCartItems()
+      } else {
+        setCartMessageType('error')
+        setCartMessage(data.error || '선택한 상품을 삭제하지 못했습니다.')
+      }
+    } catch (error) {
+      console.error('장바구니 삭제 오류:', error)
+      setCartMessageType('error')
+      setCartMessage('선택한 상품을 삭제하지 못했습니다.')
+    } finally {
+      setIsDeletingCartItems(false)
+    }
+  }, [fetchCartItems, selectedCartIds])
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-black mb-6">장바구니</h2>
-      <div className="text-center py-12">
-        <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">장바구니가 비어있습니다</h3>
-        <p className="text-gray-500 mb-6">원하는 상품을 장바구니에 담아보세요.</p>
-        <Link
-          href="/shop"
-          className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+      {cartMessage && (
+        <div
+          className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+            cartMessageType === 'success'
+              ? 'border-green-200 bg-green-50 text-green-700'
+              : 'border-red-200 bg-red-50 text-red-700'
+          }`}
         >
-          쇼핑하러 가기
-        </Link>
-      </div>
+          {cartMessage}
+        </div>
+      )}
+
+      {cartError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {cartError}
+        </div>
+      )}
+
+      {isCartLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-black"></div>
+            <p className="text-gray-600">장바구니를 불러오는 중...</p>
+          </div>
+        </div>
+      ) : cartItems.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">장바구니가 비어있습니다</h3>
+          <p className="text-gray-500 mb-6">원하는 상품을 장바구니에 담아보세요.</p>
+          <Link
+            href="/shop"
+            className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            쇼핑하러 가기
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                checked={allCartItemsSelected}
+                onChange={toggleSelectAllCartItems}
+              />
+              전체 선택
+            </label>
+            <span className="text-sm text-gray-500">총 {cartItems.length}개 상품</span>
+          </div>
+
+          <div className="space-y-4">
+            {cartItems.map((item) => {
+              const optionList = Array.isArray(item.selectedOptions) ? item.selectedOptions : []
+              const thumbnail = item.product?.images && item.product.images[0] ? item.product.images[0] : ''
+              const isInactive = !item.product?.isActive
+
+              return (
+                <div
+                  key={item.id}
+                  className={`flex items-start gap-4 rounded-lg border p-4 transition-colors ${
+                    isInactive ? 'border-red-200 bg-red-50/60' : 'border-gray-200 hover:border-black/40'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                    checked={selectedCartIds.includes(item.id)}
+                    onChange={() => handleCartItemToggle(item.id)}
+                  />
+                  <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                    {thumbnail ? (
+                      <img
+                        src={thumbnail}
+                        alt={item.product?.name ?? '상품 이미지'}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/placeholder-product.jpg'
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">No Image</div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-base font-semibold text-gray-900">{item.product?.name}</h3>
+                    {item.product?.brand && <p className="mt-1 text-sm text-gray-500">{item.product.brand}</p>}
+                    {optionList.length > 0 && (
+                      <ul className="mt-3 space-y-1 text-sm text-gray-600">
+                        {optionList.map((option) => (
+                          <li key={`${item.id}-${option.name}-${option.label}`}>
+                            {option.name}: <span className="font-medium text-black">{option.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="mt-3 text-sm text-gray-500">수량 {item.quantity}개</p>
+                    {isInactive && (
+                      <p className="mt-2 text-sm font-medium text-red-500">판매 중단된 상품입니다. 주문할 수 없습니다.</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">최종 결제 금액</p>
+                    <p className="text-base font-semibold text-black">
+                      {formatCurrency(item.unitPrice * item.quantity)}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">선택한 상품 금액</span>
+              <span className="text-lg font-bold text-black">{formatCurrency(selectedCartTotalAmount)}</span>
+            </div>
+            {hasInactiveSelectedItems && (
+              <p className="mt-2 text-sm text-red-500">
+                판매 중단된 상품이 포함되어 있어 주문이 불가능합니다. 해당 상품을 삭제해주세요.
+              </p>
+            )}
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteSelectedCartItems}
+                disabled={selectedCartIds.length === 0 || isDeletingCartItems}
+                className={`flex-1 rounded-lg border px-4 py-3 text-sm font-medium transition-colors md:flex-none md:px-6 ${
+                  selectedCartIds.length === 0 || isDeletingCartItems
+                    ? 'cursor-not-allowed border-gray-200 text-gray-400'
+                    : 'border-black text-black hover:bg-gray-50'
+                }`}
+              >
+                {isDeletingCartItems ? '삭제 중...' : '선택 삭제'}
+              </button>
+              <button
+                type="button"
+                onClick={handleProceedToCheckout}
+                disabled={selectedCartIds.length === 0 || hasInactiveSelectedItems}
+                className={`flex-1 rounded-lg px-4 py-3 text-sm font-medium transition-colors md:flex-none md:px-6 ${
+                  selectedCartIds.length === 0 || hasInactiveSelectedItems
+                    ? 'cursor-not-allowed bg-gray-300 text-gray-500'
+                    : 'bg-black text-white hover:bg-gray-800'
+                }`}
+              >
+                결제하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

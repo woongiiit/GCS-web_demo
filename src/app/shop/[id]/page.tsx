@@ -240,7 +240,8 @@ export default function ProductDetailPage() {
       if (response.ok && data.success) {
         const goToCart = window.confirm('상품을 장바구니에 담았습니다. 장바구니로 이동할까요?')
         if (goToCart) {
-          router.push('/mypage?tab=cart')
+          const cartPath = user?.role === 'ADMIN' ? '/admin?tab=cart' : '/mypage?tab=cart'
+          router.push(cartPath)
         }
       } else {
         alert(data.error || '장바구니에 담지 못했습니다.')

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -308,8 +308,12 @@ export default function CheckoutPage() {
     }
   }
 
+  const getCartPath = useCallback(() => {
+    return user?.role === 'ADMIN' ? '/admin?tab=cart' : '/mypage?tab=cart'
+  }, [user])
+
   const handleBackToShop = () => {
-    router.push(mode === 'cart' ? '/mypage?tab=cart' : '/shop')
+    router.push(mode === 'cart' ? getCartPath() : '/shop')
   }
 
   if (loading || isPaymentConfigLoading) {
