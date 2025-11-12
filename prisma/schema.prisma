@@ -23,7 +23,7 @@ model User {
   role                   UserRole @default(GENERAL)
   isSeller               Boolean  @default(false)
   participatedProjectIds String[] // 참여한 프로젝트의 ID 배열
-
+  
   // 학생 인증 관련 필드
   verificationStatus      VerificationStatus @default(PENDING)
   verificationImageUrl    String? // 학생 인증 이미지 URL
@@ -31,7 +31,7 @@ model User {
   verificationApprovedAt  DateTime? // 인증 승인 시간
   verificationRejectedAt  DateTime? // 인증 거부 시간
   verificationNote        String? // 운영자 메모 (거부 사유 등)
-
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -173,7 +173,7 @@ model Product {
   isActive              Boolean     @default(true)
   type                  ProductType @default(FUND)
   fundingGoalAmount     Int?        @map("funding_goal_amount")
-  fundingCurrentAmount  Int         @default(0)
+  fundingCurrentAmount  Int         @default(0) @map("funding_current_amount")
   fundingSupporterCount Int         @default(0) @map("funding_supporter_count")
   fundingDeadline       DateTime?   @map("funding_deadline")
   authorId              String? // 상품 등록자 ID (관리자 또는 판매자)
