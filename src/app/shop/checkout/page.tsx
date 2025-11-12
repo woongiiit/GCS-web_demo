@@ -368,8 +368,8 @@ export default function CheckoutPage() {
   }, [])
 
   const getCartPath = useCallback(() => {
-    return user?.role === 'ADMIN' ? '/admin?tab=cart' : '/mypage?tab=cart'
-  }, [user])
+    return '/mypage?tab=cart'
+  }, [])
 
   const handleBackToShop = () => {
     router.push(mode === 'cart' ? getCartPath() : '/shop')

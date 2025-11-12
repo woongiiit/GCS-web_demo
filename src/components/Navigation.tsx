@@ -59,13 +59,7 @@ export default function Navigation() {
     )
   }
 
-  const myPageHref = user
-    ? user.isSeller
-      ? '/mypage?tab=sellerOrders'
-      : user.role === 'ADMIN'
-        ? '/admin'
-        : '/mypage'
-    : '/mypage'
+  const myPageHref = '/mypage'
 
   return (
     <>
