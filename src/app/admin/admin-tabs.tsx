@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 
 export function parseOrderOptions(selectedOptions: unknown): string[] {
   if (!selectedOptions) return []
@@ -82,6 +82,8 @@ export function AdminOrdersTab() {
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const limit = 10
@@ -113,13 +115,68 @@ export function AdminOrdersTab() {
     }
   }, [limit, page])
 
+  const filteredOrders = useMemo(() => {
+    if (!appliedSearch) return orders
+    const keyword = appliedSearch.trim().toLowerCase()
+    return orders.filter((order) =>
+      order.orderItems.some((item) => item.product.name.toLowerCase().includes(keyword))
+    )
+  }, [orders, appliedSearch])
+
+  const handleSearchSubmit = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      setAppliedSearch(searchTerm)
+    },
+    [searchTerm]
+  )
+
+  const handleResetSearch = useCallback(() => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }, [])
+
   useEffect(() => {
     fetchOrders()
   }, [fetchOrders])
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-black mb-6">모든 주문내역</h2>
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h2 className="text-2xl font-bold text-black">모든 주문내역</h2>
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4"
+        >
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="상품명을 입력하세요"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black md:w-72"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              검색
+            </button>
+            <button
+              type="button"
+              onClick={handleResetSearch}
+              disabled={!searchTerm && !appliedSearch}
+              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                !searchTerm && !appliedSearch
+                  ? 'cursor-not-allowed border-gray-200 text-gray-400'
+                  : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              초기화
+            </button>
+          </div>
+        </form>
+      </div>
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -134,13 +191,13 @@ export function AdminOrdersTab() {
             <p className="text-gray-600">주문 내역을 불러오는 중...</p>
           </div>
         </div>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <div className="py-12 text-center text-gray-500 border border-dashed border-gray-300 rounded-lg">
-          등록된 주문이 없습니다.
+          표시할 주문 내역이 없습니다.
         </div>
       ) : (
         <div className="space-y-6">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <div key={order.id} className="border border-gray-200 rounded-lg overflow-hidden">
               <div className="bg-gray-50 px-4 py-3 flex flex-wrap gap-4 justify-between items-start">
                 <div>
