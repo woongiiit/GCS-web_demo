@@ -53,7 +53,7 @@ export default function ShopPage() {
     const goal = typeof product.fundingGoalAmount === 'number' ? product.fundingGoalAmount : 0
     const current = typeof product.fundingCurrentAmount === 'number' ? product.fundingCurrentAmount : 0
     if (!goal || goal <= 0) return 0
-    return Math.min(100, Math.round((current / goal) * 100))
+    return Math.round((current / goal) * 100)
   }
 
   const formatCurrency = (value: number | null | undefined) => {
@@ -196,7 +196,7 @@ export default function ShopPage() {
                               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                   className="h-full bg-black transition-all"
-                                  style={{ width: `${fundingProgress}%` }}
+                                  style={{ width: `${Math.min(fundingProgress, 100)}%` }}
                                 />
                               </div>
                             </div>
@@ -276,7 +276,7 @@ export default function ShopPage() {
                             <div className="mt-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-black transition-all"
-                                style={{ width: `${fundingProgress}%` }}
+                                style={{ width: `${Math.min(fundingProgress, 100)}%` }}
                               />
                             </div>
                             <div className="mt-2 text-[11px] text-gray-500 flex justify-between">

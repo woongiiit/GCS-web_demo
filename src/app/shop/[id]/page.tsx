@@ -436,7 +436,7 @@ export default function ProductDetailPage() {
                 <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-black transition-all"
-                    style={{ width: `${fundingProgress}%` }}
+                    style={{ width: `${Math.min(fundingProgress, 100)}%` }}
                   />
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-600">
@@ -849,6 +849,6 @@ function getFundingProgress(product: any) {
   const goal = typeof product.fundingGoalAmount === 'number' ? product.fundingGoalAmount : 0
   const current = typeof product.fundingCurrentAmount === 'number' ? product.fundingCurrentAmount : 0
   if (!goal) return 0
-  return Math.min(100, Math.round((current / goal) * 100))
+  return Math.round((current / goal) * 100)
 }
 
