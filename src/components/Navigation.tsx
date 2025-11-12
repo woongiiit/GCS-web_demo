@@ -59,6 +59,14 @@ export default function Navigation() {
     )
   }
 
+  const myPageHref = user
+    ? user.isSeller
+      ? '/mypage?tab=sellerOrders'
+      : user.role === 'ADMIN'
+        ? '/admin'
+        : '/mypage'
+    : '/mypage'
+
   return (
     <>
       <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
@@ -104,17 +112,19 @@ export default function Navigation() {
                 // 로그인된 사용자
                 <div className="flex items-center space-x-3">
                   <span className="text-sm font-medium text-gray-600 hidden sm:inline">
-                    환영합니다. <Link 
-                      href={user.role === 'ADMIN' ? '/admin' : '/mypage'} 
+                    환영합니다.{' '}
+                    <Link
+                      href={myPageHref}
                       className="text-black font-semibold hover:text-gray-700 hover:underline transition-colors cursor-pointer"
                     >
                       {user.name}
-                    </Link>님
+                    </Link>
+                    님
                   </span>
                   
                   {/* 마이페이지 아이콘 */}
                   <Link
-                    href={user.role === 'ADMIN' ? '/admin' : '/mypage'}
+                    href={myPageHref}
                     className="text-gray-600 hover:text-black transition-colors p-1"
                     title="마이페이지"
                   >
