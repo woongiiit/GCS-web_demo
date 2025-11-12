@@ -122,7 +122,7 @@ function MyPageContent() {
     (
       tab: 'profile' | 'cart' | 'archive' | 'verification' | 'orders' | 'sellerOrders'
     ) => {
-      if (tab === 'sellerOrders' && !user.isSeller) {
+      if (tab === 'sellerOrders' && !user?.isSeller) {
         return
       }
 
@@ -136,7 +136,7 @@ function MyPageContent() {
       fetchCartItems()
     }
     },
-    [router, searchParams, fetchCartItems, user.isSeller]
+    [router, searchParams, fetchCartItems, user?.isSeller]
   )
 
   const handleCartItemToggle = useCallback((cartItemId: string) => {
@@ -248,13 +248,13 @@ function MyPageContent() {
 
   useEffect(() => {
     const tabParam = searchParams ? searchParams.get('tab') : null
-    if (tabParam === 'sellerOrders' && !user.isSeller) {
+    if (tabParam === 'sellerOrders' && !user?.isSeller) {
       return
     }
     if (isValidTab(tabParam) && tabParam !== activeTab) {
       setActiveTab(tabParam)
     }
-  }, [searchParams, activeTab, user.isSeller])
+  }, [searchParams, activeTab, user?.isSeller])
 
   // 사용자 정보 로드
   useEffect(() => {
