@@ -559,7 +559,11 @@ export default function CheckoutPage() {
         return
       }
 
-      if (typeof product.stock === 'number' && product.stock < quantity) {
+      if (
+        product.type !== 'FUND' &&
+        typeof product.stock === 'number' &&
+        product.stock < quantity
+      ) {
         setError('재고가 부족하여 결제를 진행할 수 없습니다.')
         setItems([])
         return

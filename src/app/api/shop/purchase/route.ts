@@ -141,7 +141,7 @@ export async function POST(request: Request) {
           )
         }
 
-        if (product.stock < cartItem.quantity) {
+        if (product.type !== 'FUND' && product.stock < cartItem.quantity) {
           return NextResponse.json(
             { error: `재고가 부족합니다. (${product.name})` },
             { status: 400 }
@@ -160,16 +160,16 @@ export async function POST(request: Request) {
         })
 
         const contributionAmount = itemTotal
-        productsToUpdate.push({
-          productId: product.id,
-          quantity: cartItem.quantity
-        })
-
         if (product.type === 'FUND') {
           productsToIncrementFunding.push({
             productId: product.id,
             amount: contributionAmount,
             supporterIncrement: 1
+          })
+        } else {
+          productsToUpdate.push({
+            productId: product.id,
+            quantity: cartItem.quantity
           })
         }
       }
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
           )
         }
 
-        if (product.stock < item.quantity) {
+        if (product.type !== 'FUND' && product.stock < item.quantity) {
           return NextResponse.json(
             { error: `재고가 부족합니다. (${product.name})` },
             { status: 400 }
@@ -235,16 +235,16 @@ export async function POST(request: Request) {
             normalizedSelectedOptions.length > 0 ? normalizedSelectedOptions : undefined
         })
 
-        productsToUpdate.push({
-          productId: product.id,
-          quantity: item.quantity
-        })
-
         if (product.type === 'FUND') {
           productsToIncrementFunding.push({
             productId: product.id,
             amount: itemTotal,
             supporterIncrement: 1
+          })
+        } else {
+          productsToUpdate.push({
+            productId: product.id,
+            quantity: item.quantity
           })
         }
       }

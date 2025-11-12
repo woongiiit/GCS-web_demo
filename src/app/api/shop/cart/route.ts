@@ -116,7 +116,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (product.stock <= 0) {
+    const isFundProduct = product.type === 'FUND'
+
+    if (!isFundProduct && product.stock <= 0) {
       return NextResponse.json(
         { error: '품절된 상품입니다.' },
         { status: 400 }
@@ -157,7 +159,7 @@ export async function POST(request: NextRequest) {
     if (existingItem) {
       const updatedQuantity = existingItem.quantity + quantity
 
-      if (updatedQuantity > product.stock) {
+      if (!isFundProduct && updatedQuantity > product.stock) {
         return NextResponse.json(
           { error: '재고를 초과하여 담을 수 없습니다.' },
           { status: 400 }
@@ -183,7 +185,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (quantity > product.stock) {
+    if (!isFundProduct && quantity > product.stock) {
       return NextResponse.json(
         { error: '재고를 초과하여 담을 수 없습니다.' },
         { status: 400 }
