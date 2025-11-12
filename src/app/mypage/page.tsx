@@ -327,17 +327,64 @@ function MyPageContent() {
         phone: user.phone,
         role: user.role
       })
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+
+    const controller = new AbortController()
+    let cancelled = false
+
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/mypage/profile', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+          signal: controller.signal
+        })
+        const data = await response.json()
+        if (!response.ok || !data.success || cancelled) {
+          return
+        }
+
+        setUserInfo({
+          id: data.data.id,
+          email: data.data.email,
+          name: data.data.name,
+          studentId: data.data.studentId ?? '',
+          major: data.data.major ?? '',
+          phone: data.data.phone ?? '',
+          role: data.data.role ?? user.role
+        })
+      } catch (error) {
+        if (controller.signal.aborted) return
+        console.error('프로필 정보 조회 오류:', error)
+      }
+    }
+
+    fetchProfile()
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (userInfo) {
       setFormData({
-        name: user.name || '',
-        studentId: user.studentId || '',
-        major: user.major || '',
-        phone: user.phone || '',
+        name: userInfo.name || '',
+        studentId: userInfo.studentId || '',
+        major: userInfo.major || '',
+        phone: userInfo.phone || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       })
     }
-  }, [user])
+  }, [userInfo])
 
   useEffect(() => {
     if (activeTab === 'cart') {
@@ -411,6 +458,8 @@ function MyPageContent() {
     return null
   }
 
+  const displayUser = userInfo ?? user
+
   return (
     <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
       <div className="relative min-h-screen bg-white">
@@ -471,31 +520,35 @@ function MyPageContent() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
                         <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
-                          {user.name}
+                          {displayUser?.name ?? '-'}
                         </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">학번</label>
                         <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
-                          {user.studentId}
+                          {displayUser?.studentId && displayUser.studentId.trim().length > 0
+                            ? displayUser.studentId
+                            : '미입력'}
                         </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">주전공</label>
                         <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
-                          {user.major}
+                          {displayUser?.major && displayUser.major.trim().length > 0
+                            ? displayUser.major
+                            : '미입력'}
                         </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">전화번호</label>
                         <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
-                          {user.phone}
+                          {displayUser?.phone ?? '-'}
                         </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
                         <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600">
-                          {user.email}
+                          {displayUser?.email ?? '-'}
                         </div>
                       </div>
                       <div>
