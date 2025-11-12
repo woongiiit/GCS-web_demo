@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
+import { useState, useEffect, useCallback, useMemo, Suspense, type FormEvent } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -51,7 +51,9 @@ function MyPageContent() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<'profile' | 'cart' | 'archive' | 'verification' | 'orders'>('profile')
+  const [activeTab, setActiveTab] = useState<
+    'profile' | 'cart' | 'archive' | 'verification' | 'orders' | 'sellerOrders'
+  >('profile')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -77,13 +79,14 @@ function MyPageContent() {
   const [isDeletingCartItems, setIsDeletingCartItems] = useState(false)
   const isValidTab = (
     value: string | null
-  ): value is 'profile' | 'cart' | 'archive' | 'verification' | 'orders' => {
+  ): value is 'profile' | 'cart' | 'archive' | 'verification' | 'orders' | 'sellerOrders' => {
     return (
       value === 'profile' ||
       value === 'cart' ||
       value === 'archive' ||
       value === 'verification' ||
-      value === 'orders'
+      value === 'orders' ||
+      value === 'sellerOrders'
     )
   }
 
@@ -116,7 +119,13 @@ function MyPageContent() {
   }, [])
 
   const handleTabChange = useCallback(
-    (tab: 'profile' | 'cart' | 'archive' | 'verification' | 'orders') => {
+    (
+      tab: 'profile' | 'cart' | 'archive' | 'verification' | 'orders' | 'sellerOrders'
+    ) => {
+      if (tab === 'sellerOrders' && !user.isSeller) {
+        return
+      }
+
     setActiveTab(tab)
     const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
     params.set('tab', tab)
@@ -127,7 +136,7 @@ function MyPageContent() {
       fetchCartItems()
     }
     },
-    [router, searchParams, fetchCartItems]
+    [router, searchParams, fetchCartItems, user.isSeller]
   )
 
   const handleCartItemToggle = useCallback((cartItemId: string) => {
@@ -239,10 +248,13 @@ function MyPageContent() {
 
   useEffect(() => {
     const tabParam = searchParams ? searchParams.get('tab') : null
+    if (tabParam === 'sellerOrders' && !user.isSeller) {
+      return
+    }
     if (isValidTab(tabParam) && tabParam !== activeTab) {
       setActiveTab(tabParam)
     }
-  }, [searchParams, activeTab])
+  }, [searchParams, activeTab, user.isSeller])
 
   // 사용자 정보 로드
   useEffect(() => {
@@ -452,6 +464,18 @@ function MyPageContent() {
                   }`}
                 >
                   내 주문내역
+                </button>
+              )}
+              {user.isSeller && (
+                <button
+                  onClick={() => handleTabChange('sellerOrders')}
+                  className={`pb-2 border-b-2 font-medium transition-colors ${
+                    activeTab === 'sellerOrders'
+                      ? 'text-black border-black'
+                      : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                  }`}
+                >
+                  모든 주문내역
                 </button>
               )}
               <button
@@ -800,6 +824,8 @@ function MyPageContent() {
                 <MyArchiveTab user={user} />
               ) : activeTab === 'orders' ? (
                 <MyOrdersTab />
+              ) : activeTab === 'sellerOrders' ? (
+                <SellerOrdersTab />
               ) : (
                 <div>
                   {/* 학생 인증 탭 */}
@@ -1010,6 +1036,44 @@ type MyOrder = {
   notes?: string | null
   createdAt: string
   orderItems: MyOrderItem[]
+  paymentRecords: Array<{
+    id: string
+    impUid: string | null
+    merchantUid: string | null
+    amount: number
+    method: string | null
+    status: string
+    createdAt: string
+  }>
+}
+
+type SellerOrderItem = {
+  id: string
+  quantity: number
+  price: number
+  selectedOptions?: unknown
+  product: {
+    id: string
+    name: string
+    images?: string[]
+  }
+}
+
+type SellerOrder = {
+  id: string
+  status: string
+  totalAmount: number
+  shippingAddress: string
+  phone: string
+  notes?: string | null
+  createdAt: string
+  user: {
+    id: string
+    name: string | null
+    email: string | null
+    phone: string | null
+  }
+  orderItems: SellerOrderItem[]
   paymentRecords: Array<{
     id: string
     impUid: string | null
@@ -1237,6 +1301,299 @@ function MyOrdersTab() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SellerOrdersTab() {
+  const [orders, setOrders] = useState<SellerOrder[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+
+  const formatCurrency = useCallback((value: number) => `${value.toLocaleString()}원`, [])
+
+  const parseOptions = useCallback((selectedOptions: unknown): string[] => {
+    if (!selectedOptions) return []
+    if (Array.isArray(selectedOptions)) {
+      return selectedOptions
+        .map((option) => {
+          if (option && typeof option === 'object' && 'name' in option && 'label' in option) {
+            const { name, label } = option as { name?: string; label?: string }
+            if (name && label) {
+              return `${name}: ${label}`
+            }
+          }
+          return null
+        })
+        .filter((value): value is string => !!value)
+    }
+
+    try {
+      const parsed = JSON.parse(JSON.stringify(selectedOptions))
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((option) => {
+            if (option && typeof option === 'object' && option.name && option.label) {
+              return `${option.name}: ${option.label}`
+            }
+            return null
+          })
+          .filter((value): value is string => !!value)
+      }
+    } catch (optionError) {
+      console.error('판매자 주문 옵션 파싱 실패:', optionError)
+    }
+
+    return []
+  }, [])
+
+  const fetchSellerOrders = useCallback(async (keyword: string) => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const params = new URLSearchParams()
+      if (keyword) {
+        params.set('q', keyword)
+      }
+
+      const response = await fetch(
+        `/api/mypage/orders/seller${params.toString() ? `?${params.toString()}` : ''}`,
+        {
+          cache: 'no-store'
+        }
+      )
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '주문 내역을 불러오지 못했습니다.')
+      }
+      setOrders(Array.isArray(data.data) ? (data.data as SellerOrder[]) : [])
+    } catch (fetchError) {
+      console.error('판매자 주문 내역 조회 오류:', fetchError)
+      setError(fetchError instanceof Error ? fetchError.message : '주문 내역을 불러오지 못했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSellerOrders(appliedSearch)
+  }, [fetchSellerOrders, appliedSearch])
+
+  const handleSearchSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      setAppliedSearch(searchTerm.trim())
+    },
+    [searchTerm]
+  )
+
+  const handleResetSearch = useCallback(() => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-black"></div>
+          <p className="text-gray-600">주문 내역을 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {error}
+      </div>
+    )
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+        표시할 주문 내역이 없습니다.
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h2 className="text-2xl font-bold text-black">모든 주문내역</h2>
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4"
+        >
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="상품명을 입력하세요"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black md:w-72"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              검색
+            </button>
+            <button
+              type="button"
+              onClick={handleResetSearch}
+              disabled={!searchTerm && !appliedSearch}
+              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                !searchTerm && !appliedSearch
+                  ? 'cursor-not-allowed border-gray-200 text-gray-400'
+                  : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              초기화
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="space-y-6">
+        {orders.map((order) => (
+          <div key={order.id} className="overflow-hidden rounded-lg border border-gray-200">
+            <div className="flex flex-wrap items-start justify-between gap-4 bg-gray-50 px-4 py-3">
+              <div>
+                <p className="text-sm text-gray-500">주문 번호</p>
+                <p className="text-base font-semibold text-black">{order.id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">주문 일시</p>
+                <p className="text-base font-semibold text-black">
+                  {new Date(order.createdAt).toLocaleString('ko-KR')}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">상태</p>
+                <span className="inline-flex items-center rounded-full bg-black px-3 py-1 text-xs font-medium text-white">
+                  {order.status}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">구매자</p>
+                <p className="text-base font-semibold text-black">
+                  {order.user?.name ?? '정보 없음'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {order.user?.email ?? '이메일 없음'}
+                  {order.user?.phone ? ` · ${order.user.phone}` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-4 py-4">
+              <div className="flex flex-col gap-2 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">배송지</p>
+                  <p className="text-sm font-medium text-black">{order.shippingAddress}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">연락처</p>
+                  <p className="text-sm font-medium text-black">{order.phone}</p>
+                </div>
+                {order.notes && (
+                  <div className="md:text-right">
+                    <p className="text-sm text-gray-500">요청사항</p>
+                    <p className="text-sm font-medium text-black">{order.notes}</p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <p className="mb-3 text-sm font-medium text-gray-700">주문 상품</p>
+                <div className="space-y-3">
+                  {order.orderItems.map((item) => {
+                    const options = parseOptions(item.selectedOptions)
+                    const thumbnail = item.product?.images?.[0]
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 md:flex-row"
+                      >
+                        <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                          {thumbnail ? (
+                            <img
+                              src={thumbnail}
+                              alt={item.product?.name ?? '상품 이미지'}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder-product.jpg'
+                              }}
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h4 className="text-base font-semibold text-gray-900">
+                              {item.product?.name}
+                            </h4>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500">판매가</p>
+                              <p className="text-sm font-medium text-black">
+                                {formatCurrency(item.price)}
+                              </p>
+                            </div>
+                          </div>
+                          {options.length > 0 && (
+                            <ul className="mt-3 space-y-1 text-sm text-gray-600">
+                              {options.map((option) => (
+                                <li key={`${item.id}-${option}`}>{option}</li>
+                              ))}
+                            </ul>
+                          )}
+                          <p className="mt-3 text-sm text-gray-500">수량 {item.quantity}개</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 md:grid-cols-2">
+                <div>
+                  <p className="text-sm text-gray-500">총 결제 금액</p>
+                  <p className="text-lg font-bold text-black">{formatCurrency(order.totalAmount)}</p>
+                </div>
+                {order.paymentRecords.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500">결제 이력</p>
+                    <div className="mt-2 space-y-2">
+                      {order.paymentRecords.map((record) => (
+                        <div key={record.id} className="rounded-lg border border-gray-200 bg-white p-3">
+                          <p className="text-xs text-gray-500">
+                            {new Date(record.createdAt).toLocaleString('ko-KR')}
+                          </p>
+                          <p className="text-sm font-medium text-black">
+                            {record.method ?? '결제수단 미확인'} · {formatCurrency(record.amount)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            상태: {record.status}
+                            {record.merchantUid && <span> · 주문번호: {record.merchantUid}</span>}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
