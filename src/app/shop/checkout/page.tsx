@@ -12,6 +12,13 @@ import {
   type NormalizedOptionValueWithName,
   type SelectedOptionInput
 } from '@/lib/shop/options'
+import {
+  BillingKeyMethod,
+  Currency,
+  PaymentPayMethod,
+  requestIssueBillingKey,
+  requestPayment
+} from '@portone/browser-sdk/v2'
 
 type CheckoutMode = 'cart' | 'direct'
 
@@ -68,16 +75,19 @@ type CheckoutItem = {
 type PaymentConfig = {
   merchantCode: string
   pgId: string
+  billingPgId: string | null
   channelKey: string | null
 }
 
 type PortOneResponse = {
   success: boolean
-  imp_uid: string
-  merchant_uid: string
-  paid_amount: number
-  pay_method: string
+  imp_uid?: string
+  merchant_uid?: string
+  payment_id?: string
+  billing_key?: string
   customer_uid?: string
+  paid_amount?: number
+  pay_method?: string
   card_name?: string
   buyer_name?: string
   buyer_email?: string
@@ -255,7 +265,7 @@ export default function CheckoutPage() {
         throw new Error('결제 모듈을 로드하지 못했습니다.')
       }
 
-      const { merchantCode, pgId, channelKey } = paymentConfig
+      const { merchantCode, pgId, billingPgId, channelKey } = paymentConfig
       IMP.init(merchantCode)
 
       const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
@@ -273,16 +283,24 @@ export default function CheckoutPage() {
       if (requiresBilling) {
         const customerUid = `fund-${user.id}-${Date.now()}`
         const billingMerchantUid = `fund-billing-${Date.now()}`
-        const billingPgId = (() => {
-          if (!pgId) return pgId
+        const resolvedBillingPgId = (() => {
+          const configured = billingPgId && billingPgId.trim().length > 0 ? billingPgId.trim() : null
+          if (configured) return configured
+          if (!pgId) return null
           if (pgId.startsWith('tosspay.')) {
             return pgId.endsWith('_billing') ? pgId : `${pgId}_billing`
           }
           return pgId
         })()
 
+        if (!resolvedBillingPgId) {
+          setError('펀딩 결제를 위한 PG 설정이 누락되었습니다. 관리자에게 문의해주세요.')
+          setIsPaying(false)
+          return
+        }
+
         const billingParams: Record<string, unknown> = {
-          pg: billingPgId,
+          pg: resolvedBillingPgId,
           pay_method: 'card',
           merchant_uid: billingMerchantUid,
           customer_uid: customerUid,
@@ -293,7 +311,6 @@ export default function CheckoutPage() {
           buyer_tel: buyerPhone,
           buyer_addr: fullShippingAddress
         }
-        billingParams.customer_uid = customerUid
 
         IMP.request_pay(billingParams, async (rsp: PortOneResponse) => {
           if (!rsp.success) {
@@ -307,7 +324,16 @@ export default function CheckoutPage() {
             return
           }
 
+          if (!rsp.billing_key) {
+            setIsPaying(false)
+            setError('발급된 빌링키 정보를 확인할 수 없습니다. 다시 시도해주세요.')
+            return
+          }
+
           try {
+            const schedulePaymentId =
+              rsp.payment_id ?? rsp.merchant_uid ?? billingMerchantUid
+
             const response = await fetch('/api/shop/purchase', {
               method: 'POST',
               headers: {
@@ -331,9 +357,9 @@ export default function CheckoutPage() {
                 phone: buyerPhone.trim(),
                 notes: orderMemo.trim() || undefined,
                 billing: {
-                  impUid: rsp.imp_uid,
-                  customerUid: rsp.customer_uid ?? customerUid,
-                  merchantUid: rsp.merchant_uid
+                  billingKey: rsp.billing_key,
+                  paymentId: schedulePaymentId,
+                  channelKey: channelKey ?? null
                 }
               })
             })
@@ -420,8 +446,9 @@ export default function CheckoutPage() {
               phone: buyerPhone.trim(),
               notes: orderMemo.trim() || undefined,
               payment: {
-                impUid: rsp.imp_uid,
-                merchantUid: rsp.merchant_uid,
+                paymentId: rsp.payment_id ?? undefined,
+                impUid: rsp.imp_uid ?? undefined,
+                merchantUid: rsp.merchant_uid ?? merchantUid,
                 amount: rsp.paid_amount,
                 payMethod: rsp.pay_method,
                 cardName: rsp.card_name,

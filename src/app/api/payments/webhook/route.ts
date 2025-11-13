@@ -6,6 +6,8 @@ import type { Prisma } from '@prisma/client'
 export const dynamic = 'force-dynamic'
 
 type PortOneWebhookPayload = {
+  payment_id?: string
+  paymentId?: string
   imp_uid?: string
   impUid?: string
   merchant_uid?: string
@@ -22,10 +24,10 @@ type FundingPayloadEntry = {
 export async function POST(request: NextRequest) {
   try {
     const payload = (await request.json()) as PortOneWebhookPayload
-    const impUid = payload.imp_uid ?? payload.impUid
-    const merchantUid = payload.merchant_uid ?? payload.merchantUid
+    const paymentIdFromPayload =
+      payload.payment_id ?? payload.paymentId ?? payload.imp_uid ?? payload.impUid ?? null
 
-    if (!impUid || !merchantUid) {
+    if (!paymentIdFromPayload) {
       return NextResponse.json(
         { success: false, error: '잘못된 웹훅 요청입니다.' },
         { status: 400 }
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const schedule = await prisma.billingSchedule.findUnique({
-      where: { merchantUid },
+      where: { merchantUid: paymentIdFromPayload },
       include: {
         order: {
           include: {
@@ -56,8 +58,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: '이미 처리된 예약입니다.' }, { status: 200 })
     }
 
-    const paymentData = await getPortOnePayment(impUid)
-    const paymentStatus = paymentData.status
+    const paymentData = await getPortOnePayment({
+      paymentId: paymentIdFromPayload,
+      impUid: payload.imp_uid ?? payload.impUid
+    })
+
+    if (!('status' in paymentData)) {
+      return NextResponse.json({ success: true, message: '알 수 없는 결제 상태입니다.' }, { status: 200 })
+    }
+
     const serializedPayment = JSON.parse(JSON.stringify(paymentData)) as Prisma.InputJsonValue
     const now = new Date()
 
@@ -95,8 +104,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    if (paymentStatus === 'paid') {
-      // 목표 금액 충족 여부 확인
+    if (paymentData.status === 'PAID') {
       for (const [productId, info] of aggregatedFunding.entries()) {
         const product = await prisma.product.findUnique({
           where: { id: productId },
@@ -115,11 +123,11 @@ export async function POST(request: NextRequest) {
           product.fundingGoalAmount > 0 &&
           product.fundingCurrentAmount + info.amount < product.fundingGoalAmount
         ) {
-          await cancelPortOnePayment(
-            impUid,
-            '펀딩 목표 미달로 자동결제를 취소했습니다.',
-            paymentData.amount
-          )
+          await cancelPortOnePayment({
+            paymentId: paymentData.id,
+            amount: paymentData.amount.total,
+            reason: '펀딩 목표 미달로 자동결제를 취소했습니다.'
+          })
           await handleFailure('펀딩 목표 미달로 결제가 취소되었습니다.')
           return NextResponse.json({ success: true, message: '펀딩 목표 미달' }, { status: 200 })
         }
@@ -137,20 +145,24 @@ export async function POST(request: NextRequest) {
         })
 
         const paymentInfoForOrder: Prisma.InputJsonValue = {
-          impUid: paymentData.imp_uid,
-          merchantUid: paymentData.merchant_uid,
-          amount: paymentData.amount,
-          currency: paymentData.currency ?? 'KRW',
-          payMethod: paymentData.pay_method,
+          paymentId: paymentData.id,
+          transactionId: 'transactionId' in paymentData ? paymentData.transactionId : null,
+          amount: paymentData.amount.total,
+          currency: paymentData.currency,
+          payMethod:
+            'method' in paymentData && paymentData.method && 'type' in paymentData.method
+              ? (paymentData.method as any).type ?? null
+              : null,
           status: paymentData.status,
-          cardName: paymentData.card_name ?? null,
-          buyerName: paymentData.buyer_name ?? schedule.order.user.name,
-          buyerEmail: paymentData.buyer_email ?? schedule.order.user.email,
-          buyerTel: paymentData.buyer_tel ?? schedule.order.phone,
-          receiptUrl: paymentData.receipt_url ?? null,
-          paidAt: paymentData.paid_at
-            ? new Date(paymentData.paid_at * 1000).toISOString()
-            : null,
+          cardName:
+            'method' in paymentData && paymentData.method && 'card' in paymentData.method
+              ? (paymentData.method as any)?.card?.issuer?.name ?? null
+              : null,
+          buyerName: paymentData.customer?.name?.full ?? schedule.order.user.name,
+          buyerEmail: paymentData.customer?.email ?? schedule.order.user.email,
+          buyerTel: paymentData.customer?.phoneNumber ?? schedule.order.phone,
+          receiptUrl: 'receiptUrl' in paymentData ? paymentData.receiptUrl ?? null : null,
+          paidAt: 'paidAt' in paymentData ? paymentData.paidAt : null,
           raw: serializedPayment
         }
 
@@ -170,10 +182,13 @@ export async function POST(request: NextRequest) {
           data: {
             orderId: schedule.orderId,
             userId: schedule.userId,
-            impUid: paymentData.imp_uid,
-            merchantUid: paymentData.merchant_uid,
-            amount: paymentData.amount,
-            method: paymentData.pay_method ?? null,
+            impUid: paymentData.transactionId ?? null,
+            merchantUid: paymentData.id,
+            amount: paymentData.amount.total,
+            method:
+              'method' in paymentData && paymentData.method && 'type' in paymentData.method
+                ? (paymentData.method as any).type ?? null
+                : null,
             status: paymentData.status,
             paymentData: serializedPayment
           }
@@ -198,8 +213,9 @@ export async function POST(request: NextRequest) {
     }
 
     const failureReason =
-      (paymentData as unknown as { fail_reason?: string })?.fail_reason ??
-      '자동결제가 실패했습니다.'
+      ('failure' in paymentData && paymentData.failure && 'message' in paymentData.failure
+        ? (paymentData.failure as any)?.message
+        : null) ?? '자동결제가 실패했습니다.'
 
     await handleFailure(failureReason)
 

@@ -9,10 +9,12 @@ import {
   type SelectedOptionInput
 } from '@/lib/shop/options'
 import {
-  cancelPortOnePayment,
   getPortOnePayment,
-  schedulePortOnePayment
+  createPortOnePaymentSchedule,
+  preRegisterPortOnePayment,
+  getPortOneBillingKeyInfo
 } from '@/lib/shop/payment'
+import type { CreatePaymentScheduleResponse } from '@portone/server-sdk/dist/generated/payment/paymentSchedule/CreatePaymentScheduleResponse.js'
 import type { Prisma } from '@prisma/client'
 import { sendOrderNotificationEmail } from '@/lib/email'
 
@@ -64,8 +66,9 @@ export async function POST(request: Request) {
       phone?: string
       notes?: string
       payment?: {
-        impUid: string
-        merchantUid: string
+        paymentId?: string
+        impUid?: string
+        merchantUid?: string
         amount: number
         payMethod?: string
         cardName?: string
@@ -73,11 +76,13 @@ export async function POST(request: Request) {
         buyerEmail?: string
         buyerTel?: string
         receiptUrl?: string
+        paymentToken?: string
+        txId?: string | null
       }
       billing?: {
-        impUid: string
-        customerUid: string
-        merchantUid?: string
+        billingKey?: string
+        paymentId?: string
+        channelKey?: string
       }
     }
 
@@ -355,77 +360,105 @@ export async function POST(request: Request) {
     let paymentInfo: Prisma.JsonObject | null = null
     let orderStatus: 'PENDING' | 'CONFIRMED' = 'PENDING'
     let billingCustomerUid: string | null = null
-    let billingMerchantUidForSchedule: string | null = null
+    let billingScheduleId: string | null = null
+    let billingPaymentId: string | null = null
+    let billingChannelKey: string | null = null
     let billingScheduledAt: Date | null = hasFundProducts ? fundProductDeadline ?? null : null
-    let billingIssuanceData: Prisma.InputJsonValue | null = null
-    let billingImpUid: string | null = null
+    let billingScheduleResponse: CreatePaymentScheduleResponse | null = null
 
     if (hasFundProducts) {
-      if (!billing?.impUid || !billing.customerUid) {
+      const resolvedBillingKey = billing?.billingKey?.trim()
+      if (!resolvedBillingKey) {
         return NextResponse.json(
-          { error: '자동결제 정보를 확인할 수 없습니다. 다시 시도해주세요.' },
+          { error: '자동결제용 빌링키 정보를 확인할 수 없습니다. 다시 시도해주세요.' },
           { status: 400 }
         )
       }
 
       try {
-        const billingData: any = await getPortOnePayment(billing.impUid)
-        const customerUidFromPortOne: string =
-          (billingData?.customer_uid as string | undefined) ?? billing.customerUid
+        const billingInfo = await getPortOneBillingKeyInfo(resolvedBillingKey)
 
-        if (customerUidFromPortOne !== billing.customerUid) {
+        if ('status' in billingInfo && billingInfo.status !== 'ISSUED') {
           return NextResponse.json(
-            { error: '자동결제 정보가 일치하지 않습니다. (customerUid 불일치)' },
+            { error: '발급이 완료되지 않은 빌링키입니다. 다시 등록해주세요.' },
             { status: 400 }
           )
         }
 
-        const billingStatus = billingData?.status as string | undefined
-        if (billingStatus && billingStatus !== 'ready' && billingStatus !== 'paid') {
+        if (!('billingKey' in billingInfo)) {
           return NextResponse.json(
-            { error: '자동결제 등록이 완료되지 않았습니다. 다시 시도해주세요.' },
+            { error: '유효하지 않은 빌링키입니다. 다시 시도해주세요.' },
             { status: 400 }
           )
         }
 
-        billingCustomerUid = customerUidFromPortOne
-        billingImpUid = billing.impUid
-        billingMerchantUidForSchedule = `${customerUidFromPortOne}-${Date.now()}`
-        billingIssuanceData = JSON.parse(JSON.stringify(billingData)) as Prisma.InputJsonValue
+        billingCustomerUid = billingInfo.billingKey
+        billingChannelKey =
+          billing?.channelKey ??
+          billingInfo.channels?.[0]?.key ??
+          process.env.PORTONE_CHANNEL_KEY ??
+          null
 
-        const issuedAt =
-          typeof billingData?.paid_at === 'number'
-            ? new Date(billingData.paid_at * 1000)
-            : new Date()
+        const paymentIdForSchedule =
+          billing?.paymentId?.trim() || `fund-${user.id}-${Date.now()}`
+
+        if (!billingScheduledAt) {
+          return NextResponse.json(
+            { error: '펀딩 결제 예약 시간을 확인할 수 없습니다.' },
+            { status: 400 }
+          )
+        }
+
+        await preRegisterPortOnePayment({
+          paymentId: paymentIdForSchedule,
+          totalAmount,
+          currency: 'KRW'
+        })
+
+        const scheduleResponse = await createPortOnePaymentSchedule({
+          paymentId: paymentIdForSchedule,
+          schedule: {
+            billingKey: billingInfo.billingKey,
+            channelKey: billingChannelKey ?? undefined,
+            orderName: fundProductName ?? 'Fund Order',
+            amount: {
+              total: totalAmount
+            },
+            currency: 'KRW',
+            customer: {
+              id: user.id,
+              name: user.name ? { full: user.name } : undefined,
+              email: user.email ?? undefined,
+              phoneNumber: phone ?? undefined
+            }
+          },
+          scheduledAt: billingScheduledAt
+        })
+
+        billingPaymentId = paymentIdForSchedule
+        billingScheduleId = scheduleResponse.schedule.id
+        billingScheduleResponse = scheduleResponse
 
         await prisma.billingCustomer.upsert({
           where: { userId: user.id },
           update: {
-            customerUid: customerUidFromPortOne,
-            pgProvider: (billingData?.pg_provider as string | undefined) ?? null,
-            cardName: (billingData?.card_name as string | undefined) ?? null,
-            cardNumber: (billingData?.card_number as string | undefined) ?? null,
-            cardType: (billingData?.card_type as string | undefined) ?? null,
-            cardOwner: (billingData?.card_owner as string | undefined) ?? null,
-            issuedAt,
-            raw: billingIssuanceData ?? undefined
+            customerUid: billingInfo.billingKey,
+            pgProvider: billingInfo.channels?.[0]?.pgProvider ?? null,
+            issuedAt: billingInfo.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
+            raw: billingInfo as unknown as Prisma.InputJsonValue
           },
           create: {
             userId: user.id,
-            customerUid: customerUidFromPortOne,
-            pgProvider: (billingData?.pg_provider as string | undefined) ?? null,
-            cardName: (billingData?.card_name as string | undefined) ?? null,
-            cardNumber: (billingData?.card_number as string | undefined) ?? null,
-            cardType: (billingData?.card_type as string | undefined) ?? null,
-            cardOwner: (billingData?.card_owner as string | undefined) ?? null,
-            issuedAt,
-            raw: billingIssuanceData ?? undefined
+            customerUid: billingInfo.billingKey,
+            pgProvider: billingInfo.channels?.[0]?.pgProvider ?? null,
+            issuedAt: billingInfo.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
+            raw: billingInfo as unknown as Prisma.InputJsonValue
           }
         })
-      } catch (verificationError) {
-        console.error('PortOne 빌링키 검증 오류:', verificationError)
+      } catch (error) {
+        console.error('PortOne 빌링키 처리 오류:', error)
         return NextResponse.json(
-          { error: '자동결제 정보 확인에 실패했습니다. 다시 시도해주세요.' },
+          { error: '자동결제 정보를 확인하는 중 오류가 발생했습니다. 다시 시도해주세요.' },
           { status: 500 }
         )
       }
@@ -437,26 +470,29 @@ export async function POST(request: Request) {
         )
       }
 
+      const paymentId = payment.paymentId ?? payment.impUid
+
+      if (!paymentId) {
+        return NextResponse.json(
+          { error: '결제 식별자를 확인할 수 없습니다.' },
+          { status: 400 }
+        )
+      }
+
       try {
-        const paymentData = await getPortOnePayment(payment.impUid)
+        const fetchedPayment = await getPortOnePayment({
+          paymentId: payment.paymentId,
+          impUid: payment.impUid
+        })
 
-        if (paymentData.merchant_uid !== payment.merchantUid) {
-          await cancelPortOnePayment(payment.impUid, '주문 정보와 일치하지 않는 주문 번호')
-          return NextResponse.json(
-            { error: '결제 정보가 일치하지 않습니다. (주문 번호 불일치)' },
-            { status: 400 }
-          )
-        }
-
-        if (paymentData.status !== 'paid') {
+        if ('status' in fetchedPayment && fetchedPayment.status !== 'PAID') {
           return NextResponse.json(
             { error: '결제가 완료되지 않았습니다.' },
             { status: 400 }
           )
         }
 
-        if (Math.round(paymentData.amount) !== Math.round(totalAmount)) {
-          await cancelPortOnePayment(payment.impUid, '결제 금액 불일치', paymentData.amount)
+        if (!('amount' in fetchedPayment) || fetchedPayment.amount.total !== totalAmount) {
           return NextResponse.json(
             { error: '결제 금액이 주문 금액과 일치하지 않습니다.' },
             { status: 400 }
@@ -464,21 +500,23 @@ export async function POST(request: Request) {
         }
 
         orderStatus = 'CONFIRMED'
-        const serializedPaymentData = JSON.parse(JSON.stringify(paymentData)) as Prisma.InputJsonValue
         paymentInfo = {
-          impUid: payment.impUid,
-          merchantUid: payment.merchantUid,
-          amount: paymentData.amount,
-          currency: paymentData.currency ?? 'KRW',
-          payMethod: paymentData.pay_method,
-          status: paymentData.status,
-          cardName: payment.cardName ?? paymentData.card_name ?? null,
-          buyerName: payment.buyerName ?? paymentData.buyer_name ?? null,
-          buyerEmail: payment.buyerEmail ?? paymentData.buyer_email ?? null,
-          buyerTel: payment.buyerTel ?? paymentData.buyer_tel ?? null,
-          receiptUrl: payment.receiptUrl ?? paymentData.receipt_url ?? null,
-          paidAt: paymentData.paid_at ? new Date(paymentData.paid_at * 1000).toISOString() : null,
-          raw: serializedPaymentData as Prisma.JsonValue
+          paymentId,
+          transactionId: 'transactionId' in fetchedPayment ? fetchedPayment.transactionId : null,
+          amount: fetchedPayment.amount.total,
+          currency: fetchedPayment.currency ?? 'KRW',
+          status: fetchedPayment.status,
+          cardName:
+            payment.cardName ??
+            ('method' in fetchedPayment && fetchedPayment.method && 'card' in fetchedPayment.method
+              ? (fetchedPayment.method as any)?.card?.issuer?.name ?? null
+              : null),
+          buyerName: payment.buyerName ?? fetchedPayment.customer?.name?.full ?? null,
+          buyerEmail: payment.buyerEmail ?? fetchedPayment.customer?.email ?? null,
+          buyerTel: payment.buyerTel ?? fetchedPayment.customer?.phoneNumber ?? null,
+          receiptUrl: payment.receiptUrl ?? ('receiptUrl' in fetchedPayment ? fetchedPayment.receiptUrl ?? null : null),
+          paidAt: 'paidAt' in fetchedPayment ? fetchedPayment.paidAt : null,
+          raw: JSON.parse(JSON.stringify(fetchedPayment)) as Prisma.JsonValue
         }
       } catch (verificationError) {
         console.error('PortOne 결제 검증 오류:', verificationError)
@@ -502,7 +540,7 @@ export async function POST(request: Request) {
         paymentVerifiedAt: paymentInfo ? new Date() : null,
         billingStatus: hasFundProducts ? 'SCHEDULED' : null,
         billingCustomerUid: billingCustomerUid,
-        billingMerchantUid: billingMerchantUidForSchedule,
+        billingMerchantUid: billingPaymentId,
         billingScheduledAt: billingScheduledAt ?? null,
         billingExecutedAt: null,
         billingFailureReason: null,
@@ -532,7 +570,7 @@ export async function POST(request: Request) {
     })
 
     if (hasFundProducts) {
-      if (!billingCustomerUid || !billingMerchantUidForSchedule || !billingScheduledAt) {
+      if (!billingCustomerUid || !billingPaymentId || !billingScheduledAt || !billingScheduleId || !billingScheduleResponse) {
         await prisma.order.update({
           where: { id: order.id },
           data: {
@@ -547,62 +585,31 @@ export async function POST(request: Request) {
         )
       }
 
-      try {
-        const scheduleResponse = await schedulePortOnePayment({
+      await prisma.billingSchedule.create({
+        data: {
+          orderId: order.id,
+          userId: user.id,
           customerUid: billingCustomerUid,
-          merchantUid: billingMerchantUidForSchedule,
-          amount: totalAmount,
+          merchantUid: billingPaymentId,
           scheduleAt: billingScheduledAt,
-          name: fundProductName ? `Fund 자동결제 - ${fundProductName}` : 'Fund 자동결제',
-          buyerName: user.name,
-          buyerEmail: user.email,
-          buyerTel: phone
-        })
-
-        await prisma.billingSchedule.create({
-          data: {
-            orderId: order.id,
-            userId: user.id,
-            customerUid: billingCustomerUid,
-            merchantUid: billingMerchantUidForSchedule,
-            scheduleAt: billingScheduledAt,
-            amount: totalAmount,
-            status: 'SCHEDULED',
-            fundingPayload: JSON.parse(JSON.stringify(productsToIncrementFunding)) as Prisma.InputJsonValue,
-            responseData: JSON.parse(JSON.stringify(scheduleResponse)) as Prisma.InputJsonValue,
-            impUid: billingImpUid,
-            failureReason: null
-          }
-        })
-
-        if (hasCartItems) {
-          await prisma.cartItem.deleteMany({
-            where: {
-              id: {
-                in: cartItemIds!
-              },
-              userId: user.id
-            }
-          })
+          amount: totalAmount,
+          status: 'SCHEDULED',
+          fundingPayload: JSON.parse(JSON.stringify(productsToIncrementFunding)) as Prisma.InputJsonValue,
+          responseData: JSON.parse(JSON.stringify(billingScheduleResponse)) as Prisma.InputJsonValue,
+          impUid: null,
+          failureReason: null
         }
-      } catch (scheduleError) {
-        console.error('포트원 자동결제 예약 오류:', scheduleError)
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            status: 'CANCELLED',
-            billingStatus: 'FAILED',
-            billingFailureReason:
-              scheduleError instanceof Error
-                ? scheduleError.message
-                : '자동결제 예약 중 알 수 없는 오류가 발생했습니다.'
+      })
+
+      if (hasCartItems) {
+        await prisma.cartItem.deleteMany({
+          where: {
+            id: {
+              in: cartItemIds!
+            },
+            userId: user.id
           }
         })
-
-        return NextResponse.json(
-          { error: '자동결제 예약에 실패했습니다. 잠시 후 다시 시도해주세요.' },
-          { status: 500 }
-        )
       }
     }
 

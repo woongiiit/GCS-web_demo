@@ -229,11 +229,12 @@ model Order {
   notes             String?
   paymentInfo       Json?
   paymentVerifiedAt DateTime?
-  billingStatus     BillingScheduleStatus?
-  billingCustomerUid String?
-  billingMerchantUid String?
-  billingScheduledAt DateTime?
-  billingExecutedAt  DateTime?
+  billingStatus       BillingScheduleStatus?
+  billingKey          String?
+  billingPaymentId    String?
+  billingScheduleId   String?
+  billingScheduledAt  DateTime?
+  billingExecutedAt   DateTime?
   billingFailureReason String?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -284,47 +285,50 @@ model PaymentRecord {
 }
 
 model BillingCustomer {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customerUid String   @unique
-  pgProvider  String?
-  cardName    String?
-  cardNumber  String?
-  cardType    String?
-  cardOwner   String?
-  issuedAt    DateTime?
-  expiresAt   DateTime?
-  raw         Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingKey String   @unique
+  channelKey String?
+  pgProvider String?
+  cardName   String?
+  cardNumber String?
+  cardType   String?
+  cardOwner  String?
+  issuedAt   DateTime?
+  expiresAt  DateTime?
+  raw        Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  schedules   BillingSchedule[] @relation("BillingCustomerSchedules")
+  schedules BillingSchedule[]
 
   @@map("billing_customers")
 }
 
 model BillingSchedule {
-  id             String                @id @default(cuid())
-  orderId        String                @unique
-  order          Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customerUid    String
-  billingCustomer BillingCustomer      @relation("BillingCustomerSchedules", fields: [customerUid], references: [customerUid], onDelete: Cascade)
-  merchantUid    String                @unique
-  scheduleAt     DateTime
-  amount         Int
-  status         BillingScheduleStatus @default(SCHEDULED)
-  executedAt     DateTime?
-  failureReason  String?
-  responseData   Json?
-  fundingPayload Json?
-  impUid         String?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
+  id              String                @id @default(cuid())
+  orderId         String                @unique
+  order           Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingKey      String
+  billingCustomer BillingCustomer       @relation(fields: [billingKey], references: [billingKey], onDelete: Cascade)
+  scheduleId      String?               @unique
+  paymentId       String
+  channelKey      String?
+  amount          Int
+  currency        String                @default("KRW")
+  status          BillingScheduleStatus @default(SCHEDULED)
+  scheduledAt     DateTime
+  executedAt      DateTime?
+  failureReason   String?
+  responseData    Json?
+  payload         Json?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
 
-  @@index([status, scheduleAt])
+  @@index([status, scheduledAt])
   @@map("billing_schedules")
 }
 

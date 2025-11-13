@@ -1,171 +1,135 @@
-const PORTONE_API_BASE_URL = 'https://api.iamport.kr'
+import type { BillingKeyPaymentInput } from '@portone/server-sdk/dist/generated/common/BillingKeyPaymentInput.js'
+import type { ConfirmedPaymentSummary } from '@portone/server-sdk/dist/generated/payment/ConfirmedPaymentSummary.js'
+import type { CreatePaymentScheduleResponse } from '@portone/server-sdk/dist/generated/payment/paymentSchedule/CreatePaymentScheduleResponse.js'
+import type { Payment } from '@portone/server-sdk/dist/generated/payment/Payment.js'
+import type { RevokePaymentSchedulesResponse } from '@portone/server-sdk/dist/generated/payment/paymentSchedule/RevokePaymentSchedulesResponse.js'
+import { getPortOneClient } from '@/lib/portone/client'
 
-type PortOneAccessToken = {
-  token: string
-  expiresAt: number
+function paymentClient() {
+  return getPortOneClient().payment
 }
 
-type PortOnePayment = {
-  imp_uid: string
-  merchant_uid: string
-  amount: number
+export async function confirmPortOnePayment({
+  paymentId,
+  paymentToken,
+  txId,
+  totalAmount,
+  currency = 'KRW',
+  taxFreeAmount,
+  isTest
+}: {
+  paymentId: string
+  paymentToken: string
+  txId?: string | null
+  totalAmount?: number
   currency?: string
-  status: string
-  pay_method: string
-  card_name?: string
-  customer_uid?: string
-  pg_provider?: string
-  card_number?: string
-  card_type?: string
-  card_owner?: string
-  buyer_name?: string
-  buyer_email?: string
-  buyer_tel?: string
-  receipt_url?: string
-  paid_at?: number
-  [key: string]: unknown
-}
-
-type SchedulePortOnePaymentParams = {
-  customerUid: string
-  merchantUid: string
-  amount: number
-  scheduleAt: Date
-  name: string
-  buyerName: string
-  buyerEmail?: string | null
-  buyerTel?: string | null
-}
-
-let cachedToken: PortOneAccessToken | null = null
-
-export async function getPortOnePayment(impUid: string): Promise<PortOnePayment> {
-  const accessToken = await getAccessToken()
-
-  const response = await fetch(`${PORTONE_API_BASE_URL}/payments/${impUid}`, {
-    headers: {
-      Authorization: accessToken
-    },
-    cache: 'no-store'
+  taxFreeAmount?: number
+  isTest?: boolean
+}): Promise<ConfirmedPaymentSummary> {
+  return paymentClient().confirmPayment({
+    paymentId,
+    paymentToken,
+    txId: txId ?? undefined,
+    totalAmount,
+    currency,
+    taxFreeAmount,
+    isTest
   })
-
-  const data = await response.json()
-
-  if (data.code !== 0) {
-    throw new Error(data.message || '포트원 결제 조회에 실패했습니다.')
-  }
-
-  if (!data.response) {
-    throw new Error('포트원 결제 데이터가 비어있습니다.')
-  }
-
-  return data.response as PortOnePayment
 }
 
-export async function cancelPortOnePayment(impUid: string, reason: string, amount?: number) {
-  try {
-    const accessToken = await getAccessToken()
-    const body: Record<string, unknown> = {
-      imp_uid: impUid,
-      reason
-    }
-
-    if (typeof amount === 'number' && !Number.isNaN(amount)) {
-      body.amount = amount
-    }
-
-    const response = await fetch(`${PORTONE_API_BASE_URL}/payments/cancel`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: accessToken
-      },
-      body: JSON.stringify(body)
-    })
-
-    const data = await response.json()
-    if (data.code !== 0) {
-      console.warn('포트원 결제 취소 실패:', data.message)
-    }
-  } catch (error) {
-    console.error('포트원 결제 취소 요청 중 오류:', error)
+export async function getPortOnePayment({
+  paymentId,
+  impUid
+}: {
+  paymentId?: string
+  impUid?: string
+}): Promise<Payment> {
+  if (!paymentId && !impUid) {
+    throw new Error('포트원 결제 조회를 위해 paymentId 또는 impUid가 필요합니다.')
   }
+
+  if (paymentId) {
+    return paymentClient().getPayment({ paymentId })
+  }
+
+  const legacyId = impUid!
+  // V1 결제 건은 transactionId(=imp_uid)를 paymentId로 간주하여 조회할 수 있습니다.
+  return paymentClient().getPayment({ paymentId: legacyId })
 }
 
-export async function schedulePortOnePayment(params: SchedulePortOnePaymentParams) {
-  const accessToken = await getAccessToken()
-
-  const response = await fetch(`${PORTONE_API_BASE_URL}/subscribe/payments/schedule`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: accessToken
-    },
-    body: JSON.stringify({
-      customer_uid: params.customerUid,
-      schedules: [
-        {
-          merchant_uid: params.merchantUid,
-          schedule_at: Math.floor(params.scheduleAt.getTime() / 1000),
-          amount: params.amount,
-          name: params.name,
-          buyer_name: params.buyerName,
-          ...(params.buyerEmail ? { buyer_email: params.buyerEmail } : {}),
-          ...(params.buyerTel ? { buyer_tel: params.buyerTel } : {})
-        }
-      ]
-    })
+export async function cancelPortOnePayment({
+  paymentId,
+  amount,
+  taxFreeAmount,
+  reason,
+  requester = 'Admin'
+}: {
+  paymentId: string
+  amount?: number
+  taxFreeAmount?: number
+  reason: string
+  requester?: 'Customer' | 'Admin'
+}) {
+  await paymentClient().cancelPayment({
+    paymentId,
+    amount,
+    taxFreeAmount,
+    reason,
+    requester
   })
-
-  const data = await response.json()
-  if (data.code !== 0) {
-    throw new Error(data.message || '포트원 자동결제 예약에 실패했습니다.')
-  }
-
-  return data.response
 }
 
-async function getAccessToken(): Promise<string> {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 10_000) {
-    return cachedToken.token
-  }
-
-  const apiKey = process.env.PORTONE_API_KEY
-  const apiSecret = process.env.PORTONE_API_SECRET
-
-  if (!apiKey || !apiSecret) {
-    throw new Error('PORTONE API 자격 증명이 설정되지 않았습니다.')
-  }
-
-  const response = await fetch(`${PORTONE_API_BASE_URL}/users/getToken`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      imp_key: apiKey,
-      imp_secret: apiSecret
-    })
+export async function createPortOnePaymentSchedule({
+  paymentId,
+  schedule,
+  scheduledAt
+}: {
+  paymentId: string
+  schedule: BillingKeyPaymentInput
+  scheduledAt: Date
+}): Promise<CreatePaymentScheduleResponse> {
+  return paymentClient().paymentSchedule.createPaymentSchedule({
+    paymentId,
+    payment: schedule,
+    timeToPay: scheduledAt.toISOString()
   })
+}
 
-  const data = await response.json()
+export async function preRegisterPortOnePayment({
+  paymentId,
+  totalAmount,
+  taxFreeAmount,
+  currency = 'KRW'
+}: {
+  paymentId: string
+  totalAmount: number
+  taxFreeAmount?: number
+  currency?: string
+}) {
+  return paymentClient().preRegisterPayment({
+    paymentId,
+    totalAmount,
+    taxFreeAmount,
+    currency
+  })
+}
 
-  if (data.code !== 0) {
-    throw new Error(data.message || '포트원 액세스 토큰 발급에 실패했습니다.')
-  }
+export async function revokePortOnePaymentSchedules({
+  billingKey,
+  scheduleIds
+}: {
+  billingKey?: string
+  scheduleIds?: string[]
+}): Promise<RevokePaymentSchedulesResponse> {
+  return paymentClient().paymentSchedule.revokePaymentSchedules({
+    billingKey,
+    scheduleIds
+  })
+}
 
-  const token = data.response?.access_token
-  const expiredAt = data.response?.expired_at
-
-  if (!token || !expiredAt) {
-    throw new Error('포트원 액세스 토큰 응답이 올바르지 않습니다.')
-  }
-
-  cachedToken = {
-    token,
-    expiresAt: expiredAt * 1000
-  }
-
-  return token
+export async function getPortOneBillingKeyInfo(billingKey: string) {
+  return paymentClient().billingKey.getBillingKeyInfo({
+    billingKey
+  })
 }
 
