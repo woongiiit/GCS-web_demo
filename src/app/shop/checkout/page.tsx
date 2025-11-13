@@ -256,7 +256,6 @@ export default function CheckoutPage() {
       }
 
       const { merchantCode, pgId, channelKey } = paymentConfig
-      const billingPgId = pgId?.includes('.') ? pgId.split('.')[0] : pgId
       IMP.init(merchantCode)
 
       const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
@@ -275,8 +274,8 @@ export default function CheckoutPage() {
         const customerUid = `fund-${user.id}-${Date.now()}`
         const billingMerchantUid = `fund-billing-${Date.now()}`
 
-        const billingParams = {
-          pg: billingPgId,
+        const billingParams: Record<string, unknown> = {
+          pg: pgId,
           pay_method: 'card',
           merchant_uid: billingMerchantUid,
           customer_uid: customerUid,
@@ -285,9 +284,9 @@ export default function CheckoutPage() {
           buyer_name: buyerName,
           buyer_email: buyerEmail,
           buyer_tel: buyerPhone,
-          buyer_addr: fullShippingAddress,
-          ...(channelKey ? { channel_key: channelKey } : {})
+          buyer_addr: fullShippingAddress
         }
+        billingParams.customer_uid = customerUid
 
         IMP.request_pay(billingParams, async (rsp: PortOneResponse) => {
           if (!rsp.success) {
