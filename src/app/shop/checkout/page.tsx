@@ -256,6 +256,7 @@ export default function CheckoutPage() {
       }
 
       const { merchantCode, pgId, channelKey } = paymentConfig
+      const billingPgId = pgId?.includes('.') ? pgId.split('.')[0] : pgId
       IMP.init(merchantCode)
 
       const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
@@ -275,7 +276,7 @@ export default function CheckoutPage() {
         const billingMerchantUid = `fund-billing-${Date.now()}`
 
         const billingParams = {
-          pg: pgId,
+          pg: billingPgId,
           pay_method: 'card',
           merchant_uid: billingMerchantUid,
           customer_uid: customerUid,
