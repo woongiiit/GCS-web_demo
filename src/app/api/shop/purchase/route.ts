@@ -359,7 +359,7 @@ export async function POST(request: Request) {
 
     let paymentInfo: Prisma.JsonObject | null = null
     let orderStatus: 'PENDING' | 'CONFIRMED' = 'PENDING'
-    let billingCustomerUid: string | null = null
+    let billingCustomerKey: string | null = null
     let billingScheduleId: string | null = null
     let billingPaymentId: string | null = null
     let billingChannelKey: string | null = null
@@ -392,7 +392,7 @@ export async function POST(request: Request) {
           )
         }
 
-        billingCustomerUid = billingInfo.billingKey
+        billingCustomerKey = billingInfo.billingKey
         billingChannelKey =
           billing?.channelKey ??
           billingInfo.channels?.[0]?.key ??
@@ -442,14 +442,16 @@ export async function POST(request: Request) {
         await prisma.billingCustomer.upsert({
           where: { userId: user.id },
           update: {
-            customerUid: billingInfo.billingKey,
+            billingKey: billingInfo.billingKey,
+            channelKey: billingChannelKey ?? undefined,
             pgProvider: billingInfo.channels?.[0]?.pgProvider ?? null,
             issuedAt: billingInfo.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
             raw: billingInfo as unknown as Prisma.InputJsonValue
           },
           create: {
             userId: user.id,
-            customerUid: billingInfo.billingKey,
+            billingKey: billingInfo.billingKey,
+            channelKey: billingChannelKey ?? undefined,
             pgProvider: billingInfo.channels?.[0]?.pgProvider ?? null,
             issuedAt: billingInfo.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
             raw: billingInfo as unknown as Prisma.InputJsonValue
@@ -514,7 +516,9 @@ export async function POST(request: Request) {
           buyerName: payment.buyerName ?? fetchedPayment.customer?.name?.full ?? null,
           buyerEmail: payment.buyerEmail ?? fetchedPayment.customer?.email ?? null,
           buyerTel: payment.buyerTel ?? fetchedPayment.customer?.phoneNumber ?? null,
-          receiptUrl: payment.receiptUrl ?? ('receiptUrl' in fetchedPayment ? fetchedPayment.receiptUrl ?? null : null),
+          receiptUrl:
+            payment.receiptUrl ??
+            ('receiptUrl' in fetchedPayment ? fetchedPayment.receiptUrl ?? null : null),
           paidAt: 'paidAt' in fetchedPayment ? fetchedPayment.paidAt : null,
           raw: JSON.parse(JSON.stringify(fetchedPayment)) as Prisma.JsonValue
         }
@@ -539,8 +543,9 @@ export async function POST(request: Request) {
         paymentInfo: paymentInfo ?? undefined,
         paymentVerifiedAt: paymentInfo ? new Date() : null,
         billingStatus: hasFundProducts ? 'SCHEDULED' : null,
-        billingCustomerUid: billingCustomerUid,
-        billingMerchantUid: billingPaymentId,
+        billingKey: billingCustomerKey,
+        billingPaymentId,
+        billingScheduleId,
         billingScheduledAt: billingScheduledAt ?? null,
         billingExecutedAt: null,
         billingFailureReason: null,
@@ -570,7 +575,12 @@ export async function POST(request: Request) {
     })
 
     if (hasFundProducts) {
-      if (!billingCustomerUid || !billingPaymentId || !billingScheduledAt || !billingScheduleId || !billingScheduleResponse) {
+      if (
+        !billingCustomerKey ||
+        !billingPaymentId ||
+        !billingScheduledAt ||
+        !billingScheduleResponse
+      ) {
         await prisma.order.update({
           where: { id: order.id },
           data: {
@@ -585,19 +595,22 @@ export async function POST(request: Request) {
         )
       }
 
+      const scheduleSummary = billingScheduleResponse.schedule
+
       await prisma.billingSchedule.create({
         data: {
           orderId: order.id,
           userId: user.id,
-          customerUid: billingCustomerUid,
-          merchantUid: billingPaymentId,
-          scheduleAt: billingScheduledAt,
+          billingKey: billingCustomerKey,
+          paymentId: billingPaymentId,
+          scheduleId: scheduleSummary?.id,
+          channelKey: billingChannelKey ?? null,
           amount: totalAmount,
+          currency: 'KRW',
           status: 'SCHEDULED',
-          fundingPayload: JSON.parse(JSON.stringify(productsToIncrementFunding)) as Prisma.InputJsonValue,
-          responseData: JSON.parse(JSON.stringify(billingScheduleResponse)) as Prisma.InputJsonValue,
-          impUid: null,
-          failureReason: null
+          scheduledAt: billingScheduledAt,
+          payload: JSON.parse(JSON.stringify(productsToIncrementFunding)) as Prisma.InputJsonValue,
+          responseData: JSON.parse(JSON.stringify(billingScheduleResponse)) as Prisma.InputJsonValue
         }
       })
 
@@ -681,14 +694,17 @@ export async function POST(request: Request) {
       status: order.status,
       billingStatus: order.billingStatus,
       billingScheduledAt: order.billingScheduledAt,
-      billingMerchantUid: order.billingMerchantUid,
+      billingPaymentId: order.billingPaymentId,
+      billingScheduleId: order.billingScheduleId,
       totalAmount: order.totalAmount
     }
 
     return NextResponse.json(
       {
         success: true,
-        message: hasFundProducts ? '펀딩 자동결제 예약이 완료되었습니다.' : '주문이 성공적으로 완료되었습니다.',
+        message: hasFundProducts
+          ? '펀딩 자동결제 예약이 완료되었습니다.'
+          : '주문이 성공적으로 완료되었습니다.',
         data: responsePayload
       },
       { status: 201 }

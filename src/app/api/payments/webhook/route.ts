@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const schedule = await prisma.billingSchedule.findUnique({
-      where: { merchantUid: paymentIdFromPayload },
+      where: { paymentId: paymentIdFromPayload },
       include: {
         order: {
           include: {
@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
     const serializedPayment = JSON.parse(JSON.stringify(paymentData)) as Prisma.InputJsonValue
     const now = new Date()
 
-    const fundingEntries: FundingPayloadEntry[] = Array.isArray(schedule.fundingPayload)
-      ? (schedule.fundingPayload as FundingPayloadEntry[])
+    const fundingEntries: FundingPayloadEntry[] = Array.isArray(schedule.payload)
+      ? (schedule.payload as FundingPayloadEntry[])
       : []
 
     const aggregatedFunding = new Map<string, { amount: number; supporter: number }>()
@@ -173,6 +173,7 @@ export async function POST(request: NextRequest) {
             billingStatus: 'EXECUTED',
             billingExecutedAt: now,
             billingFailureReason: null,
+            billingPaymentId: paymentData.id,
             paymentInfo: paymentInfoForOrder,
             paymentVerifiedAt: new Date()
           }

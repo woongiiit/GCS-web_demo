@@ -102,6 +102,8 @@ type CheckoutSuccess = {
   status: string
   billingStatus?: string | null
   billingScheduledAt?: string | null
+  billingPaymentId?: string | null
+  billingScheduleId?: string | null
 }
 
 declare global {
@@ -375,7 +377,9 @@ export default function CheckoutPage() {
                       orderId: payload.id,
                       status: payload.status,
                       billingStatus: payload.billingStatus ?? null,
-                      billingScheduledAt: payload.billingScheduledAt ?? null
+                      billingScheduledAt: payload.billingScheduledAt ?? null,
+                      billingPaymentId: payload.billingPaymentId ?? null,
+                      billingScheduleId: payload.billingScheduleId ?? null
                     }
                   : null
               )
@@ -471,7 +475,9 @@ export default function CheckoutPage() {
                     orderId: payload.id,
                     status: payload.status,
                     billingStatus: payload.billingStatus ?? null,
-                    billingScheduledAt: payload.billingScheduledAt ?? null
+                    billingScheduledAt: payload.billingScheduledAt ?? null,
+                    billingPaymentId: payload.billingPaymentId ?? null,
+                    billingScheduleId: payload.billingScheduleId ?? null
                   }
                 : null
             )
