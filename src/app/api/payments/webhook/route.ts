@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const schedule = await prisma.billingSchedule.findUnique({
+    const schedule = await prisma.billingSchedule.findFirst({
       where: { paymentId: paymentIdFromPayload },
       include: {
         order: {
