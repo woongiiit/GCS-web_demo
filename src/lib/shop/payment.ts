@@ -13,12 +13,28 @@ type PortOnePayment = {
   status: string
   pay_method: string
   card_name?: string
+  customer_uid?: string
+  pg_provider?: string
+  card_number?: string
+  card_type?: string
+  card_owner?: string
   buyer_name?: string
   buyer_email?: string
   buyer_tel?: string
   receipt_url?: string
   paid_at?: number
   [key: string]: unknown
+}
+
+type SchedulePortOnePaymentParams = {
+  customerUid: string
+  merchantUid: string
+  amount: number
+  scheduleAt: Date
+  name: string
+  buyerName: string
+  buyerEmail?: string | null
+  buyerTel?: string | null
 }
 
 let cachedToken: PortOneAccessToken | null = null
@@ -74,6 +90,39 @@ export async function cancelPortOnePayment(impUid: string, reason: string, amoun
   } catch (error) {
     console.error('포트원 결제 취소 요청 중 오류:', error)
   }
+}
+
+export async function schedulePortOnePayment(params: SchedulePortOnePaymentParams) {
+  const accessToken = await getAccessToken()
+
+  const response = await fetch(`${PORTONE_API_BASE_URL}/subscribe/payments/schedule`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: accessToken
+    },
+    body: JSON.stringify({
+      customer_uid: params.customerUid,
+      schedules: [
+        {
+          merchant_uid: params.merchantUid,
+          schedule_at: Math.floor(params.scheduleAt.getTime() / 1000),
+          amount: params.amount,
+          name: params.name,
+          buyer_name: params.buyerName,
+          ...(params.buyerEmail ? { buyer_email: params.buyerEmail } : {}),
+          ...(params.buyerTel ? { buyer_tel: params.buyerTel } : {})
+        }
+      ]
+    })
+  })
+
+  const data = await response.json()
+  if (data.code !== 0) {
+    throw new Error(data.message || '포트원 자동결제 예약에 실패했습니다.')
+  }
+
+  return data.response
 }
 
 async function getAccessToken(): Promise<string> {

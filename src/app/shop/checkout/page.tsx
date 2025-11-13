@@ -27,6 +27,8 @@ type CheckoutPayload =
       selectedOptions?: SelectedOptionInput[]
     }
 
+type ProductTypeId = 'FUND' | 'PARTNER_UP'
+
 type CartApiItem = {
   id: string
   productId: string
@@ -40,6 +42,10 @@ type CartApiItem = {
     images: string[]
     brand?: string | null
     isActive: boolean
+    type: ProductTypeId
+    fundingGoalAmount?: number | null
+    fundingCurrentAmount?: number | null
+    fundingDeadline?: string | null
   }
 }
 
@@ -53,6 +59,10 @@ type CheckoutItem = {
   quantity: number
   unitPrice: number
   selectedOptions: NormalizedOptionValueWithName[]
+  productType: ProductTypeId
+  fundingGoalAmount?: number | null
+  fundingCurrentAmount?: number | null
+  fundingDeadline?: string | null
 }
 
 type PaymentConfig = {
@@ -67,6 +77,7 @@ type PortOneResponse = {
   merchant_uid: string
   paid_amount: number
   pay_method: string
+  customer_uid?: string
   card_name?: string
   buyer_name?: string
   buyer_email?: string
@@ -74,6 +85,13 @@ type PortOneResponse = {
   receipt_url?: string
   error_code?: string
   error_msg?: string
+}
+
+type CheckoutSuccess = {
+  orderId: string
+  status: string
+  billingStatus?: string | null
+  billingScheduledAt?: string | null
 }
 
 declare global {
@@ -100,7 +118,7 @@ export default function CheckoutPage() {
   const [shippingAddressDetail, setShippingAddressDetail] = useState('')
   const [orderMemo, setOrderMemo] = useState('')
   const [isPaying, setIsPaying] = useState(false)
-  const [successOrderId, setSuccessOrderId] = useState<string | null>(null)
+  const [successResult, setSuccessResult] = useState<CheckoutSuccess | null>(null)
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null)
   const [isPaymentConfigLoading, setIsPaymentConfigLoading] = useState(true)
   const [isAddressSearchLoading, setIsAddressSearchLoading] = useState(false)
@@ -184,6 +202,13 @@ export default function CheckoutPage() {
     return items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
   }, [items])
 
+  const requiresBilling = useMemo(() => {
+    if (items.length === 0) return false
+    const hasFundItems = items.some((item) => item.productType === 'FUND')
+    const hasNonFundItems = items.some((item) => item.productType !== 'FUND')
+    return hasFundItems && !hasNonFundItems
+  }, [items])
+
   const mainProductName = useMemo(() => {
     if (items.length === 0) return ''
     if (items.length === 1) return items[0].name
@@ -230,15 +255,114 @@ export default function CheckoutPage() {
         throw new Error('결제 모듈을 로드하지 못했습니다.')
       }
 
+      const { merchantCode, pgId, channelKey } = paymentConfig
+      IMP.init(merchantCode)
+
+      const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
+      const hasFundItems = items.some((item) => item.productType === 'FUND')
+      const hasNonFundItems = items.some((item) => item.productType !== 'FUND')
+
+      if (hasFundItems && hasNonFundItems) {
+        setError('펀딩 상품과 일반 상품은 함께 결제할 수 없습니다. 상품 유형별로 나누어 결제해주세요.')
+        setIsPaying(false)
+        return
+      }
+
+      const requiresBilling = hasFundItems
+
+      if (requiresBilling) {
+        const customerUid = `fund-${user.id}-${Date.now()}`
+        const billingMerchantUid = `fund-billing-${Date.now()}`
+
+        const billingParams = {
+          pg: pgId,
+          pay_method: 'card',
+          merchant_uid: billingMerchantUid,
+          customer_uid: customerUid,
+          amount: 0,
+          name: mainProductName || 'Fund 자동결제 등록',
+          buyer_name: buyerName,
+          buyer_email: buyerEmail,
+          buyer_tel: buyerPhone,
+          buyer_addr: fullShippingAddress,
+          ...(channelKey ? { channel_key: channelKey } : {})
+        }
+
+        IMP.request_pay(billingParams, async (rsp: PortOneResponse) => {
+          if (!rsp.success) {
+            console.error('PortOne billing key issuance failed:', rsp)
+            setIsPaying(false)
+            setError(
+              rsp.error_msg
+                ? `결제 등록 실패: ${rsp.error_msg}`
+                : '자동결제 등록이 취소되거나 실패했습니다. 다시 시도해주세요.'
+            )
+            return
+          }
+
+          try {
+            const response = await fetch('/api/shop/purchase', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                cartItemIds: mode === 'cart' ? items.map((item) => item.key) : undefined,
+                items:
+                  mode === 'direct'
+                    ? items.map((item) => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        selectedOptions: item.selectedOptions.map(({ name, label }) => ({
+                          name,
+                          label
+                        }))
+                      }))
+                    : undefined,
+                shippingAddress: fullShippingAddress,
+                phone: buyerPhone.trim(),
+                notes: orderMemo.trim() || undefined,
+                billing: {
+                  impUid: rsp.imp_uid,
+                  customerUid: rsp.customer_uid ?? customerUid,
+                  merchantUid: rsp.merchant_uid
+                }
+              })
+            })
+
+            const data = await response.json()
+            if (!response.ok || !data.success) {
+              setError(data.error || '주문 처리 중 오류가 발생했습니다.')
+            } else {
+              const payload = data.data
+              setSuccessResult(
+                payload
+                  ? {
+                      orderId: payload.id,
+                      status: payload.status,
+                      billingStatus: payload.billingStatus ?? null,
+                      billingScheduledAt: payload.billingScheduledAt ?? null
+                    }
+                  : null
+              )
+              window.sessionStorage.removeItem('gcs_checkout_payload')
+            }
+          } catch (purchaseError) {
+            console.error('자동결제 주문 처리 오류:', purchaseError)
+            setError('주문 처리 중 오류가 발생했습니다.')
+          } finally {
+            setIsPaying(false)
+          }
+        })
+
+        return
+      }
+
       const merchantUid =
         window.crypto?.randomUUID?.() ??
         `gcs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       const amount = totalAmount
-      const { merchantCode, pgId, channelKey } = paymentConfig
-
-      IMP.init(merchantCode)
-
-      const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
 
       const paymentParams = {
         pg: pgId,
@@ -257,7 +381,7 @@ export default function CheckoutPage() {
         if (!rsp.success) {
           console.error('PortOne payment failed:', rsp)
           setIsPaying(false)
-            setError(
+          setError(
             rsp.error_msg
               ? `결제 실패: ${rsp.error_msg}`
               : '결제가 취소되거나 실패했습니다. 다시 시도해주세요.'
@@ -306,7 +430,17 @@ export default function CheckoutPage() {
           if (!response.ok || !data.success) {
             setError(data.error || '주문 처리 중 오류가 발생했습니다.')
           } else {
-            setSuccessOrderId(data.data?.id ?? null)
+            const payload = data.data
+            setSuccessResult(
+              payload
+                ? {
+                    orderId: payload.id,
+                    status: payload.status,
+                    billingStatus: payload.billingStatus ?? null,
+                    billingScheduledAt: payload.billingScheduledAt ?? null
+                  }
+                : null
+            )
             window.sessionStorage.removeItem('gcs_checkout_payload')
           }
         } catch (purchaseError) {
@@ -422,8 +556,8 @@ export default function CheckoutPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
-        {successOrderId ? (
-          <SuccessPanel orderId={successOrderId} onClose={handleBackToShop} />
+        {successResult ? (
+          <SuccessPanel result={successResult} onClose={handleBackToShop} />
         ) : (
           <>
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -453,6 +587,7 @@ export default function CheckoutPage() {
                   error={error}
                   isPaying={isPaying}
                   onPay={handlePayment}
+                  requiresBilling={requiresBilling}
                 />
                 <button
                   onClick={handleBackToShop}
@@ -511,7 +646,11 @@ export default function CheckoutPage() {
         image: item.product.images?.[0],
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        selectedOptions: Array.isArray(item.selectedOptions) ? item.selectedOptions : []
+        selectedOptions: Array.isArray(item.selectedOptions) ? item.selectedOptions : [],
+        productType: item.product.type,
+        fundingGoalAmount: item.product.fundingGoalAmount ?? null,
+        fundingCurrentAmount: item.product.fundingCurrentAmount ?? null,
+        fundingDeadline: item.product.fundingDeadline ?? null
       }))
 
       setItems(checkoutItems)
@@ -598,7 +737,11 @@ export default function CheckoutPage() {
           image: product.images?.[0],
           quantity,
           unitPrice,
-          selectedOptions: normalizedSelectedOptions
+          selectedOptions: normalizedSelectedOptions,
+          productType: product.type,
+          fundingGoalAmount: product.fundingGoalAmount ?? null,
+          fundingCurrentAmount: product.fundingCurrentAmount ?? null,
+          fundingDeadline: product.fundingDeadline ?? null
         }
       ])
     } catch (directError) {
@@ -840,13 +983,15 @@ function OrderSummary({
   items,
   error,
   isPaying,
-  onPay
+  onPay,
+  requiresBilling
 }: {
   totalAmount: number
   items: CheckoutItem[]
   error: string
   isPaying: boolean
   onPay: () => void
+  requiresBilling: boolean
 }) {
   return (
     <div className="border border-gray-200 rounded-lg p-6 space-y-4">
@@ -877,16 +1022,41 @@ function OrderSummary({
             : 'bg-black hover:bg-gray-800'
         }`}
       >
-        {isPaying ? '결제 진행 중...' : '결제하기'}
+        {isPaying
+          ? '결제 진행 중...'
+          : requiresBilling
+            ? '펀딩 결제 예약하기'
+            : '결제하기'}
       </button>
       <p className="text-xs text-gray-500">
         현재 테스트 결제 환경입니다. 실 결제 전에는 PG사의 실제 API Key로 교체해야 합니다.
       </p>
+      {requiresBilling && (
+        <p className="text-xs text-gray-500">
+          펀딩 상품은 목표 금액 달성 시 자동으로 결제가 진행됩니다. 목표 미달 시 결제는 실행되지
+          않습니다.
+        </p>
+      )}
     </div>
   )
 }
 
-function SuccessPanel({ orderId, onClose }: { orderId: string; onClose: () => void }) {
+function SuccessPanel({ result, onClose }: { result: CheckoutSuccess; onClose: () => void }) {
+  const isConfirmed = result.status === 'CONFIRMED'
+  const isScheduled = result.billingStatus === 'SCHEDULED' || !isConfirmed
+  const scheduledAtText = result.billingScheduledAt
+    ? new Date(result.billingScheduledAt).toLocaleString('ko-KR')
+    : null
+  const title = isConfirmed ? '결제가 완료되었습니다!' : '펀딩 결제 예약이 접수되었습니다!'
+  const description = isConfirmed
+    ? `주문 번호 ${result.orderId}에 대한 결제가 성공적으로 완료되었습니다.`
+    : `주문 번호 ${result.orderId}에 대한 자동결제 예약이 완료되었습니다.`
+  const subDescription = isConfirmed
+    ? '주문 상세는 운영자 확인 절차 후 별도로 안내드릴 예정입니다.'
+    : scheduledAtText
+      ? `${scheduledAtText}에 자동결제가 시도됩니다. 목표 금액을 달성하지 못하면 결제가 진행되지 않습니다.`
+      : '펀딩 종료 시점에 자동결제가 시도됩니다. 목표 금액을 달성하지 못하면 결제가 진행되지 않습니다.'
+
   return (
     <div className="border border-green-200 bg-green-50 rounded-lg p-8 text-center space-y-4">
       <div className="mx-auto w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center">
@@ -894,12 +1064,10 @@ function SuccessPanel({ orderId, onClose }: { orderId: string; onClose: () => vo
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold text-green-700">결제가 완료되었습니다!</h2>
-      <p className="text-sm text-green-700">
-        주문 번호 <span className="font-semibold">{orderId}</span>에 대한 결제가 성공적으로 완료되었습니다.
-      </p>
+      <h2 className="text-2xl font-bold text-green-700">{title}</h2>
+      <p className="text-sm text-green-700">{description}</p>
       <p className="text-xs text-green-700">
-        주문 상세는 운영자 확인 절차 후 별도로 안내드릴 예정입니다.
+        {isScheduled ? subDescription : '주문 상세는 운영자 확인 절차 후 별도로 안내드릴 예정입니다.'}
       </p>
       <button
         onClick={onClose}

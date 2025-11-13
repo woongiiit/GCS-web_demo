@@ -39,7 +39,11 @@ export async function GET() {
             price: true,
             images: true,
             brand: true,
-            isActive: true
+            isActive: true,
+            type: true,
+            fundingGoalAmount: true,
+            fundingDeadline: true,
+            fundingCurrentAmount: true
           }
         },
         createdAt: true,
