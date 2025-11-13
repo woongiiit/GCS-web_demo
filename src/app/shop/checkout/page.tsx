@@ -273,9 +273,11 @@ export default function CheckoutPage() {
       if (requiresBilling) {
         const customerUid = `fund-${user.id}-${Date.now()}`
         const billingMerchantUid = `fund-billing-${Date.now()}`
+        const billingPgId =
+          pgId && pgId.startsWith('tosspay.') && !pgId.endsWith('_billing') ? `${pgId}_billing` : pgId
 
         const billingParams: Record<string, unknown> = {
-          pg: pgId,
+          pg: billingPgId,
           pay_method: 'card',
           merchant_uid: billingMerchantUid,
           customer_uid: customerUid,
