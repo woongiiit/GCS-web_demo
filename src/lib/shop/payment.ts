@@ -1,8 +1,7 @@
-import type { BillingKeyPaymentInput } from '@portone/server-sdk/dist/generated/common/BillingKeyPaymentInput.js'
-import type { ConfirmedPaymentSummary } from '@portone/server-sdk/dist/generated/payment/ConfirmedPaymentSummary.js'
-import type { CreatePaymentScheduleResponse } from '@portone/server-sdk/dist/generated/payment/paymentSchedule/CreatePaymentScheduleResponse.js'
-import type { Payment } from '@portone/server-sdk/dist/generated/payment/Payment.js'
-import type { RevokePaymentSchedulesResponse } from '@portone/server-sdk/dist/generated/payment/paymentSchedule/RevokePaymentSchedulesResponse.js'
+import type { BillingKeyPaymentInput } from '@portone/server-sdk/common'
+import type { ConfirmedPaymentSummary } from '@portone/server-sdk/payment'
+import type { CreatePaymentScheduleResponse, RevokePaymentSchedulesResponse } from '@portone/server-sdk/payment/paymentSchedule'
+import type { Payment } from '@portone/server-sdk/payment'
 import { getPortOneClient } from '@/lib/portone/client'
 
 function paymentClient() {

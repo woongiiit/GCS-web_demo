@@ -14,7 +14,8 @@ import {
   preRegisterPortOnePayment,
   getPortOneBillingKeyInfo
 } from '@/lib/shop/payment'
-import type { CreatePaymentScheduleResponse } from '@portone/server-sdk/dist/generated/payment/paymentSchedule/CreatePaymentScheduleResponse.js'
+import type { BillingKeyPaymentInput } from '@portone/server-sdk/common'
+import type { CreatePaymentScheduleResponse } from '@portone/server-sdk/payment/paymentSchedule'
 import type { Prisma } from '@prisma/client'
 import { sendOrderNotificationEmail } from '@/lib/email'
 
@@ -513,7 +514,7 @@ export async function POST(request: Request) {
             ('method' in fetchedPayment && fetchedPayment.method && 'card' in fetchedPayment.method
               ? (fetchedPayment.method as any)?.card?.issuer?.name ?? null
               : null),
-          buyerName: payment.buyerName ?? fetchedPayment.customer?.name?.full ?? null,
+          buyerName: payment.buyerName ?? fetchedPayment.customer?.name ?? null,
           buyerEmail: payment.buyerEmail ?? fetchedPayment.customer?.email ?? null,
           buyerTel: payment.buyerTel ?? fetchedPayment.customer?.phoneNumber ?? null,
           receiptUrl:

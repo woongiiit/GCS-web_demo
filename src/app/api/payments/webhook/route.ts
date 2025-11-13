@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
             'method' in paymentData && paymentData.method && 'card' in paymentData.method
               ? (paymentData.method as any)?.card?.issuer?.name ?? null
               : null,
-          buyerName: paymentData.customer?.name?.full ?? schedule.order.user.name,
+          buyerName: paymentData.customer?.name ?? schedule.order.user.name,
           buyerEmail: paymentData.customer?.email ?? schedule.order.user.email,
           buyerTel: paymentData.customer?.phoneNumber ?? schedule.order.phone,
           receiptUrl: 'receiptUrl' in paymentData ? paymentData.receiptUrl ?? null : null,
