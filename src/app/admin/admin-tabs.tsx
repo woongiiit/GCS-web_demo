@@ -45,6 +45,7 @@ export type AdminOrderItem = {
   product: {
     id: string
     name: string
+    type: string
     author?: {
       id: string
       name: string | null
@@ -84,6 +85,7 @@ export function AdminOrdersTab() {
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'FUND' | 'PARTNER_UP'>('ALL')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const limit = 10
@@ -116,12 +118,25 @@ export function AdminOrdersTab() {
   }, [limit, page])
 
   const filteredOrders = useMemo(() => {
-    if (!appliedSearch) return orders
-    const keyword = appliedSearch.trim().toLowerCase()
-    return orders.filter((order) =>
-      order.orderItems.some((item) => item.product.name.toLowerCase().includes(keyword))
-    )
-  }, [orders, appliedSearch])
+    let filtered = orders
+
+    // 카테고리 필터 적용
+    if (categoryFilter !== 'ALL') {
+      filtered = filtered.filter((order) =>
+        order.orderItems.some((item) => item.product.type === categoryFilter)
+      )
+    }
+
+    // 검색 필터 적용
+    if (appliedSearch) {
+      const keyword = appliedSearch.trim().toLowerCase()
+      filtered = filtered.filter((order) =>
+        order.orderItems.some((item) => item.product.name.toLowerCase().includes(keyword))
+      )
+    }
+
+    return filtered
+  }, [orders, appliedSearch, categoryFilter])
 
   const handleSearchSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
@@ -142,40 +157,79 @@ export function AdminOrdersTab() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-2xl font-bold text-black">모든 주문내역</h2>
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4"
-        >
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="상품명을 입력하세요"
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black md:w-72"
-          />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-            >
-              검색
-            </button>
-            <button
-              type="button"
-              onClick={handleResetSearch}
-              disabled={!searchTerm && !appliedSearch}
-              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-                !searchTerm && !appliedSearch
-                  ? 'cursor-not-allowed border-gray-200 text-gray-400'
-                  : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              초기화
-            </button>
-          </div>
-        </form>
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-2xl font-bold text-black">모든 주문내역</h2>
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4"
+          >
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="상품명을 입력하세요"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black md:w-72"
+            />
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                검색
+              </button>
+              <button
+                type="button"
+                onClick={handleResetSearch}
+                disabled={!searchTerm && !appliedSearch}
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                  !searchTerm && !appliedSearch
+                    ? 'cursor-not-allowed border-gray-200 text-gray-400'
+                    : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                초기화
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        {/* 카테고리 필터 토글 */}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('ALL')}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+              categoryFilter === 'ALL'
+                ? 'bg-black text-white border-black'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('FUND')}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+              categoryFilter === 'FUND'
+                ? 'bg-black text-white border-black'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            only Fund
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('PARTNER_UP')}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+              categoryFilter === 'PARTNER_UP'
+                ? 'bg-black text-white border-black'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            only Partner up
+          </button>
+        </div>
       </div>
 
       {error && (

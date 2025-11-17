@@ -47,6 +47,17 @@ export interface OrderNotificationEmailParams {
   orderedAt: Date
 }
 
+export interface FundingGoalReachedEmailParams {
+  to: string
+  sellerName: string
+  productName: string
+  productId: string
+  goalAmount: number
+  currentAmount: number
+  supporterCount: number
+  reachedAt: Date
+}
+
 /**
  * 비밀번호 재설정 이메일을 전송합니다.
  * @param to 수신자 이메일 주소
@@ -631,6 +642,139 @@ function generateEmailVerificationTemplate(code: string): string {
             <a href="mailto:gcsweb01234@gcsweb.kr" class="link">gcsweb01234@gcsweb.kr</a>
           </p>
         </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * FUND 아이템 목표 달성 이메일을 전송합니다.
+ * @param params 목표 달성 이메일 파라미터
+ */
+export async function sendFundingGoalReachedEmail(params: FundingGoalReachedEmailParams): Promise<void> {
+  const {
+    to,
+    sellerName,
+    productName,
+    productId,
+    goalAmount,
+    currentAmount,
+    supporterCount,
+    reachedAt
+  } = params
+
+  if (EMAIL_METHOD !== 'smtp' || !transporter || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('='.repeat(60))
+    console.log('📧 펀딩 목표 달성 이메일 (개발 모드)')
+    console.log('='.repeat(60))
+    console.log(`수신자: ${to}`)
+    console.log(`판매자: ${sellerName}`)
+    console.log(`상품명: ${productName}`)
+    console.log(`상품 ID: ${productId}`)
+    console.log(`목표 금액: ${goalAmount.toLocaleString()}원`)
+    console.log(`현재 금액: ${currentAmount.toLocaleString()}원`)
+    console.log(`서포터 수: ${supporterCount}명`)
+    console.log(`달성 일시: ${reachedAt.toISOString()}`)
+    console.log('='.repeat(60))
+    return
+  }
+
+  const html = generateFundingGoalReachedEmailTemplate({
+    sellerName,
+    productName,
+    productId,
+    goalAmount,
+    currentAmount,
+    supporterCount,
+    reachedAt
+  })
+
+  const mailOptions = {
+    from: `"GCS:Web" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    to,
+    subject: `[GCS:Web] 펀딩 목표 달성 알림 - ${productName}`,
+    html
+  }
+
+  try {
+    await transporter.sendMail(mailOptions)
+    console.log(`✅ 펀딩 목표 달성 이메일 전송 완료: ${to}`)
+  } catch (error) {
+    console.error('❌ 펀딩 목표 달성 이메일 전송 실패:', error)
+  }
+}
+
+function generateFundingGoalReachedEmailTemplate({
+  sellerName,
+  productName,
+  productId,
+  goalAmount,
+  currentAmount,
+  supporterCount,
+  reachedAt
+}: Omit<FundingGoalReachedEmailParams, 'to'>) {
+  const reachedAtKst = new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+    timeZone: 'Asia/Seoul'
+  }).format(reachedAt)
+
+  const achievementRate = goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0
+  const exceededAmount = currentAmount - goalAmount
+
+  return `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>펀딩 목표 달성 알림</title>
+    </head>
+    <body style="margin:0; padding:24px; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background-color:#f6f6f9;">
+      <div style="max-width:640px; margin:0 auto; background:#ffffff; border-radius:16px; padding:32px;">
+        <div style="text-align:center; margin-bottom:32px;">
+          <h1 style="margin:0; font-size:24px; color:#000000;">GCS<span style="color:#f57520;">:</span>Web</h1>
+          <p style="margin-top:8px; color:#555; font-size:18px; font-weight:bold;">🎉 펀딩 목표를 달성했습니다!</p>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:18px; margin-bottom:12px; color:#000;">상품 정보</h2>
+          <div style="background:#fafafa; border-radius:12px; padding:16px; line-height:1.6; color:#333;">
+            <div><strong>상품명:</strong> ${productName}</div>
+            <div><strong>상품 ID:</strong> ${productId}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:18px; margin-bottom:12px; color:#000;">펀딩 현황</h2>
+          <div style="background:#fafafa; border-radius:12px; padding:16px; line-height:1.6; color:#333;">
+            <div style="margin-bottom:12px;"><strong>목표 금액:</strong> ${goalAmount.toLocaleString()}원</div>
+            <div style="margin-bottom:12px;"><strong>현재 모금액:</strong> <span style="color:#f57520; font-weight:bold; font-size:18px;">${currentAmount.toLocaleString()}원</span></div>
+            <div style="margin-bottom:12px;"><strong>달성률:</strong> ${achievementRate}%</div>
+            <div style="margin-bottom:12px;"><strong>초과 금액:</strong> ${exceededAmount > 0 ? `<span style="color:#28a745; font-weight:bold;">+${exceededAmount.toLocaleString()}원</span>` : '0원'}</div>
+            <div><strong>서포터 수:</strong> ${supporterCount.toLocaleString()}명</div>
+          </div>
+        </div>
+
+        <div style="background:#e8f5e9; border-left:4px solid #4caf50; border-radius:8px; padding:16px; margin-bottom:24px;">
+          <div style="font-weight:bold; color:#2e7d32; margin-bottom:8px;">✅ 목표 달성 일시</div>
+          <div style="color:#333;">${reachedAtKst}</div>
+        </div>
+
+        <div style="background:#fff3e0; border-left:4px solid #ff9800; border-radius:8px; padding:16px; margin-bottom:24px;">
+          <div style="font-weight:bold; color:#e65100; margin-bottom:8px;">📋 다음 단계</div>
+          <div style="color:#333; line-height:1.8;">
+            <div>• 펀딩 마감일까지 추가 후원을 받을 수 있습니다.</div>
+            <div>• 마감일이 되면 자동으로 결제가 진행됩니다.</div>
+            <div>• 상품 제작 및 배송 준비를 시작해주세요.</div>
+          </div>
+        </div>
+
+        <p style="margin-top:32px; font-size:13px; color:#777; text-align:center;">
+          이 메일은 GCS:Web 시스템에서 자동으로 발송되었습니다.<br/>
+          문의사항은 관리자에게 연락해주세요.
+        </p>
       </div>
     </body>
     </html>

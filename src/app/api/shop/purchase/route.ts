@@ -17,7 +17,7 @@ import {
 import type { BillingKeyPaymentInput } from '@portone/server-sdk/common'
 import type { CreatePaymentScheduleResponse } from '@portone/server-sdk/payment/paymentSchedule'
 import type { Prisma } from '@prisma/client'
-import { sendOrderNotificationEmail } from '@/lib/email'
+import { sendOrderNotificationEmail, sendFundingGoalReachedEmail } from '@/lib/email'
 
 type OrderWithRelations = Prisma.OrderGetPayload<{
   include: {
@@ -682,6 +682,22 @@ export async function POST(request: Request) {
       })
 
       for (const item of productsToIncrementFunding) {
+        // 업데이트 전 상품 정보 조회 (Goal 값 확인용)
+        const productBeforeUpdate = await prisma.product.findUnique({
+          where: { id: item.productId },
+          include: {
+            author: true
+          }
+        })
+
+        if (!productBeforeUpdate) {
+          console.error(`[Purchase] 상품을 찾을 수 없습니다: ${item.productId}`)
+          continue
+        }
+
+        const wasBelowGoal = productBeforeUpdate.fundingGoalAmount !== null &&
+          productBeforeUpdate.fundingCurrentAmount < productBeforeUpdate.fundingGoalAmount
+
         const updatedProduct = await prisma.product.update({
           where: { id: item.productId },
           data: {
@@ -691,6 +707,9 @@ export async function POST(request: Request) {
             fundingSupporterCount: {
               increment: item.supporterIncrement
             }
+          },
+          include: {
+            author: true
           }
         })
 
@@ -700,6 +719,33 @@ export async function POST(request: Request) {
           newFundingCurrentAmount: updatedProduct.fundingCurrentAmount,
           newFundingSupporterCount: updatedProduct.fundingSupporterCount
         })
+
+        // 목표 달성 여부 확인 및 이메일 전송
+        if (
+          wasBelowGoal &&
+          updatedProduct.fundingGoalAmount !== null &&
+          updatedProduct.fundingCurrentAmount >= updatedProduct.fundingGoalAmount &&
+          updatedProduct.author?.email
+        ) {
+          console.log('[Purchase] 펀딩 목표 달성 감지 - 이메일 전송 시작:', {
+            productId: item.productId,
+            goalAmount: updatedProduct.fundingGoalAmount,
+            currentAmount: updatedProduct.fundingCurrentAmount
+          })
+
+          void sendFundingGoalReachedEmail({
+            to: updatedProduct.author.email,
+            sellerName: updatedProduct.author.name,
+            productName: updatedProduct.name,
+            productId: updatedProduct.id,
+            goalAmount: updatedProduct.fundingGoalAmount,
+            currentAmount: updatedProduct.fundingCurrentAmount,
+            supporterCount: updatedProduct.fundingSupporterCount,
+            reachedAt: new Date()
+          }).catch((error) => {
+            console.error('[Purchase] 펀딩 목표 달성 이메일 전송 실패:', error)
+          })
+        }
       }
 
       if (hasCartItems) {
@@ -767,14 +813,21 @@ export async function POST(request: Request) {
         })
       }
 
-      void notifySellersOfOrder(order, {
-        buyerName: user.name,
-        buyerEmail: user.email,
-        buyerPhone: phone,
-        shippingAddress,
-        notes: notes ?? null,
-        totalAmount
-      })
+      // PARTNER_UP 아이템이 있는 경우에만 판매자에게 이메일 전송
+      const hasPartnerUpItems = order.orderItems.some(
+        (orderItem) => orderItem.product.type === 'PARTNER_UP'
+      )
+
+      if (hasPartnerUpItems) {
+        void notifySellersOfOrder(order, {
+          buyerName: user.name,
+          buyerEmail: user.email,
+          buyerPhone: phone,
+          shippingAddress,
+          notes: notes ?? null,
+          totalAmount
+        })
+      }
     }
 
     const responsePayload = {
@@ -850,6 +903,12 @@ async function notifySellersOfOrder(order: OrderWithRelations, context: SellerNo
 
     for (const item of order.orderItems) {
       const product = item.product
+      
+      // PARTNER_UP 타입의 상품에 대해서만 이메일 전송
+      if (product.type !== 'PARTNER_UP') {
+        continue
+      }
+
       const seller = product.author
       const sellerEmail = seller?.email
       if (!sellerEmail) {
