@@ -343,11 +343,14 @@ export default function CheckoutPage() {
           // V2 API의 requestIssueBillingKey 사용
           // storeId, channelKey, billingKeyMethod 필수
           // customerId는 customer 객체 안에 있어야 함 (토스페이 빌링키 발급 필수)
+          // redirectUrl은 리디렉션 방식에서 필수 (토스페이 등)
+          const redirectUrl = typeof window !== 'undefined' ? window.location.href : undefined
           const billingKeyRequest: any = {
             storeId,
             channelKey: billingChannelKey,
             issueName: (mainProductName || 'Fund 자동결제 등록').trim(),
             billingKeyMethod: requiresEasyPay ? BillingKeyMethod.EASY_PAY : undefined,
+            redirectUrl: isTossPay ? redirectUrl : undefined, // 토스페이의 경우 리디렉션 URL 필수
             customer: {
               customerId: customerId.trim(), // customer 객체 안에 customerId 포함
               fullName: buyerName,
