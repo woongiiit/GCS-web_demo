@@ -674,6 +674,34 @@ export async function POST(request: Request) {
         }
       })
 
+      // 펀딩 상품의 경우, 결제 예약 완료 시점에 RAISED 값 증가
+      // (실제 결제는 예약된 시간에 실행되지만, 예약 완료 = 참여 의사 표현으로 간주)
+      console.log('[Purchase] 펀딩 결제 예약 완료 - RAISED 값 증가 시작:', {
+        productsToIncrementFunding,
+        orderId: order.id
+      })
+
+      for (const item of productsToIncrementFunding) {
+        const updatedProduct = await prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            fundingCurrentAmount: {
+              increment: item.amount
+            },
+            fundingSupporterCount: {
+              increment: item.supporterIncrement
+            }
+          }
+        })
+
+        console.log('[Purchase] 펀딩 상품 RAISED 값 증가 완료:', {
+          productId: item.productId,
+          amount: item.amount,
+          newFundingCurrentAmount: updatedProduct.fundingCurrentAmount,
+          newFundingSupporterCount: updatedProduct.fundingSupporterCount
+        })
+      }
+
       if (hasCartItems) {
         await prisma.cartItem.deleteMany({
           where: {
