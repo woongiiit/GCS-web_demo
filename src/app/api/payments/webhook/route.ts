@@ -34,7 +34,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const schedule = await prisma.billingSchedule.findFirst({
+    // 결제 정보 먼저 가져오기
+    const paymentData = await getPortOnePayment({
+      paymentId: paymentIdFromPayload,
+      impUid: payload.imp_uid ?? payload.impUid
+    })
+
+    if (!('status' in paymentData)) {
+      return NextResponse.json({ success: true, message: '알 수 없는 결제 상태입니다.' }, { status: 200 })
+    }
+
+    const serializedPayment = JSON.parse(JSON.stringify(paymentData)) as Prisma.InputJsonValue
+    const now = new Date()
+
+    // billing schedule에서 찾기
+    let schedule = await prisma.billingSchedule.findFirst({
       where: { paymentId: paymentIdFromPayload },
       include: {
         order: {
@@ -50,25 +64,87 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // billing schedule을 찾지 못한 경우, order에서 직접 찾기 (billing key로 즉시 결제 완료된 경우)
     if (!schedule) {
+      const order = await prisma.order.findFirst({
+        where: {
+          OR: [
+            { billingPaymentId: paymentIdFromPayload },
+            { paymentInfo: { path: ['paymentId'], equals: paymentIdFromPayload } }
+          ],
+          orderItems: {
+            some: {
+              product: {
+                type: 'FUND'
+              }
+            }
+          }
+        },
+        include: {
+          orderItems: {
+            include: {
+              product: true
+            }
+          },
+          user: true
+        }
+      })
+
+      if (order && order.billingKey && paymentData.status === 'PAID') {
+        // billing key로 결제 완료된 경우, funding amount 증가 처리
+        const fundingEntries: FundingPayloadEntry[] = []
+        for (const orderItem of order.orderItems) {
+          if (orderItem.product.type === 'FUND') {
+            fundingEntries.push({
+              productId: orderItem.product.id,
+              amount: orderItem.price * orderItem.quantity,
+              supporterIncrement: 1
+            })
+          }
+        }
+
+        if (fundingEntries.length > 0) {
+          await prisma.$transaction(async (tx) => {
+            // Order 상태 업데이트
+            await tx.order.update({
+              where: { id: order.id },
+              data: {
+                status: 'CONFIRMED',
+                billingStatus: 'EXECUTED',
+                billingExecutedAt: now,
+                billingFailureReason: null,
+                billingPaymentId: paymentIdFromPayload,
+                paymentInfo: serializedPayment,
+                paymentVerifiedAt: now
+              }
+            })
+
+            // Funding amount 증가 (RAISED 값 증가)
+            for (const entry of fundingEntries) {
+              await tx.product.update({
+                where: { id: entry.productId },
+                data: {
+                  fundingCurrentAmount: {
+                    increment: entry.amount
+                  },
+                  fundingSupporterCount: {
+                    increment: entry.supporterIncrement ?? 1
+                  }
+                }
+              })
+            }
+          })
+
+          return NextResponse.json({ success: true, message: '펀딩 결제가 완료되었습니다.' }, { status: 200 })
+        }
+      }
+
       return NextResponse.json({ success: true, message: '처리할 예약이 없습니다.' }, { status: 200 })
     }
 
     if (schedule.status === 'EXECUTED') {
       return NextResponse.json({ success: true, message: '이미 처리된 예약입니다.' }, { status: 200 })
     }
-
-    const paymentData = await getPortOnePayment({
-      paymentId: paymentIdFromPayload,
-      impUid: payload.imp_uid ?? payload.impUid
-    })
-
-    if (!('status' in paymentData)) {
-      return NextResponse.json({ success: true, message: '알 수 없는 결제 상태입니다.' }, { status: 200 })
-    }
-
-    const serializedPayment = JSON.parse(JSON.stringify(paymentData)) as Prisma.InputJsonValue
-    const now = new Date()
 
     const fundingEntries: FundingPayloadEntry[] = Array.isArray(schedule.payload)
       ? (schedule.payload as FundingPayloadEntry[])
