@@ -377,26 +377,43 @@ export async function POST(request: Request) {
       }
 
       try {
-        const billingInfo = await getPortOneBillingKeyInfo(resolvedBillingKey)
+        // 빌링키 정보 조회 시도 (방금 발급된 빌링키는 서버에 동기화되지 않았을 수 있음)
+        let billingInfo: any = null
+        try {
+          billingInfo = await getPortOneBillingKeyInfo(resolvedBillingKey)
+          console.log('Fetched PortOne billing info:', {
+            billingKey: billingInfo.billingKey,
+            channels: billingInfo.channels?.map((ch) => ({
+              key: ch.key,
+              provider: ch.pgProvider
+            })),
+            merchantId: 'merchantId' in billingInfo ? billingInfo.merchantId : undefined,
+            storeId: 'storeId' in billingInfo ? billingInfo.storeId : undefined
+          })
 
-        if ('status' in billingInfo && billingInfo.status !== 'ISSUED') {
-          return NextResponse.json(
-            { error: '발급이 완료되지 않은 빌링키입니다. 다시 등록해주세요.' },
-            { status: 400 }
-          )
+          if ('status' in billingInfo && billingInfo.status !== 'ISSUED') {
+            console.warn('빌링키 상태가 ISSUED가 아닙니다:', billingInfo.status)
+          }
+
+          if (!('billingKey' in billingInfo)) {
+            console.warn('빌링키 정보에 billingKey가 없습니다. 클라이언트에서 받은 빌링키를 사용합니다.')
+            billingInfo = null
+          }
+        } catch (billingInfoError: any) {
+          console.warn('빌링키 정보 조회 실패 (방금 발급된 빌링키일 수 있음):', {
+            error: billingInfoError?.message || billingInfoError,
+            billingKey: resolvedBillingKey
+          })
+          // 빌링키 정보 조회 실패 시 클라이언트에서 받은 빌링키를 직접 사용
+          billingInfo = null
         }
 
-        if (!('billingKey' in billingInfo)) {
-          return NextResponse.json(
-            { error: '유효하지 않은 빌링키입니다. 다시 시도해주세요.' },
-            { status: 400 }
-          )
-        }
-
-        billingCustomerKey = billingInfo.billingKey
+        // 빌링키 정보가 있으면 사용, 없으면 클라이언트에서 받은 빌링키 직접 사용
+        billingCustomerKey = billingInfo?.billingKey ?? resolvedBillingKey
         billingChannelKey =
           billing?.channelKey ??
-          billingInfo.channels?.[0]?.key ??
+          billingInfo?.channels?.[0]?.key ??
+          process.env.PORTONE_BILLING_CHANNEL_KEY ??
           process.env.PORTONE_CHANNEL_KEY ??
           null
 
@@ -410,31 +427,54 @@ export async function POST(request: Request) {
           )
         }
 
-        await preRegisterPortOnePayment({
-          paymentId: paymentIdForSchedule,
-          totalAmount,
-          currency: 'KRW'
-        })
+        try {
+          await preRegisterPortOnePayment({
+            paymentId: paymentIdForSchedule,
+            totalAmount,
+            currency: 'KRW'
+          })
+        } catch (preRegisterError: any) {
+          console.error('preRegisterPortOnePayment 오류:', {
+            error: preRegisterError?.message || preRegisterError,
+            data: preRegisterError?.data,
+            paymentId: paymentIdForSchedule,
+            totalAmount
+          })
+          // preRegisterPayment는 선택적이므로 실패해도 계속 진행
+          console.warn('preRegisterPayment 실패했지만 계속 진행합니다.')
+        }
 
-        const scheduleResponse = await createPortOnePaymentSchedule({
-          paymentId: paymentIdForSchedule,
-          schedule: {
-            billingKey: billingInfo.billingKey,
-            channelKey: billingChannelKey ?? undefined,
-            orderName: fundProductName ?? 'Fund Order',
-            amount: {
-              total: totalAmount
+        let scheduleResponse
+        try {
+          scheduleResponse = await createPortOnePaymentSchedule({
+            paymentId: paymentIdForSchedule,
+            schedule: {
+              billingKey: billingCustomerKey,
+              channelKey: billingChannelKey ?? undefined,
+              orderName: fundProductName ?? 'Fund Order',
+              amount: {
+                total: totalAmount
+              },
+              currency: 'KRW',
+              customer: {
+                id: user.id,
+                name: user.name ? { full: user.name } : undefined,
+                email: user.email ?? undefined,
+                phoneNumber: phone ?? undefined
+              }
             },
-            currency: 'KRW',
-            customer: {
-              id: user.id,
-              name: user.name ? { full: user.name } : undefined,
-              email: user.email ?? undefined,
-              phoneNumber: phone ?? undefined
-            }
-          },
-          scheduledAt: billingScheduledAt
-        })
+            scheduledAt: billingScheduledAt
+          })
+        } catch (scheduleError: any) {
+          console.error('createPortOnePaymentSchedule 오류:', {
+            error: scheduleError?.message || scheduleError,
+            data: scheduleError?.data,
+            billingKey: billingCustomerKey,
+            channelKey: billingChannelKey,
+            paymentId: paymentIdForSchedule
+          })
+          throw scheduleError
+        }
 
         billingPaymentId = paymentIdForSchedule
         billingScheduleId = scheduleResponse.schedule.id
@@ -443,23 +483,38 @@ export async function POST(request: Request) {
         await prisma.billingCustomer.upsert({
           where: { userId: user.id },
           update: {
-            billingKey: billingInfo.billingKey,
+            billingKey: billingCustomerKey,
             channelKey: billingChannelKey ?? undefined,
-            pgProvider: billingInfo.channels?.[0]?.pgProvider ?? null,
-            issuedAt: billingInfo.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
-            raw: billingInfo as unknown as Prisma.InputJsonValue
+            pgProvider: billingInfo?.channels?.[0]?.pgProvider ?? null,
+            issuedAt: billingInfo?.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
+            raw: (billingInfo ?? { billingKey: billingCustomerKey }) as unknown as Prisma.InputJsonValue
           },
           create: {
             userId: user.id,
-            billingKey: billingInfo.billingKey,
+            billingKey: billingCustomerKey,
             channelKey: billingChannelKey ?? undefined,
-            pgProvider: billingInfo.channels?.[0]?.pgProvider ?? null,
-            issuedAt: billingInfo.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
-            raw: billingInfo as unknown as Prisma.InputJsonValue
+            pgProvider: billingInfo?.channels?.[0]?.pgProvider ?? null,
+            issuedAt: billingInfo?.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
+            raw: (billingInfo ?? { billingKey: billingCustomerKey }) as unknown as Prisma.InputJsonValue
           }
         })
       } catch (error) {
         console.error('PortOne 빌링키 처리 오류:', error)
+
+        if (
+          error &&
+          typeof error === 'object' &&
+          'data' in error &&
+          (error as any).data?.type === 'BILLING_KEY_NOT_FOUND'
+        ) {
+          console.error('BILLING_KEY_NOT_FOUND: resolvedBillingKey', resolvedBillingKey)
+          console.error('billing?.channelKey', billing?.channelKey)
+          return NextResponse.json(
+            { error: '발급된 빌링키를 찾을 수 없습니다. 다시 등록해주세요.' },
+            { status: 400 }
+          )
+        }
+
         return NextResponse.json(
           { error: '자동결제 정보를 확인하는 중 오류가 발생했습니다. 다시 시도해주세요.' },
           { status: 500 }

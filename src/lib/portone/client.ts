@@ -16,10 +16,22 @@ export function getPortOneClient(): PortOneSDKClient {
     )
   }
 
+  const storeId =
+    process.env.PORTONE_STORE_ID ??
+    process.env.NEXT_PUBLIC_PORTONE_STORE_ID ??
+    undefined
+
+  console.log('PortOne 클라이언트 초기화:', {
+    hasSecret: !!secret,
+    secretLength: secret.length,
+    storeId: storeId || 'not set',
+    baseUrl: process.env.PORTONE_API_BASE_URL || 'default'
+  })
+
   cachedClient = PortOneClient({
     secret,
     baseUrl: process.env.PORTONE_API_BASE_URL || undefined,
-    storeId: process.env.PORTONE_STORE_ID || undefined
+    storeId: storeId || undefined
   })
 
   return cachedClient

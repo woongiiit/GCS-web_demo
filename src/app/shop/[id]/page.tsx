@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 import { PRODUCT_TYPES } from '@/lib/shop/product-types'
+import StarRating from '@/components/StarRating'
 
 type RawProductOptionValue = string | { label?: string; priceAdjustment?: number | string }
 
@@ -38,6 +39,16 @@ export default function ProductDetailPage() {
   const [isLiking, setIsLiking] = useState(false)
   const [hasLiked, setHasLiked] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [reviewStats, setReviewStats] = useState<any>(null)
+  const [reviewPage, setReviewPage] = useState(1)
+  const [reviewTotalPages, setReviewTotalPages] = useState(1)
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewContent, setReviewContent] = useState('')
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
+  const [hasUserReview, setHasUserReview] = useState(false)
 
   const productTypeMeta = product ? getProductTypeMeta(product.type) : null
   const fundingProgress = product ? getFundingProgress(product) : null
@@ -46,8 +57,9 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (productId) {
       fetchProduct()
+      fetchReviews()
     }
-  }, [productId])
+  }, [productId, reviewPage])
 
   const fetchProduct = async () => {
     setIsLoading(true)
@@ -65,6 +77,105 @@ export default function ProductDetailPage() {
       console.error('상품 조회 오류:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchReviews = async () => {
+    setIsLoadingReviews(true)
+    try {
+      const response = await fetch(`/api/shop/products/${productId}/reviews?page=${reviewPage}&limit=10`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setReviews(data.data.reviews)
+        setReviewStats(data.data.stats)
+        setReviewTotalPages(data.data.pagination.totalPages)
+        
+        // 사용자가 이미 리뷰를 작성했는지 확인
+        if (user) {
+          const userReview = data.data.reviews.find((r: any) => r.userId === user.id)
+          setHasUserReview(!!userReview)
+        }
+      }
+    } catch (error) {
+      console.error('리뷰 조회 오류:', error)
+    } finally {
+      setIsLoadingReviews(false)
+    }
+  }
+
+  const handleSubmitReview = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (reviewRating === 0) {
+      alert('별점을 선택해주세요.')
+      return
+    }
+
+    if (!reviewContent.trim()) {
+      alert('리뷰 내용을 입력해주세요.')
+      return
+    }
+
+    setIsSubmittingReview(true)
+    try {
+      const response = await fetch(`/api/shop/products/${productId}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          rating: reviewRating,
+          content: reviewContent.trim()
+        })
+      })
+
+      const data = await response.json()
+      if (response.ok && data.success) {
+        alert('리뷰가 작성되었습니다.')
+        setShowReviewForm(false)
+        setReviewRating(0)
+        setReviewContent('')
+        setHasUserReview(true)
+        fetchReviews()
+      } else {
+        alert(data.error || '리뷰 작성에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('리뷰 작성 오류:', error)
+      alert('리뷰 작성 중 오류가 발생했습니다.')
+    } finally {
+      setIsSubmittingReview(false)
+    }
+  }
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('리뷰를 삭제하시겠습니까?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/shop/products/${productId}/reviews/${reviewId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+      if (response.ok && data.success) {
+        alert('리뷰가 삭제되었습니다.')
+        setHasUserReview(false)
+        fetchReviews()
+      } else {
+        alert(data.error || '리뷰 삭제에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('리뷰 삭제 오류:', error)
+      alert('리뷰 삭제 중 오류가 발생했습니다.')
     }
   }
 
@@ -727,6 +838,197 @@ export default function ProductDetailPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* 리뷰 섹션 */}
+                <div className="mt-12 border-t border-gray-200 pt-12">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-bold">리뷰</h3>
+                  </div>
+
+                  {/* 리뷰 통계 */}
+                  {reviewStats && (
+                    <div className="mb-8 bg-gray-50 rounded-lg p-6">
+                      <div className="flex items-center gap-6 mb-4">
+                        <div className="text-center">
+                          <div className="text-4xl font-bold text-black mb-1">
+                            {reviewStats.averageRating > 0 ? reviewStats.averageRating.toFixed(1) : '0.0'}
+                          </div>
+                          <StarRating rating={reviewStats.averageRating} readonly size="lg" />
+                          <div className="text-sm text-gray-600 mt-2">
+                            총 {reviewStats.reviewCount}개의 리뷰
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="space-y-2">
+                            {[5, 4, 3, 2, 1].map((rating) => {
+                              const count = reviewStats.distribution[rating] || 0
+                              const percentage = reviewStats.reviewCount > 0
+                                ? (count / reviewStats.reviewCount) * 100
+                                : 0
+                              return (
+                                <div key={rating} className="flex items-center gap-3">
+                                  <span className="text-sm text-gray-600 w-8">{rating}점</span>
+                                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-yellow-400 transition-all"
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-sm text-gray-600 w-12 text-right">
+                                    {count}개
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 리뷰 작성 버튼 */}
+                  {user && !hasUserReview && (
+                    <div className="mb-6">
+                      {!showReviewForm ? (
+                        <button
+                          onClick={() => setShowReviewForm(true)}
+                          className="px-6 py-3 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+                        >
+                          리뷰 작성하기
+                        </button>
+                      ) : (
+                        <div className="border border-gray-200 rounded-lg p-6 bg-white">
+                          <h4 className="text-lg font-semibold mb-4">리뷰 작성</h4>
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              별점
+                            </label>
+                            <StarRating
+                              rating={reviewRating}
+                              onRatingChange={setReviewRating}
+                              size="lg"
+                            />
+                          </div>
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              리뷰 내용
+                            </label>
+                            <textarea
+                              value={reviewContent}
+                              onChange={(e) => setReviewContent(e.target.value)}
+                              placeholder="상품에 대한 리뷰를 작성해주세요."
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black resize-none"
+                              rows={5}
+                              maxLength={1000}
+                            />
+                            <div className="text-xs text-gray-500 mt-1 text-right">
+                              {reviewContent.length}/1000
+                            </div>
+                          </div>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={handleSubmitReview}
+                              disabled={isSubmittingReview || reviewRating === 0 || !reviewContent.trim()}
+                              className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            >
+                              {isSubmittingReview ? '작성 중...' : '리뷰 등록'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowReviewForm(false)
+                                setReviewRating(0)
+                                setReviewContent('')
+                              }}
+                              className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 리뷰 목록 */}
+                  {isLoadingReviews ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
+                      <p className="text-gray-600 mt-2">리뷰를 불러오는 중...</p>
+                    </div>
+                  ) : reviews.length > 0 ? (
+                    <>
+                      <div className="space-y-6">
+                        {reviews.map((review) => (
+                          <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                  <span className="text-sm font-semibold text-gray-600">
+                                    {review.user.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <div className="font-semibold text-gray-900">
+                                    {review.user.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {new Date(review.createdAt).toLocaleDateString('ko-KR', {
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric'
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                              {(user?.id === review.userId || user?.role === 'ADMIN') && (
+                                <button
+                                  onClick={() => handleDeleteReview(review.id)}
+                                  className="text-sm text-red-600 hover:text-red-800 transition-colors"
+                                >
+                                  삭제
+                                </button>
+                              )}
+                            </div>
+                            <div className="mb-3">
+                              <StarRating rating={review.rating} readonly size="sm" />
+                            </div>
+                            <p className="text-gray-700 whitespace-pre-wrap">{review.content}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* 페이지네이션 */}
+                      {reviewTotalPages > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-8">
+                          <button
+                            onClick={() => setReviewPage((prev) => Math.max(1, prev - 1))}
+                            disabled={reviewPage === 1}
+                            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            이전
+                          </button>
+                          <span className="text-sm text-gray-600">
+                            {reviewPage} / {reviewTotalPages}
+                          </span>
+                          <button
+                            onClick={() => setReviewPage((prev) => Math.min(reviewTotalPages, prev + 1))}
+                            disabled={reviewPage === reviewTotalPages}
+                            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            다음
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <p>아직 작성된 리뷰가 없습니다.</p>
+                      {user && !hasUserReview && (
+                        <p className="text-sm mt-2">첫 번째 리뷰를 작성해보세요!</p>
+                      )}
+                    </div>
+                  )}
                 </div>
           </div>
         </div>

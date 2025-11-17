@@ -8,6 +8,12 @@ export async function GET() {
     process.env.NEXT_PUBLIC_PORTONE_BILLING_PG_ID ?? process.env.PORTONE_BILLING_PG_ID ?? ''
   const channelKey =
     process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY ?? process.env.PORTONE_CHANNEL_KEY ?? ''
+  const billingChannelKey =
+    process.env.NEXT_PUBLIC_PORTONE_BILLING_CHANNEL_KEY ??
+    process.env.PORTONE_BILLING_CHANNEL_KEY ??
+    ''
+  const storeId =
+    process.env.NEXT_PUBLIC_PORTONE_STORE_ID ?? process.env.PORTONE_STORE_ID ?? ''
 
   if (!merchantCode || !pgId) {
     return NextResponse.json(
@@ -17,7 +23,8 @@ export async function GET() {
         data: {
           hasMerchantCode: Boolean(merchantCode),
           hasPgId: Boolean(pgId),
-          hasChannelKey: Boolean(channelKey || billingPgId)
+          hasChannelKey: Boolean(channelKey || billingPgId || billingChannelKey),
+          hasStoreId: Boolean(storeId)
         }
       },
       { status: 500 }
@@ -30,7 +37,9 @@ export async function GET() {
       merchantCode,
       pgId,
       billingPgId: billingPgId || null,
-      channelKey: channelKey || null
+      channelKey: channelKey || null,
+      billingChannelKey: billingChannelKey || null,
+      storeId: storeId || null
     }
   })
 }

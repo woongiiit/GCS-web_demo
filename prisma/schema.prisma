@@ -51,6 +51,7 @@ model User {
   paymentRecords      PaymentRecord[]
   billingCustomer     BillingCustomer?
   billingSchedules    BillingSchedule[]
+  productReviews      ProductReview[]
 
   @@index([role])
   @@index([isSeller])
@@ -188,6 +189,7 @@ model Product {
   productDetails ProductDetail[]
   likes          ProductLike[]
   cartItems      CartItem[]
+  reviews        ProductReview[]
 
   @@index([type, isActive, createdAt])
   @@index([isActive, createdAt])
@@ -349,6 +351,25 @@ model CartItem {
   @@index([userId])
   @@index([productId])
   @@map("cart_items")
+}
+
+// 상품 리뷰 모델
+model ProductReview {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int      // 별점 (1-5)
+  content   String   // 리뷰 내용
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId]) // 한 사용자는 한 상품당 하나의 리뷰만 작성 가능
+  @@index([productId, createdAt])
+  @@index([userId, createdAt])
+  @@index([productId, rating])
+  @@map("product_reviews")
 }
 
 // 프로젝트 모델 (아카이브)

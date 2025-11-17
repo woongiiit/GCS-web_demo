@@ -77,6 +77,8 @@ type PaymentConfig = {
   pgId: string
   billingPgId: string | null
   channelKey: string | null
+  billingChannelKey: string | null
+  storeId: string | null
 }
 
 type PortOneResponse = {
@@ -267,7 +269,7 @@ export default function CheckoutPage() {
         throw new Error('결제 모듈을 로드하지 못했습니다.')
       }
 
-      const { merchantCode, pgId, billingPgId, channelKey } = paymentConfig
+      const { merchantCode, pgId, billingPgId, channelKey, billingChannelKey, storeId } = paymentConfig
       IMP.init(merchantCode)
 
       const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
@@ -283,13 +285,12 @@ export default function CheckoutPage() {
       const requiresBilling = hasFundItems
 
       if (requiresBilling) {
-        const customerUid = `fund-${user.id}-${Date.now()}`
-        const billingMerchantUid = `fund-billing-${Date.now()}`
+        const customerId = `fund-${user.id}-${Date.now()}`
         const resolvedBillingPgId = (() => {
           const configured = billingPgId && billingPgId.trim().length > 0 ? billingPgId.trim() : null
           if (configured) return configured
           if (!pgId) return null
-          if (pgId.startsWith('tosspay.')) {
+          if (pgId.startsWith('tosspay.') || pgId.startsWith('tosspay_v2.')) {
             return pgId.endsWith('_billing') ? pgId : `${pgId}_billing`
           }
           return pgId
@@ -301,40 +302,84 @@ export default function CheckoutPage() {
           return
         }
 
-        const billingParams: Record<string, unknown> = {
-          pg: resolvedBillingPgId,
-          pay_method: 'card',
-          merchant_uid: billingMerchantUid,
-          customer_uid: customerUid,
-          amount: 0,
-          name: mainProductName || 'Fund 자동결제 등록',
-          buyer_name: buyerName,
-          buyer_email: buyerEmail,
-          buyer_tel: buyerPhone,
-          buyer_addr: fullShippingAddress
+        // 토스페이와 포트원의 경우 billingKeyMethod를 'EASY_PAY'로 설정해야 함
+        const isTossPay = resolvedBillingPgId.startsWith('tosspay.') || resolvedBillingPgId.startsWith('tosspay_v2.')
+        const isPortOne = resolvedBillingPgId.startsWith('portone.') || resolvedBillingPgId.startsWith('inicis.')
+        const requiresEasyPay = isTossPay || isPortOne
+        
+        // storeId가 필수이므로 별도로 확인
+        if (!storeId) {
+          setError('빌링키 발급을 위한 Store ID가 누락되었습니다. 환경 변수에 NEXT_PUBLIC_PORTONE_STORE_ID 또는 PORTONE_STORE_ID를 설정해주세요.')
+          setIsPaying(false)
+          return
         }
 
-        IMP.request_pay(billingParams, async (rsp: PortOneResponse) => {
-          if (!rsp.success) {
-            console.error('PortOne billing key issuance failed:', rsp)
-            setIsPaying(false)
-            setError(
-              rsp.error_msg
-                ? `결제 등록 실패: ${rsp.error_msg}`
-                : '자동결제 등록이 취소되거나 실패했습니다. 다시 시도해주세요.'
-            )
-            return
-          }
+        // customerId가 필수이므로 확인
+        if (!customerId || customerId.trim().length === 0) {
+          setError('빌링키 발급을 위한 Customer ID가 생성되지 않았습니다.')
+          setIsPaying(false)
+          return
+        }
 
-          if (!rsp.billing_key) {
+        console.log('빌링키 발급 파라미터 설정:', {
+          resolvedBillingPgId,
+          isTossPay,
+          isPortOne,
+          requiresEasyPay,
+          customerId,
+          storeId,
+          billingChannelKey,
+          channelKey
+        })
+
+        // channelKey가 필수이므로 확인
+        if (!billingChannelKey) {
+          setError('빌링키 발급을 위한 Channel Key가 누락되었습니다. 환경 변수에 NEXT_PUBLIC_PORTONE_BILLING_CHANNEL_KEY를 설정해주세요.')
+          setIsPaying(false)
+          return
+        }
+
+        try {
+          // V2 API의 requestIssueBillingKey 사용
+          // storeId, channelKey, billingKeyMethod 필수
+          // customerId는 customer 객체 안에 있어야 함 (토스페이 빌링키 발급 필수)
+          const billingKeyRequest: any = {
+            storeId,
+            channelKey: billingChannelKey,
+            issueName: (mainProductName || 'Fund 자동결제 등록').trim(),
+            billingKeyMethod: requiresEasyPay ? BillingKeyMethod.EASY_PAY : undefined,
+            customer: {
+              customerId: customerId.trim(), // customer 객체 안에 customerId 포함
+              fullName: buyerName,
+              email: buyerEmail,
+              phoneNumber: buyerPhone,
+              address: {
+                addressLine1: shippingAddress.trim() || fullShippingAddress,
+                addressLine2: shippingAddressDetail.trim() || ''
+              }
+            },
+            customData: {
+              productName: mainProductName || 'Fund 자동결제 등록'
+            }
+          }
+          
+          console.log('빌링키 발급 요청:', billingKeyRequest)
+          
+          const billingKeyResponse = await requestIssueBillingKey(billingKeyRequest)
+
+          console.log('빌링키 발급 성공:', billingKeyResponse)
+
+          const resolvedBillingKey = billingKeyResponse.billingKey
+
+          if (!resolvedBillingKey) {
+            console.error('PortOne billing response missing billingKey:', billingKeyResponse)
             setIsPaying(false)
             setError('발급된 빌링키 정보를 확인할 수 없습니다. 다시 시도해주세요.')
             return
           }
 
           try {
-            const schedulePaymentId =
-              rsp.payment_id ?? rsp.merchant_uid ?? billingMerchantUid
+            const schedulePaymentId = billingKeyResponse.paymentId ?? `fund-${user.id}-${Date.now()}`
 
             const response = await fetch('/api/shop/purchase', {
               method: 'POST',
@@ -359,9 +404,9 @@ export default function CheckoutPage() {
                 phone: buyerPhone.trim(),
                 notes: orderMemo.trim() || undefined,
                 billing: {
-                  billingKey: rsp.billing_key,
+                  billingKey: resolvedBillingKey,
                   paymentId: schedulePaymentId,
-                  channelKey: channelKey ?? null
+                  channelKey: billingChannelKey ?? channelKey ?? null
                 }
               })
             })
@@ -391,7 +436,26 @@ export default function CheckoutPage() {
           } finally {
             setIsPaying(false)
           }
-        })
+        } catch (billingError: any) {
+          console.error('PortOne billing key issuance failed:', billingError)
+          console.error('Error details:', {
+            message: billingError?.message,
+            code: billingError?.code,
+            data: billingError?.data,
+            storeId,
+            channelKey: billingChannelKey,
+            resolvedBillingPgId
+          })
+          setIsPaying(false)
+          const errorMessage = billingError?.message || '자동결제 등록이 취소되거나 실패했습니다.'
+          setError(
+            `결제 등록 실패: ${errorMessage}\n\n` +
+            `Store ID: ${storeId}\n` +
+            `Channel Key: ${billingChannelKey}\n` +
+            `PG ID: ${resolvedBillingPgId}\n\n` +
+            `포트원 관리자 콘솔에서 채널 설정을 확인해주세요.`
+          )
+        }
 
         return
       }

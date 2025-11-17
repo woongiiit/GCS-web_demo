@@ -28,6 +28,16 @@ export async function GET(
       )
     }
 
+    // 리뷰 통계 조회
+    const reviewStats = await prisma.productReview.aggregate({
+      where: { productId },
+      _avg: { rating: true },
+      _count: { rating: true }
+    })
+
+    const averageRating = reviewStats._avg.rating || 0
+    const reviewCount = reviewStats._count.rating || 0
+
     // 같은 카테고리의 관련 상품 조회 (최대 4개)
     const relatedProducts = await prisma.product.findMany({
       where: {
@@ -58,7 +68,11 @@ export async function GET(
       { 
         success: true, 
         data: {
-          product,
+          product: {
+            ...product,
+            averageRating: Math.round(averageRating * 10) / 10,
+            reviewCount
+          },
           relatedProducts,
           liked
         }
