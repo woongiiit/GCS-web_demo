@@ -367,6 +367,13 @@ export default function CheckoutPage() {
           
           const billingKeyResponse = await requestIssueBillingKey(billingKeyRequest)
 
+          if (!billingKeyResponse) {
+            console.error('빌링키 발급 실패: 응답이 없습니다.')
+            setIsPaying(false)
+            setError('빌링키 발급에 실패했습니다. 다시 시도해주세요.')
+            return
+          }
+
           console.log('빌링키 발급 성공:', billingKeyResponse)
 
           const resolvedBillingKey = billingKeyResponse.billingKey
@@ -379,7 +386,8 @@ export default function CheckoutPage() {
           }
 
           try {
-            const schedulePaymentId = billingKeyResponse.paymentId ?? `fund-${user.id}-${Date.now()}`
+            // 빌링키 발급 응답에는 paymentId가 없으므로 직접 생성
+            const schedulePaymentId = `fund-${user.id}-${Date.now()}`
 
             const response = await fetch('/api/shop/purchase', {
               method: 'POST',

@@ -383,7 +383,7 @@ export async function POST(request: Request) {
           billingInfo = await getPortOneBillingKeyInfo(resolvedBillingKey)
           console.log('Fetched PortOne billing info:', {
             billingKey: billingInfo.billingKey,
-            channels: billingInfo.channels?.map((ch) => ({
+            channels: billingInfo.channels?.map((ch: any) => ({
               key: ch.key,
               provider: ch.pgProvider
             })),
@@ -444,6 +444,10 @@ export async function POST(request: Request) {
           console.warn('preRegisterPayment 실패했지만 계속 진행합니다.')
         }
 
+        if (!billingCustomerKey) {
+          throw new Error('빌링키가 없습니다.')
+        }
+
         let scheduleResponse
         try {
           scheduleResponse = await createPortOnePaymentSchedule({
@@ -483,7 +487,7 @@ export async function POST(request: Request) {
         await prisma.billingCustomer.upsert({
           where: { userId: user.id },
           update: {
-            billingKey: billingCustomerKey,
+            billingKey: billingCustomerKey, // null 체크는 위에서 수행됨
             channelKey: billingChannelKey ?? undefined,
             pgProvider: billingInfo?.channels?.[0]?.pgProvider ?? null,
             issuedAt: billingInfo?.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
@@ -491,7 +495,7 @@ export async function POST(request: Request) {
           },
           create: {
             userId: user.id,
-            billingKey: billingCustomerKey,
+            billingKey: billingCustomerKey, // null 체크는 위에서 수행됨
             channelKey: billingChannelKey ?? undefined,
             pgProvider: billingInfo?.channels?.[0]?.pgProvider ?? null,
             issuedAt: billingInfo?.issuedAt ? new Date(billingInfo.issuedAt) : new Date(),
@@ -657,8 +661,8 @@ export async function POST(request: Request) {
         data: {
           orderId: order.id,
           userId: user.id,
-          billingKey: billingCustomerKey,
-          paymentId: billingPaymentId,
+          billingKey: billingCustomerKey!, // null 체크는 위에서 수행됨
+          paymentId: billingPaymentId!,
           scheduleId: scheduleSummary?.id,
           channelKey: billingChannelKey ?? null,
           amount: totalAmount,
