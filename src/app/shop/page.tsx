@@ -20,8 +20,8 @@ export default function ShopPage() {
   const fetchProducts = async () => {
     setIsLoading(true)
     try {
-      // Best Item 조회
-      const bestRes = await fetch('/api/shop/products?sort=likes&limit=3', { cache: 'no-store' })
+      // Best Item 조회 - activeTab에 따라 타입 필터링
+      const bestRes = await fetch(`/api/shop/products?sort=likes&limit=3&type=${encodeURIComponent(activeTab.toLowerCase())}`, { cache: 'no-store' })
       const bestData = await bestRes.json()
       if (bestData.success) {
         setBestProducts(Array.isArray(bestData.data) ? bestData.data.slice(0, 3) : [])
