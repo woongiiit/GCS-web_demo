@@ -63,6 +63,20 @@ export default function ShopPage() {
     return value.toLocaleString()
   }
 
+  // Fund 상품이 현재 진행 중인지 확인
+  const isFundInNow = (product: any) => {
+    if (product.type !== 'FUND') return true // Fund 타입이 아니면 항상 포함
+    
+    if (!product.fundingDeadline) return true // 마감일이 없으면 현재 진행 중으로 간주
+    
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const deadline = new Date(product.fundingDeadline)
+    deadline.setHours(0, 0, 0, 0)
+    
+    return deadline >= now
+  }
+
   // Fund 상품을 마감일 기준으로 분리
   const separateFundProducts = (products: any[]) => {
     const now = new Date()
@@ -180,9 +194,15 @@ export default function ShopPage() {
                       </div>
                     ))}
                   </div>
-                ) : bestProducts.length > 0 ? (
-                  <div className="flex gap-6 min-w-max">
-                    {bestProducts.map((product) => {
+                ) : (() => {
+                  // Fund 탭일 때는 마감일이 지난 항목 제외
+                  const filteredBestProducts = activeTab === 'FUND' 
+                    ? bestProducts.filter(isFundInNow).slice(0, 3)
+                    : bestProducts.slice(0, 3)
+                  
+                  return filteredBestProducts.length > 0 ? (
+                    <div className="flex gap-6 min-w-max">
+                      {filteredBestProducts.map((product) => {
                       const typeMeta = getTypeMeta(product.type)
                       const fundingProgress = calculateFundingProgress(product)
                       return (
@@ -231,12 +251,13 @@ export default function ShopPage() {
                         </Link>
                       )
                     })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Best Item이 없습니다.
-                  </div>
-                )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      Best Item이 없습니다.
+                    </div>
+                  )
+                })()}
               </div>
               
               {/* 하단 보더 */}
