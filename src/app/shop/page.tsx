@@ -12,19 +12,56 @@ export default function ShopPage() {
   const [bestProducts, setBestProducts] = useState<any[]>([])
   const [typeProducts, setTypeProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  // Fund 상품이 현재 진행 중인지 확인
+  const isFundInNow = (product: any) => {
+    if (product.type !== 'FUND') return true // Fund 타입이 아니면 항상 포함
+    
+    if (!product.fundingDeadline) return true // 마감일이 없으면 현재 진행 중으로 간주
+    
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const deadline = new Date(product.fundingDeadline)
+    deadline.setHours(0, 0, 0, 0)
+    
+    return deadline >= now
+  }
 
   useEffect(() => {
     fetchProducts()
+    setCurrentSlide(0) // 탭 변경 시 슬라이드 초기화
   }, [activeTab])
+
+  // 자동 슬라이드
+  useEffect(() => {
+    const filteredBestProducts = activeTab === 'FUND' 
+      ? bestProducts.filter(isFundInNow)
+      : bestProducts
+    
+    if (filteredBestProducts.length <= 5) return // 5개 이하면 슬라이드 불필요
+    
+    const maxSlide = Math.max(0, Math.ceil((filteredBestProducts.length - 5) / 2))
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => {
+        if (prev >= maxSlide) {
+          return 0 // 처음으로 돌아가기
+        }
+        return prev + 1
+      })
+    }, 3000) // 3초마다 슬라이드
+
+    return () => clearInterval(interval)
+  }, [bestProducts, activeTab])
 
   const fetchProducts = async () => {
     setIsLoading(true)
     try {
-      // Best Item 조회 - activeTab에 따라 타입 필터링
-      const bestRes = await fetch(`/api/shop/products?sort=likes&limit=3&type=${encodeURIComponent(activeTab.toLowerCase())}`, { cache: 'no-store' })
+      // Best Item 조회 - activeTab에 따라 타입 필터링, 10개 조회
+      const bestRes = await fetch(`/api/shop/products?sort=likes&limit=10&type=${encodeURIComponent(activeTab.toLowerCase())}`, { cache: 'no-store' })
       const bestData = await bestRes.json()
       if (bestData.success) {
-        setBestProducts(Array.isArray(bestData.data) ? bestData.data.slice(0, 3) : [])
+        setBestProducts(Array.isArray(bestData.data) ? bestData.data.slice(0, 10) : [])
       }
 
       // 유형별 상품 조회
@@ -61,20 +98,6 @@ export default function ShopPage() {
       return '0'
     }
     return value.toLocaleString()
-  }
-
-  // Fund 상품이 현재 진행 중인지 확인
-  const isFundInNow = (product: any) => {
-    if (product.type !== 'FUND') return true // Fund 타입이 아니면 항상 포함
-    
-    if (!product.fundingDeadline) return true // 마감일이 없으면 현재 진행 중으로 간주
-    
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
-    const deadline = new Date(product.fundingDeadline)
-    deadline.setHours(0, 0, 0, 0)
-    
-    return deadline >= now
   }
 
   // Fund 상품을 마감일 기준으로 분리
@@ -184,12 +207,19 @@ export default function ShopPage() {
                 <div className="w-16 h-1 bg-black mt-1"></div>
               </div>
               
-              {/* Best Item 상품 가로 스크롤 */}
-              <div className="relative z-10 mt-8 overflow-x-auto pb-4 scrollbar-hide">
+              {/* Best Item 상품 슬라이드 캐러셀 */}
+              <div className="relative z-10 mt-8 overflow-hidden">
                 {isLoading ? (
-                  <div className="flex gap-6 min-w-max">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-white w-[200px] flex-shrink-0">
+                  <div className="flex gap-6">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div 
+                        key={i} 
+                        className="bg-white flex-shrink-0"
+                        style={{ 
+                          width: 'calc((100% - 6rem) / 5)',
+                          minWidth: '200px'
+                        }}
+                      >
                         <div className="w-full aspect-square bg-gray-100 rounded mb-3 animate-pulse"></div>
                       </div>
                     ))}
@@ -197,64 +227,88 @@ export default function ShopPage() {
                 ) : (() => {
                   // Fund 탭일 때는 마감일이 지난 항목 제외
                   const filteredBestProducts = activeTab === 'FUND' 
-                    ? bestProducts.filter(isFundInNow).slice(0, 3)
-                    : bestProducts.slice(0, 3)
+                    ? bestProducts.filter(isFundInNow).slice(0, 10)
+                    : bestProducts.slice(0, 10)
                   
-                  return filteredBestProducts.length > 0 ? (
-                    <div className="flex gap-6 min-w-max">
-                      {filteredBestProducts.map((product) => {
-                      const typeMeta = getTypeMeta(product.type)
-                      const fundingProgress = calculateFundingProgress(product)
-                      return (
-                        <Link key={product.id} href={`/shop/${product.id}`} className="bg-white w-[200px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
-                          <div className="w-full aspect-square bg-gray-100 rounded mb-3 overflow-hidden relative">
-                            {typeMeta && (
-                              <span className="absolute top-2 left-2 bg-black/70 text-white text-[10px] uppercase tracking-wide px-2 py-1 rounded-full">
-                                {typeMeta.name}
-                              </span>
-                            )}
-                            {product.images && product.images[0] ? (
-                              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
-                                e.currentTarget.src = '/images/placeholder-product.jpg'
-                              }} />
-                            ) : (
-                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                  if (filteredBestProducts.length === 0) {
+                    return (
+                      <div className="text-center py-8 text-gray-500">
+                        Best Item이 없습니다.
+                      </div>
+                    )
+                  }
+
+                  // 슬라이드 이동 계산: 2개씩 이동
+                  // 각 아이템 너비: calc((100% - 6rem) / 5)
+                  // gap: 1.5rem (24px)
+                  // 2개 이동 거리: 2 * (아이템 너비 + gap) = 2 * ((100% - 6rem) / 5 + 1.5rem)
+                  
+                  return (
+                    <div className="relative overflow-hidden">
+                      <div 
+                        className="flex gap-6 transition-transform duration-500 ease-in-out"
+                        style={{ 
+                          transform: `translateX(calc(-${currentSlide * 2} * ((100% - 6rem) / 5 + 1.5rem)))`,
+                        }}
+                      >
+                        {filteredBestProducts.map((product) => {
+                          const typeMeta = getTypeMeta(product.type)
+                          const fundingProgress = calculateFundingProgress(product)
+                          return (
+                            <Link 
+                              key={product.id} 
+                              href={`/shop/${product.id}`} 
+                              className="bg-white flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                              style={{ 
+                                width: 'calc((100% - 6rem) / 5)',
+                                minWidth: '200px'
+                              }}
+                            >
+                              <div className="w-full aspect-square bg-gray-100 rounded mb-3 overflow-hidden relative">
+                                {typeMeta && (
+                                  <span className="absolute top-2 left-2 bg-black/70 text-white text-[10px] uppercase tracking-wide px-2 py-1 rounded-full">
+                                    {typeMeta.name}
+                                  </span>
+                                )}
+                                {product.images && product.images[0] ? (
+                                  <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
+                                    e.currentTarget.src = '/images/placeholder-product.jpg'
+                                  }} />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                    <div className="w-3/4 h-3/4 bg-gray-300"></div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
-                          <p className="text-gray-500 text-xs line-clamp-1">{product.brand || 'GCS'}</p>
-                          <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
-                            <span className="text-black font-semibold text-sm">{product.price.toLocaleString()}원</span>
-                            <span className="flex items-center gap-1">
-                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
-                              </svg>
-                              <span>{product.likeCount ?? 0}</span>
-                            </span>
-                          </div>
-                          {typeof fundingProgress === 'number' && (
-                            <div className="mt-2">
-                              <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1 uppercase">
-                                <span>Funding</span>
-                                <span>{fundingProgress}%</span>
+                              <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
+                              <p className="text-gray-500 text-xs line-clamp-1">{product.brand || 'GCS'}</p>
+                              <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
+                                <span className="text-black font-semibold text-sm">{product.price.toLocaleString()}원</span>
+                                <span className="flex items-center gap-1">
+                                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
+                                  </svg>
+                                  <span>{product.likeCount ?? 0}</span>
+                                </span>
                               </div>
-                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-black transition-all"
-                                  style={{ width: `${Math.min(fundingProgress, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </Link>
-                      )
-                    })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      Best Item이 없습니다.
+                              {typeof fundingProgress === 'number' && (
+                                <div className="mt-2">
+                                  <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1 uppercase">
+                                    <span>Funding</span>
+                                    <span>{fundingProgress}%</span>
+                                  </div>
+                                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-black transition-all"
+                                      style={{ width: `${Math.min(fundingProgress, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </Link>
+                          )
+                        })}
+                      </div>
                     </div>
                   )
                 })()}
