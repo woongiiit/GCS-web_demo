@@ -184,6 +184,48 @@ export default function ProductDetailPage() {
     !!product &&
     permissions.canEditProduct(user.role, user.isSeller, product.authorId, user.id)
 
+  const isAdmin = user?.role === 'ADMIN'
+
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteProduct = async () => {
+    if (!isAdmin) {
+      alert('관리자 권한이 필요합니다.')
+      return
+    }
+
+    // 첫 번째 확인
+    const confirmed = window.confirm('정말로 해당 상품을 삭제하시겠습니까?')
+    if (!confirmed) return
+
+    // 두 번째 확인
+    const productName = product?.name || '이'
+    const deleteConfirmed = window.confirm(`정말로 ${productName} 상품을 삭제합니다.`)
+    if (!deleteConfirmed) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/shop/products/${productId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        alert('상품이 성공적으로 삭제되었습니다.')
+        router.push('/shop')
+      } else {
+        alert(data.error || '상품 삭제 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('상품 삭제 오류:', error)
+      alert('상품 삭제 중 오류가 발생했습니다.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const productOptions = useMemo(() => normalizeProductOptions(product), [product])
 
   useEffect(() => {
@@ -710,6 +752,17 @@ export default function ProductDetailPage() {
                 >
                   상품 수정
                 </Link>
+              </div>
+            )}
+            {isAdmin && (
+              <div className="mb-6">
+                <button
+                  onClick={handleDeleteProduct}
+                  disabled={isDeleting}
+                  className="inline-flex items-center justify-center w-full border border-red-500 text-red-500 py-3 px-6 rounded hover:bg-red-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? '삭제 중...' : '상품 삭제하기'}
+                </button>
               </div>
             )}
           </div>

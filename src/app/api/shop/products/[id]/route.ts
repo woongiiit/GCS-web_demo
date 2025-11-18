@@ -407,3 +407,74 @@ export async function PATCH(
   }
 }
 
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await requireAuth()
+    const productId = params.id
+
+    // ADMIN 권한 확인
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: '관리자 권한이 필요합니다.' },
+        { status: 403 }
+      )
+    }
+
+    // 상품 존재 여부 확인
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId },
+    })
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { error: '상품을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    // Soft delete: isActive를 false로 설정
+    // 연결된 데이터(orderItems, productDetails, likes, cartItems, reviews)는 유지
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        isActive: false,
+      },
+    })
+
+    // 캐시 무효화
+    invalidateCache('products:.*')
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: '상품이 성공적으로 삭제되었습니다.',
+      },
+      { status: 200 }
+    )
+  } catch (error: any) {
+    console.error('상품 삭제 오류:', error)
+
+    if (error.message === '로그인이 필요합니다') {
+      return NextResponse.json(
+        { error: '로그인이 필요합니다.' },
+        { status: 401 }
+      )
+    }
+
+    if (error.message === '권한이 부족합니다') {
+      return NextResponse.json(
+        { error: '관리자 권한이 필요합니다.' },
+        { status: 403 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: '서버 오류가 발생했습니다.' },
+      { status: 500 }
+    )
+  }
+}
+
