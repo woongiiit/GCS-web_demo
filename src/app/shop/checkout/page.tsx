@@ -576,6 +576,7 @@ export default function CheckoutPage() {
 
   const handleAddressSearch = useCallback(async () => {
     if (typeof window === 'undefined') return
+    if (isAddressSearchLoading) return // 이미 검색 중이면 중복 실행 방지
     try {
       setIsAddressSearchLoading(true)
       const daum = await loadDaumPostcode()
@@ -614,7 +615,7 @@ export default function CheckoutPage() {
       alert('주소 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       setIsAddressSearchLoading(false)
     }
-  }, [])
+  }, [isAddressSearchLoading])
 
   const getCartPath = useCallback(() => {
     return '/mypage?tab=cart'

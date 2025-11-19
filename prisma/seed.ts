@@ -416,17 +416,189 @@ async function main() {
   console.log('ℹ️  뉴스 데이터: 빈 상태 (관리자/학생회원이 직접 등록)')
 
   console.log('✅ 사용자 데이터 생성 완료')
-  console.log('👤 관리자 계정: gcsweb01234@gcsweb.kr / GCS_Admin_2024!')
-  console.log('👤 일반회원 (구매만 가능): general@gcs-demo.com / GCS_User_2024!')
-  console.log('👤 학생회원 (구매+글쓰기): student@gcs-demo.com / GCS_User_2024!')
+
+  // 챗봇 옵션 데이터 생성
+  console.log('🤖 챗봇 옵션 데이터 생성 시작...')
+
+  // 첫 번째 레벨 옵션들 (메인 메뉴)
+  const mainOptions = await Promise.all([
+    prisma.chatBotOption.upsert({
+      where: { id: 'main-about' },
+      update: {},
+      create: {
+        id: 'main-about',
+        title: 'GCS:Web 소개',
+        content: 'GCS:Web에 대해 무엇이 궁금하신가요?',
+        category: null, // 메인 메뉴는 category가 null
+        order: 1,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'main-products' },
+      update: {},
+      create: {
+        id: 'main-products',
+        title: '상품 문의',
+        content: '상품에 대해 무엇이 궁금하신가요?',
+        category: null,
+        order: 2,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'main-support' },
+      update: {},
+      create: {
+        id: 'main-support',
+        title: '고객 지원',
+        content: '고객 지원 서비스에 대해 무엇이 궁금하신가요?',
+        category: null,
+        order: 3,
+        isActive: true
+      }
+    })
+  ])
+
+  // 두 번째 레벨 옵션들 - GCS:Web 소개 관련
+  const aboutOptions = await Promise.all([
+    prisma.chatBotOption.upsert({
+      where: { id: 'about-program' },
+      update: {},
+      create: {
+        id: 'about-program',
+        title: '프로그램 소개',
+        content: 'GCS:Web은 동국대학교 경영대학의 그래픽커뮤니케이션사이언스 연계전공입니다. 그래픽, 경영, 공학 분야를 융합한 실무 중심의 커리큘럼을 제공합니다.',
+        category: 'main-about', // 부모 옵션 ID
+        order: 1,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'about-professors' },
+      update: {},
+      create: {
+        id: 'about-professors',
+        title: '교수진 안내',
+        content: 'GCS:Web은 그래픽커뮤니케이션, 경영, 공학 분야의 전문 교수진으로 구성되어 있습니다. About GCS 페이지에서 교수진의 상세 정보를 확인하실 수 있습니다.',
+        category: 'main-about',
+        order: 2,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'about-courses' },
+      update: {},
+      create: {
+        id: 'about-courses',
+        title: '개설 과목',
+        content: 'GCS:Web은 예술(Art), 경영(Business), 공학(Engineering) 세 가지 카테고리의 과목을 제공합니다. About GCS 페이지에서 상세한 과목 정보를 확인하실 수 있습니다.',
+        category: 'main-about',
+        order: 3,
+        isActive: true
+      }
+    })
+  ])
+
+  // 두 번째 레벨 옵션들 - 상품 문의 관련
+  const productOptions = await Promise.all([
+    prisma.chatBotOption.upsert({
+      where: { id: 'product-order' },
+      update: {},
+      create: {
+        id: 'product-order',
+        title: '주문/결제 방법',
+        content: '상품 주문은 Shop 페이지에서 가능합니다. 원하는 상품을 선택하고 장바구니에 담거나 바로 구매할 수 있습니다. 결제는 신용카드, 계좌이체 등 다양한 방법을 지원합니다.',
+        category: 'main-products',
+        order: 1,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'product-shipping' },
+      update: {},
+      create: {
+        id: 'product-shipping',
+        title: '배송 안내',
+        content: '일반 주문 상품은 결제 완료 후 3-5일 내 배송됩니다. 펀딩 상품은 목표 달성 후 제작 기간을 거쳐 배송됩니다. 배송비는 상품 상세 페이지에서 확인하실 수 있습니다.',
+        category: 'main-products',
+        order: 2,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'product-refund' },
+      update: {},
+      create: {
+        id: 'product-refund',
+        title: '반품/교환',
+        content: '상품 수령 후 7일 이내 반품/교환이 가능합니다. 단, 펀딩 상품의 경우 펀딩 특성상 반품이 제한될 수 있습니다. 자세한 내용은 상품 상세 정보 고시를 참고해주세요.',
+        category: 'main-products',
+        order: 3,
+        isActive: true
+      }
+    })
+  ])
+
+  // 두 번째 레벨 옵션들 - 고객 지원 관련
+  const supportOptions = await Promise.all([
+    prisma.chatBotOption.upsert({
+      where: { id: 'support-contact' },
+      update: {},
+      create: {
+        id: 'support-contact',
+        title: '연락처 정보',
+        content: '주소: 서울 필동로 1길 30, 동국대학교\n대표자: 김봉구\n회사명: 제작담\n사업자번호: 000-00-00000\n고객센터 이메일 문의를 통해 더 자세한 도움을 받으실 수 있습니다.',
+        category: 'main-support',
+        order: 1,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'support-hours' },
+      update: {},
+      create: {
+        id: 'support-hours',
+        title: '운영 시간',
+        content: '고객센터 운영 시간: 평일 09:00 - 18:00\n주말 및 공휴일은 휴무입니다. 이메일 문의는 24시간 접수 가능하며, 평일 근무 시간에 순차적으로 답변드립니다.',
+        category: 'main-support',
+        order: 2,
+        isActive: true
+      }
+    }),
+    prisma.chatBotOption.upsert({
+      where: { id: 'support-faq' },
+      update: {},
+      create: {
+        id: 'support-faq',
+        title: '자주 묻는 질문',
+        content: '자주 묻는 질문은 다음과 같습니다:\n1. 회원가입은 어떻게 하나요?\n2. 상품은 어떻게 구매하나요?\n3. 펀딩 상품은 언제 배송되나요?\n\n더 자세한 내용은 각 카테고리를 선택해주세요.',
+        category: 'main-support',
+        order: 3,
+        isActive: true
+      }
+    })
+  ])
+
+  console.log('✅ 챗봇 옵션 데이터 생성 완료')
+  console.log(`   - 메인 메뉴: ${mainOptions.length}개`)
+  console.log(`   - GCS:Web 소개 하위 메뉴: ${aboutOptions.length}개`)
+  console.log(`   - 상품 문의 하위 메뉴: ${productOptions.length}개`)
+  console.log(`   - 고객 지원 하위 메뉴: ${supportOptions.length}개`)
 
   console.log('📊 생성된 데이터 요약:')
   console.log(`   - 전공: ${majors.length}개`)
   console.log(`   - 교수진: ${professors.length}명`)
   console.log(`   - 과목: ${subjects.length}개`)
+  console.log(`   - 챗봇 옵션: ${mainOptions.length + aboutOptions.length + productOptions.length + supportOptions.length}개`)
   console.log(`   - 상품: 0개 (빈 상태)`)
   console.log(`   - 프로젝트: 0개 (빈 상태)`)
   console.log(`   - 뉴스: 0개 (빈 상태)`)
+  
+  console.log('\n👤 계정 정보:')
+  console.log('   - 관리자: gcsweb01234@gcsweb.kr / GCS_Admin_2024!')
+  console.log('   - 일반회원 (구매만 가능): general@gcs-demo.com / GCS_User_2024!')
+  console.log('   - 학생회원 (구매+글쓰기): student@gcs-demo.com / GCS_User_2024!')
 
   console.log('🎉 데이터베이스 시드 작업 완료!')
 }

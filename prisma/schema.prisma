@@ -52,6 +52,7 @@ model User {
   billingCustomer     BillingCustomer?
   billingSchedules    BillingSchedule[]
   productReviews      ProductReview[]
+  chatbotHistories    ChatBotHistory[]
 
   @@index([role])
   @@index([isSeller])
@@ -623,4 +624,40 @@ enum ContentSection {
   MAJOR_INTRO // 전공 소개
   SUBJECTS // 개설 과목
   PROFESSORS // 교수진
+}
+
+// 챗봇 옵션 모델 (정보 제공용)
+model ChatBotOption {
+  id          String   @id @default(cuid())
+  title       String // 옵션 제목
+  content     String // 옵션 내용/응답
+  category    String? // 카테고리 (선택사항)
+  order       Int      @default(0) // 표시 순서
+  isActive    Boolean  @default(true) // 활성화 여부
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, order])
+  histories   ChatBotHistory[]
+
+  @@index([category, isActive])
+  @@map("chatbot_options")
+}
+
+// 챗봇 사용 기록 모델
+model ChatBotHistory {
+  id          String   @id @default(cuid())
+  userId      String? // 사용자 ID (비로그인 사용자는 null)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  optionId    String? // 선택한 옵션 ID
+  option      ChatBotOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+  question    String? // 사용자가 입력한 질문 (선택사항)
+  response    String? // 챗봇 응답
+  metadata    Json? // 추가 메타데이터
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([optionId])
+  @@index([createdAt])
+  @@map("chatbot_histories")
 }
