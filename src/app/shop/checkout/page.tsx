@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -136,6 +136,7 @@ export default function CheckoutPage() {
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null)
   const [isPaymentConfigLoading, setIsPaymentConfigLoading] = useState(true)
   const [isAddressSearchLoading, setIsAddressSearchLoading] = useState(false)
+  const justSelectedAddressRef = useRef(false)
 
   useEffect(() => {
     if (user) {
@@ -579,6 +580,7 @@ export default function CheckoutPage() {
   const handleAddressSearch = useCallback(async () => {
     if (typeof window === 'undefined') return
     if (isAddressSearchLoading) return // 이미 검색 중이면 중복 실행 방지
+    if (justSelectedAddressRef.current) return // 주소 선택 직후에는 중복 실행 방지
     try {
       setIsAddressSearchLoading(true)
       const daum = await loadDaumPostcode()
@@ -604,6 +606,12 @@ export default function CheckoutPage() {
             const formatted = `[${data.zonecode}] ${address}`
             setShippingAddress(formatted.trim())
             setShippingAddressDetail('')
+            // 주소 선택 직후 onFocus 재트리거 방지를 위한 플래그 설정
+            justSelectedAddressRef.current = true
+            // 300ms 후 플래그 리셋 (모달이 닫히고 포커스가 안정화될 시간 확보)
+            setTimeout(() => {
+              justSelectedAddressRef.current = false
+            }, 300)
           } finally {
             setIsAddressSearchLoading(false)
           }
