@@ -413,6 +413,8 @@ export default function CheckoutPage() {
                     : undefined,
                 shippingAddress: fullShippingAddress,
                 phone: buyerPhone.trim(),
+                buyerName: buyerName.trim(),
+                buyerEmail: buyerEmail.trim(),
                 notes: orderMemo.trim() || undefined,
                 billing: {
                   billingKey: resolvedBillingKey,

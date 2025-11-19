@@ -60,6 +60,8 @@ export type AdminOrder = {
   totalAmount: number
   shippingAddress: string
   phone: string
+  buyerName?: string | null
+  buyerEmail?: string | null
   notes?: string | null
   createdAt: string
   user: {
@@ -259,11 +261,15 @@ export function AdminOrdersTab() {
                   <p className="text-base font-semibold text-black">{order.id}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">주문자</p>
+                  <p className="text-sm text-gray-500">주문자 (계정)</p>
                   <p className="text-base font-semibold text-black">
                     {order.user.name}{' '}
                     <span className="text-sm font-normal text-gray-500">({order.user.email})</span>
                   </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">받는 분</p>
+                  <p className="text-base font-semibold text-black">{order.buyerName || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">연락처</p>
@@ -289,8 +295,20 @@ export function AdminOrdersTab() {
 
               <div className="px-4 py-4 space-y-4">
                 <div>
+                  <p className="text-sm font-medium text-gray-700">받는 분</p>
+                  <p className="text-sm text-gray-600 mt-1">{order.buyerName || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">이메일</p>
+                  <p className="text-sm text-gray-600 mt-1">{order.buyerEmail || '-'}</p>
+                </div>
+                <div>
                   <p className="text-sm font-medium text-gray-700">배송지</p>
                   <p className="text-sm text-gray-600 mt-1">{order.shippingAddress}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">연락처</p>
+                  <p className="text-sm text-gray-600 mt-1">{order.phone}</p>
                 </div>
                 {order.notes && (
                   <div>

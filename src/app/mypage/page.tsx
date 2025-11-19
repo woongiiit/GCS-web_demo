@@ -886,6 +886,8 @@ type MyOrder = {
   totalAmount: number
   shippingAddress: string
   phone: string
+  buyerName?: string | null
+  buyerEmail?: string | null
   notes?: string | null
   createdAt: string
   orderItems: MyOrderItem[]
@@ -918,6 +920,8 @@ type ManagedOrder = {
   totalAmount: number
   shippingAddress: string
   phone: string
+  buyerName?: string | null
+  buyerEmail?: string | null
   notes?: string | null
   createdAt: string
   user: {
@@ -1062,6 +1066,14 @@ function MyOrdersTab() {
             </div>
 
             <div className="px-4 py-4 space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-700">받는 분</p>
+                <p className="text-sm text-gray-600 mt-1">{order.buyerName || '-'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">이메일</p>
+                <p className="text-sm text-gray-600 mt-1">{order.buyerEmail || '-'}</p>
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-700">배송지</p>
                 <p className="text-sm text-gray-600 mt-1">{order.shippingAddress}</p>
@@ -1337,19 +1349,32 @@ function AllOrdersTab() {
                 </span>
               </div>
               <div>
-                <p className="text-sm text-gray-500">구매자</p>
+                <p className="text-sm text-gray-500">주문자 (계정)</p>
                 <p className="text-base font-semibold text-black">
                   {order.user?.name ?? '정보 없음'}
                 </p>
                 <p className="text-xs text-gray-500">
                   {order.user?.email ?? '이메일 없음'}
-                  {order.user?.phone ? ` · ${order.user.phone}` : ''}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">받는 분</p>
+                <p className="text-base font-semibold text-black">
+                  {order.buyerName ?? '-'}
                 </p>
               </div>
             </div>
 
             <div className="space-y-4 px-4 py-4">
               <div className="flex flex-col gap-2 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">받는 분</p>
+                  <p className="text-sm font-medium text-black">{order.buyerName || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">이메일</p>
+                  <p className="text-sm font-medium text-black">{order.buyerEmail || '-'}</p>
+                </div>
                 <div>
                   <p className="text-sm text-gray-500">배송지</p>
                   <p className="text-sm font-medium text-black">{order.shippingAddress}</p>

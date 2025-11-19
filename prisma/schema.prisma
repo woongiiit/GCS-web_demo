@@ -229,6 +229,8 @@ model Order {
   totalAmount       Int // 총 금액
   shippingAddress   String
   phone             String
+  buyerName         String? // 주문 시 입력한 받는 분 성함
+  buyerEmail        String? // 주문 시 입력한 이메일
   notes             String?
   paymentInfo       Json?
   paymentVerifiedAt DateTime?

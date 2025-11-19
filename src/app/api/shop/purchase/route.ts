@@ -53,6 +53,8 @@ export async function POST(request: Request) {
       cartItemIds,
       shippingAddress,
       phone,
+      buyerName,
+      buyerEmail,
       notes,
       payment,
       billing
@@ -65,6 +67,8 @@ export async function POST(request: Request) {
       cartItemIds?: string[]
       shippingAddress?: string
       phone?: string
+      buyerName?: string
+      buyerEmail?: string
       notes?: string
       payment?: {
         paymentId?: string
@@ -592,6 +596,10 @@ export async function POST(request: Request) {
     }
 
     // 주문 생성
+    // buyerName과 buyerEmail은 payment 객체에서 우선 가져오고, 없으면 body에서 직접 가져옴
+    const resolvedBuyerName = payment?.buyerName ?? buyerName ?? null
+    const resolvedBuyerEmail = payment?.buyerEmail ?? buyerEmail ?? null
+
     const order = await prisma.order.create({
       data: {
         userId: user.id,
@@ -599,6 +607,8 @@ export async function POST(request: Request) {
         totalAmount,
         shippingAddress,
         phone,
+        buyerName: resolvedBuyerName,
+        buyerEmail: resolvedBuyerEmail,
         notes: notes || null,
         paymentInfo: paymentInfo ?? undefined,
         paymentVerifiedAt: paymentInfo ? new Date() : null,

@@ -14,6 +14,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:setup": "node scripts/setup-db.js",
+    "db:add-buyer-fields": "node scripts/add-buyer-fields.js",
     "railway:setup": "prisma db push && npm run db:setup",
     "deploy:setup": "prisma db push && npm run db:seed",
     "railway:db:setup": "node scripts/railway-setup.js"
