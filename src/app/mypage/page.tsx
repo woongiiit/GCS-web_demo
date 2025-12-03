@@ -19,7 +19,7 @@ function getPartnerUpStatusLabel(status: string): string {
   const statusLabels: Record<string, string> = {
     ORDERED: '상품 주문',
     CONFIRMED: '주문 확인',
-    PRODUCTION_STARTED: '제작 착수',
+    PRODUCTION_STARTED: '상품 준비중',
     SHIPPED_OUT: '출고',
     SHIPPING: '배송중',
     ARRIVED: '도착',
@@ -34,7 +34,7 @@ function getFundStatusLabel(status: string): string {
     ORDERED: '상품 주문',
     BILLING_COMPLETED: '빌링키 결제 완료',
     CONFIRMED: '주문 확인',
-    PRODUCTION_STARTED: '제작 착수',
+    PRODUCTION_STARTED: '상품 준비중',
     SHIPPED_OUT: '출고',
     SHIPPING: '배송중',
     ARRIVED: '도착',
@@ -928,6 +928,10 @@ type MyOrder = {
   fundStatus?: string | null
   fundStatusUpdatedAt?: string | null
   fundStatusNote?: string | null
+  billingExecutedAt?: string | null
+  fundStatus?: string | null
+  fundStatusUpdatedAt?: string | null
+  fundStatusNote?: string | null
   createdAt: string
   orderItems: MyOrderItem[]
   paymentRecords: Array<{
@@ -985,6 +989,7 @@ function MyOrdersTab() {
   const [orders, setOrders] = useState<MyOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null)
 
   const formatCurrency = useCallback((value: number) => `${value.toLocaleString()}원`, [])
 
@@ -1047,6 +1052,66 @@ function MyOrdersTab() {
   useEffect(() => {
     fetchMyOrders()
   }, [fetchMyOrders])
+
+  const handleCancelOrder = useCallback(async (orderId: string) => {
+    if (!confirm('정말로 이 주문을 취소하시겠습니까? 취소된 주문은 복구할 수 없습니다.')) {
+      return
+    }
+
+    setCancellingOrderId(orderId)
+    try {
+      const response = await fetch(`/api/mypage/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert('주문이 성공적으로 취소되었습니다.')
+        // 주문 목록 다시 불러오기
+        fetchMyOrders()
+      } else {
+        alert(data.error || '주문 취소 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('주문 취소 오류:', error)
+      alert('주문 취소 중 오류가 발생했습니다.')
+    } finally {
+      setCancellingOrderId(null)
+    }
+  }, [fetchMyOrders])
+
+  // 주문 취소 가능 여부 확인 함수
+  const canCancelOrder = useCallback((order: MyOrder): boolean => {
+    // 이미 취소된 주문은 취소 불가
+    if (order.status === 'CANCELLED') {
+      return false
+    }
+
+    // Fund 상품이 포함되어 있는지 확인
+    const hasFundProducts = order.orderItems.some(
+      (item) => item.product.type === 'FUND'
+    )
+
+    if (!hasFundProducts) {
+      return false
+    }
+
+    // fundStatus가 ORDERED여야 함
+    if (order.fundStatus !== 'ORDERED') {
+      return false
+    }
+
+    // billingExecutedAt가 null이어야 함 (빌링키 결제가 실행되지 않음)
+    if (order.billingExecutedAt !== null && order.billingExecutedAt !== undefined) {
+      return false
+    }
+
+    return true
+  }, [])
 
   if (isLoading) {
     return (
@@ -1237,6 +1302,22 @@ function MyOrdersTab() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* 주문 취소 버튼 */}
+              {canCancelOrder(order) && (
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleCancelOrder(order.id)}
+                    disabled={cancellingOrderId === order.id}
+                    className="w-full px-4 py-2 bg-red-50 border border-red-300 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  >
+                    {cancellingOrderId === order.id ? '취소 중...' : '주문 취소'}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    빌링키 결제가 실행되기 전까지 주문 취소가 가능합니다.
+                  </p>
                 </div>
               )}
             </div>

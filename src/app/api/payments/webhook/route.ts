@@ -361,8 +361,72 @@ export async function POST(request: NextRequest) {
         aggregatedFunding: Array.from(aggregatedFunding.entries())
       })
 
-      // 펀딩 목표 미달 체크는 제거 (결제가 완료되면 항상 RAISED 증가)
-      // 펀딩 목표는 마감일까지의 목표이므로, 중간에 목표 미달로 취소하는 것은 적절하지 않음
+      // Fund 상품의 경우 결제 실행 조건 확인
+      const hasFundProducts = schedule.order.orderItems.some(
+        (item) => item.product.type === 'FUND'
+      )
+
+      if (hasFundProducts) {
+        // Fund 상품이 포함된 주문의 경우, 결제 실행 조건 확인
+        for (const entry of fundingEntries) {
+          if (!entry?.productId) continue
+
+          const product = await prisma.product.findUnique({
+            where: { id: entry.productId },
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              fundingGoalAmount: true,
+              fundingCurrentAmount: true,
+              fundingDeadline: true,
+              billingPaymentApproved: true
+            }
+          })
+
+          if (!product || product.type !== 'FUND') continue
+
+          // 조건 1: 펀딩 기간이 도래했는지 확인
+          if (!product.fundingDeadline) {
+            await handleFailure('펀딩 마감일이 설정되지 않은 상품입니다.')
+            return NextResponse.json(
+              { success: false, message: '펀딩 마감일이 설정되지 않은 상품입니다.' },
+              { status: 400 }
+            )
+          }
+
+          const deadline = new Date(product.fundingDeadline)
+          const now = new Date()
+          if (deadline.getTime() > now.getTime()) {
+            await handleFailure('펀딩 기간이 아직 도래하지 않았습니다.')
+            return NextResponse.json(
+              { success: false, message: '펀딩 기간이 아직 도래하지 않았습니다.' },
+              { status: 400 }
+            )
+          }
+
+          // 조건 2: 달성률이 100% 이상인지 확인
+          if (product.fundingGoalAmount !== null) {
+            const achievementRate = (product.fundingCurrentAmount / product.fundingGoalAmount) * 100
+            if (achievementRate < 100) {
+              await handleFailure(`펀딩 달성률이 100% 미만입니다. (현재: ${achievementRate.toFixed(2)}%)`)
+              return NextResponse.json(
+                { success: false, message: `펀딩 달성률이 100% 미만입니다. (현재: ${achievementRate.toFixed(2)}%)` },
+                { status: 400 }
+              )
+            }
+          }
+
+          // 조건 3: 관리자 승인이 떨어졌는지 확인
+          if (!product.billingPaymentApproved) {
+            await handleFailure('관리자의 빌링키 결제 승인이 필요합니다.')
+            return NextResponse.json(
+              { success: false, message: '관리자의 빌링키 결제 승인이 필요합니다.' },
+              { status: 400 }
+            )
+          }
+        }
+      }
 
       await prisma.$transaction(async (tx) => {
         await tx.billingSchedule.update({

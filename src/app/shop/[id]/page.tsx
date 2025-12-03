@@ -49,6 +49,7 @@ export default function ProductDetailPage() {
   const [reviewContent, setReviewContent] = useState('')
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
   const [hasUserReview, setHasUserReview] = useState(false)
+  const [isApprovingBilling, setIsApprovingBilling] = useState(false)
 
   const productTypeMeta = product ? getProductTypeMeta(product.type) : null
   const fundingProgress = product ? getFundingProgress(product) : null
@@ -187,6 +188,39 @@ export default function ProductDetailPage() {
   const isAdmin = user?.role === 'ADMIN'
 
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleApproveBilling = async () => {
+    if (!product || !isFundProduct) return
+
+    if (!confirm('빌링키 결제를 승인하시겠습니까?')) {
+      return
+    }
+
+    setIsApprovingBilling(true)
+    try {
+      const response = await fetch(`/api/shop/products/${productId}/billing-approval`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert('빌링키 결제가 승인되었습니다.')
+        // 상품 정보 다시 불러오기
+        fetchProduct()
+      } else {
+        alert(data.error || '빌링키 결제 승인 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('빌링키 결제 승인 오류:', error)
+      alert('빌링키 결제 승인 중 오류가 발생했습니다.')
+    } finally {
+      setIsApprovingBilling(false)
+    }
+  }
 
   const handleDeleteProduct = async () => {
     if (!isAdmin) {
@@ -606,6 +640,44 @@ export default function ProductDetailPage() {
                   <p className="mt-3 text-xs text-gray-500">
                     펀딩 마감일: {new Date(product.fundingDeadline).toLocaleDateString()}
                   </p>
+                )}
+                {isAdmin && isFundProduct && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-gray-800">관리자 결제 승인</h4>
+                      {product.billingPaymentApproved ? (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          승인됨
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                          미승인
+                        </span>
+                      )}
+                    </div>
+                    {product.billingPaymentApproved && product.billingPaymentApprovedAt && (
+                      <p className="text-xs text-gray-600 mb-2">
+                        승인일: {new Date(product.billingPaymentApprovedAt).toLocaleString('ko-KR')}
+                      </p>
+                    )}
+                    {!product.billingPaymentApproved && (
+                      <button
+                        onClick={handleApproveBilling}
+                        disabled={isApprovingBilling}
+                        className="w-full mt-2 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+                      >
+                        {isApprovingBilling ? '승인 중...' : '빌링키 결제 승인하기'}
+                      </button>
+                    )}
+                    {product.fundingGoalAmount && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        달성률: {((product.fundingCurrentAmount / product.fundingGoalAmount) * 100).toFixed(2)}%
+                        {((product.fundingCurrentAmount / product.fundingGoalAmount) * 100) < 100 && (
+                          <span className="text-red-600 ml-1">(100% 미달)</span>
+                        )}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}

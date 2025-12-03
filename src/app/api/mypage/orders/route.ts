@@ -18,7 +18,33 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc'
       },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        totalAmount: true,
+        shippingAddress: true,
+        phone: true,
+        buyerName: true,
+        buyerEmail: true,
+        notes: true,
+        paymentInfo: true,
+        paymentVerifiedAt: true,
+        billingStatus: true,
+        billingKey: true,
+        billingPaymentId: true,
+        billingScheduleId: true,
+        billingScheduledAt: true,
+        billingExecutedAt: true,
+        billingFailureReason: true,
+        partnerUpStatus: true,
+        partnerUpStatusUpdatedAt: true,
+        partnerUpStatusNote: true,
+        fundStatus: true,
+        fundStatusUpdatedAt: true,
+        fundStatusNote: true,
+        createdAt: true,
+        updatedAt: true,
         orderItems: {
           include: {
             product: {

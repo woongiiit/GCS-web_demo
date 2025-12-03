@@ -180,6 +180,9 @@ model Product {
   fundingCurrentAmount  Int         @default(0) @map("funding_current_amount")
   fundingSupporterCount Int         @default(0) @map("funding_supporter_count")
   fundingDeadline       DateTime?   @map("funding_deadline")
+  billingPaymentApproved Boolean     @default(false) @map("billing_payment_approved") // 빌링키 결제 관리자 승인 여부
+  billingPaymentApprovedAt DateTime? @map("billing_payment_approved_at") // 빌링키 결제 승인 시간
+  billingPaymentApprovedBy String? @map("billing_payment_approved_by") // 빌링키 결제 승인자 ID (관리자)
   authorId              String? // 상품 등록자 ID (관리자 또는 판매자)
   author                User?       @relation(fields: [authorId], references: [id])
   createdAt             DateTime    @default(now())
@@ -625,7 +628,7 @@ enum BillingScheduleStatus {
 enum PartnerUpOrderStatus {
   ORDERED // 상품 주문 (결제 완료 시 자동 설정)
   CONFIRMED // 주문 확인
-  PRODUCTION_STARTED // 제작 착수
+  PRODUCTION_STARTED // 상품 준비중
   SHIPPED_OUT // 출고
   SHIPPING // 배송중
   ARRIVED // 도착
@@ -638,7 +641,7 @@ enum FundOrderStatus {
   ORDERED // 상품 주문 (결제 완료 시 자동 설정)
   BILLING_COMPLETED // 빌링키 결제 완료
   CONFIRMED // 주문 확인
-  PRODUCTION_STARTED // 제작 착수
+  PRODUCTION_STARTED // 상품 준비중
   SHIPPED_OUT // 출고
   SHIPPING // 배송중
   ARRIVED // 도착
