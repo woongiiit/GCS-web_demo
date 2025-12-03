@@ -26,6 +26,7 @@ export async function GET() {
                 id: true,
                 name: true,
                 images: true,
+                type: true,
                 authorId: true,
                 author: {
                   select: {

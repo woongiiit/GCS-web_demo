@@ -23,7 +23,7 @@ model User {
   role                   UserRole @default(GENERAL)
   isSeller               Boolean  @default(false)
   participatedProjectIds String[] // 참여한 프로젝트의 ID 배열
-  
+
   // 학생 인증 관련 필드
   verificationStatus      VerificationStatus @default(PENDING)
   verificationImageUrl    String? // 학생 인증 이미지 URL
@@ -31,7 +31,7 @@ model User {
   verificationApprovedAt  DateTime? // 인증 승인 시간
   verificationRejectedAt  DateTime? // 인증 거부 시간
   verificationNote        String? // 운영자 메모 (거부 사유 등)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -222,35 +222,45 @@ model ProductDetail {
 
 // 주문 모델
 model Order {
-  id                String      @id @default(cuid())
-  userId            String
-  user              User        @relation(fields: [userId], references: [id])
-  status            OrderStatus @default(PENDING)
-  totalAmount       Int // 총 금액
-  shippingAddress   String
-  phone             String
-  buyerName         String? // 주문 시 입력한 받는 분 성함
-  buyerEmail        String? // 주문 시 입력한 이메일
-  notes             String?
-  paymentInfo       Json?
-  paymentVerifiedAt DateTime?
-  billingStatus       BillingScheduleStatus?
-  billingKey          String?
-  billingPaymentId    String?
-  billingScheduleId   String?
-  billingScheduledAt  DateTime?
-  billingExecutedAt   DateTime?
-  billingFailureReason String?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id                       String                 @id @default(cuid())
+  userId                   String
+  user                     User                   @relation(fields: [userId], references: [id])
+  status                   OrderStatus            @default(PENDING)
+  totalAmount              Int // 총 금액
+  shippingAddress          String
+  phone                    String
+  buyerName                String? // 주문 시 입력한 받는 분 성함
+  buyerEmail               String? // 주문 시 입력한 이메일
+  notes                    String?
+  paymentInfo              Json?
+  paymentVerifiedAt        DateTime?
+  billingStatus            BillingScheduleStatus?
+  billingKey               String?
+  billingPaymentId         String?
+  billingScheduleId        String?
+  billingScheduledAt       DateTime?
+  billingExecutedAt        DateTime?
+  billingFailureReason     String?
+  // Partner up 상품 주문 단계 관리
+  partnerUpStatus          PartnerUpOrderStatus? // Partner up 상품의 주문 단계
+  partnerUpStatusUpdatedAt DateTime? // 단계 변경 시간
+  partnerUpStatusNote      String? // 단계 변경 메모 (판매자 메모)
+  // Fund 상품 주문 단계 관리
+  fundStatus          FundOrderStatus? // Fund 상품의 주문 단계
+  fundStatusUpdatedAt DateTime? // 단계 변경 시간
+  fundStatusNote      String? // 단계 변경 메모 (판매자 메모)
+  createdAt           DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   // 관계
-  orderItems     OrderItem[]
-  paymentRecords PaymentRecord[]
+  orderItems      OrderItem[]
+  paymentRecords  PaymentRecord[]
   billingSchedule BillingSchedule?
 
   @@index([userId, status, createdAt])
   @@index([status, createdAt])
+  @@index([partnerUpStatus, createdAt])
+  @@index([fundStatus, createdAt])
   @@map("orders")
 }
 
@@ -290,10 +300,10 @@ model PaymentRecord {
 }
 
 model BillingCustomer {
-  id         String   @id @default(cuid())
-  userId     String   @unique
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  billingKey String   @unique
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingKey String    @unique
   channelKey String?
   pgProvider String?
   cardName   String?
@@ -303,8 +313,8 @@ model BillingCustomer {
   issuedAt   DateTime?
   expiresAt  DateTime?
   raw        Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   schedules BillingSchedule[]
 
@@ -363,8 +373,8 @@ model ProductReview {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rating    Int      // 별점 (1-5)
-  content   String   // 리뷰 내용
+  rating    Int // 별점 (1-5)
+  content   String // 리뷰 내용
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -610,6 +620,31 @@ enum BillingScheduleStatus {
   CANCELLED
 }
 
+// Partner up 상품 주문 단계
+// ORDERED는 결제 완료 시 자동으로 설정되므로 소비자에게는 보이지 않음
+enum PartnerUpOrderStatus {
+  ORDERED // 상품 주문 (결제 완료 시 자동 설정)
+  CONFIRMED // 주문 확인
+  PRODUCTION_STARTED // 제작 착수
+  SHIPPED_OUT // 출고
+  SHIPPING // 배송중
+  ARRIVED // 도착
+  RECEIVED // 수령
+}
+
+// Fund 상품 주문 단계
+// ORDERED는 결제 완료 시 자동으로 설정되므로 소비자에게는 보이지 않음
+enum FundOrderStatus {
+  ORDERED // 상품 주문 (결제 완료 시 자동 설정)
+  BILLING_COMPLETED // 빌링키 결제 완료
+  CONFIRMED // 주문 확인
+  PRODUCTION_STARTED // 제작 착수
+  SHIPPED_OUT // 출고
+  SHIPPING // 배송중
+  ARRIVED // 도착
+  RECEIVED // 수령
+}
+
 enum ProductType {
   FUND
   PARTNER_UP
@@ -630,33 +665,32 @@ enum ContentSection {
 
 // 챗봇 옵션 모델 (정보 제공용)
 model ChatBotOption {
-  id          String   @id @default(cuid())
-  title       String // 옵션 제목
-  content     String // 옵션 내용/응답
-  category    String? // 카테고리 (선택사항)
-  order       Int      @default(0) // 표시 순서
-  isActive    Boolean  @default(true) // 활성화 여부
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String           @id @default(cuid())
+  title     String // 옵션 제목
+  content   String // 옵션 내용/응답
+  category  String? // 카테고리 (선택사항)
+  order     Int              @default(0) // 표시 순서
+  isActive  Boolean          @default(true) // 활성화 여부
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  histories ChatBotHistory[]
 
   @@index([isActive, order])
-  histories   ChatBotHistory[]
-
   @@index([category, isActive])
   @@map("chatbot_options")
 }
 
 // 챗봇 사용 기록 모델
 model ChatBotHistory {
-  id          String   @id @default(cuid())
-  userId      String? // 사용자 ID (비로그인 사용자는 null)
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  optionId    String? // 선택한 옵션 ID
-  option      ChatBotOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
-  question    String? // 사용자가 입력한 질문 (선택사항)
-  response    String? // 챗봇 응답
-  metadata    Json? // 추가 메타데이터
-  createdAt   DateTime @default(now())
+  id        String         @id @default(cuid())
+  userId    String? // 사용자 ID (비로그인 사용자는 null)
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  optionId  String? // 선택한 옵션 ID
+  option    ChatBotOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+  question  String? // 사용자가 입력한 질문 (선택사항)
+  response  String? // 챗봇 응답
+  metadata  Json? // 추가 메타데이터
+  createdAt DateTime       @default(now())
 
   @@index([userId, createdAt])
   @@index([optionId])

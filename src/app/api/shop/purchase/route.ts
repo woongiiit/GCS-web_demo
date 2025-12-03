@@ -600,6 +600,22 @@ export async function POST(request: Request) {
     const resolvedBuyerName = payment?.buyerName ?? buyerName ?? null
     const resolvedBuyerEmail = payment?.buyerEmail ?? buyerEmail ?? null
 
+    // Partner up 상품이 포함되어 있는지 확인
+    let hasPartnerUpItems = false
+    if (!hasFundProducts) {
+      // Fund 상품이 아닌 경우, 일반 상품이므로 Partner up일 수 있음
+      for (const item of orderItems) {
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { type: true }
+        })
+        if (product?.type === 'PARTNER_UP') {
+          hasPartnerUpItems = true
+          break
+        }
+      }
+    }
+
     const order = await prisma.order.create({
       data: {
         userId: user.id,
@@ -619,6 +635,12 @@ export async function POST(request: Request) {
         billingScheduledAt: billingScheduledAt ?? null,
         billingExecutedAt: null,
         billingFailureReason: null,
+        // Partner up 상품인 경우 주문 단계를 ORDERED로 설정
+        partnerUpStatus: hasPartnerUpItems && orderStatus === 'CONFIRMED' ? 'ORDERED' : null,
+        partnerUpStatusUpdatedAt: hasPartnerUpItems && orderStatus === 'CONFIRMED' ? new Date() : null,
+        // Fund 상품인 경우 주문 단계를 ORDERED로 설정 (빌링키 예약 완료 시점)
+        fundStatus: hasFundProducts ? 'ORDERED' : null,
+        fundStatusUpdatedAt: hasFundProducts ? new Date() : null,
         orderItems: {
           create: orderItems.map((item) => ({
             product: {

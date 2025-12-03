@@ -255,7 +255,10 @@ export async function POST(request: NextRequest) {
                   billingFailureReason: null,
                   billingPaymentId: paymentIdFromPayload,
                   paymentInfo: serializedPayment,
-                  paymentVerifiedAt: now
+                  paymentVerifiedAt: now,
+                  // Fund 상품인 경우 빌링키 결제 완료 상태로 업데이트
+                  fundStatus: 'BILLING_COMPLETED',
+                  fundStatusUpdatedAt: now
                 }
               })
 
@@ -403,7 +406,10 @@ export async function POST(request: NextRequest) {
             billingFailureReason: null,
             billingPaymentId: paymentData.id,
             paymentInfo: paymentInfoForOrder,
-            paymentVerifiedAt: new Date()
+            paymentVerifiedAt: new Date(),
+            // Fund 상품인 경우 빌링키 결제 완료 상태로 업데이트
+            fundStatus: 'BILLING_COMPLETED',
+            fundStatusUpdatedAt: now
           }
         })
 

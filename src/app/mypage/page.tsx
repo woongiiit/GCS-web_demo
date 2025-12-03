@@ -14,6 +14,35 @@ function getProductTypeLabel(typeId?: string | null) {
   return getProductTypeMeta(normalizedType)?.name ?? ''
 }
 
+// Partner up 주문 단계 라벨 변환 함수
+function getPartnerUpStatusLabel(status: string): string {
+  const statusLabels: Record<string, string> = {
+    ORDERED: '상품 주문',
+    CONFIRMED: '주문 확인',
+    PRODUCTION_STARTED: '제작 착수',
+    SHIPPED_OUT: '출고',
+    SHIPPING: '배송중',
+    ARRIVED: '도착',
+    RECEIVED: '수령'
+  }
+  return statusLabels[status] || status
+}
+
+// Fund 주문 단계 라벨 변환 함수
+function getFundStatusLabel(status: string): string {
+  const statusLabels: Record<string, string> = {
+    ORDERED: '상품 주문',
+    BILLING_COMPLETED: '빌링키 결제 완료',
+    CONFIRMED: '주문 확인',
+    PRODUCTION_STARTED: '제작 착수',
+    SHIPPED_OUT: '출고',
+    SHIPPING: '배송중',
+    ARRIVED: '도착',
+    RECEIVED: '수령'
+  }
+  return statusLabels[status] || status
+}
+
 type TabKey =
   | 'profile'
   | 'orders'
@@ -872,6 +901,7 @@ type MyOrderItem = {
     id: string
     name: string
     images?: string[]
+    type?: string
     author?: {
       id: string
       name: string | null
@@ -889,6 +919,12 @@ type MyOrder = {
   buyerName?: string | null
   buyerEmail?: string | null
   notes?: string | null
+  partnerUpStatus?: string | null
+  partnerUpStatusUpdatedAt?: string | null
+  partnerUpStatusNote?: string | null
+  fundStatus?: string | null
+  fundStatusUpdatedAt?: string | null
+  fundStatusNote?: string | null
   createdAt: string
   orderItems: MyOrderItem[]
   paymentRecords: Array<{
@@ -1136,6 +1172,40 @@ function MyOrdersTab() {
                               판매자: {item.product.author.name}
                               {item.product.author.email ? ` (${item.product.author.email})` : ''}
                             </p>
+                          )}
+                          {item.product.type === 'PARTNER_UP' && order.partnerUpStatus && (
+                            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                              <p className="text-xs font-medium text-orange-900 mb-1">
+                                현재 단계: {getPartnerUpStatusLabel(order.partnerUpStatus)}
+                              </p>
+                              {order.partnerUpStatusNote && (
+                                <p className="text-xs text-orange-700 mt-1">
+                                  {order.partnerUpStatusNote}
+                                </p>
+                              )}
+                              {order.partnerUpStatusUpdatedAt && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  업데이트: {new Date(order.partnerUpStatusUpdatedAt).toLocaleString('ko-KR')}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {item.product.type === 'FUND' && order.fundStatus && (
+                            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                              <p className="text-xs font-medium text-orange-900 mb-1">
+                                현재 단계: {getFundStatusLabel(order.fundStatus)}
+                              </p>
+                              {order.fundStatusNote && (
+                                <p className="text-xs text-orange-700 mt-1">
+                                  {order.fundStatusNote}
+                                </p>
+                              )}
+                              {order.fundStatusUpdatedAt && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  업데이트: {new Date(order.fundStatusUpdatedAt).toLocaleString('ko-KR')}
+                                </p>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
