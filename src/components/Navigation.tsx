@@ -173,118 +173,173 @@ export default function Navigation() {
             style={{ opacity: isMobileMenuOpen ? 0.5 : 0 }}
             onClick={toggleMobileMenu}
           ></div>
-          <div className="fixed top-0 left-0 right-0 bottom-0 bg-white flex flex-col transform transition-transform duration-300 ease-in-out animate-slide-in">
-            {/* 헤더 */}
-            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-              <Link href="/" className="text-xl font-bold text-black" onClick={toggleMobileMenu}>
-                GCS<span className="text-[#f57520]">:</span>Web
-              </Link>
-              <button
-                onClick={toggleMobileMenu}
-                className="text-gray-600 hover:text-black transition-colors p-1"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className="fixed top-0 left-0 right-0 bottom-0 bg-white flex flex-col transform transition-transform duration-300 ease-in-out overflow-y-auto">
+            {/* Nav Bar - 상단 고정 */}
+            <div className="bg-[#f8f6f4] flex-shrink-0 sticky top-0 z-10">
+              {/* Safe Area */}
+              <div className="h-[34px]"></div>
+              {/* Nav Bar Content */}
+              <div className="h-[44px] bg-[#f8f6f4] shadow-[0px_4px_10px_0px_rgba(99,81,73,0.1)] flex items-center justify-between px-4 relative">
+                {/* 햄버거 메뉴 아이콘 */}
+                <button
+                  onClick={toggleMobileMenu}
+                  className="text-gray-600 hover:text-black transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                
+                {/* 로고 */}
+                <Link href="/" className="text-lg font-bold text-black" onClick={toggleMobileMenu}>
+                  GCS<span className="text-[#f57520]">:</span>Web
+                </Link>
+                
+                {/* 사용자 아이콘 */}
+                <Link
+                  href={user ? myPageHref : '/login'}
+                  className="text-gray-600 hover:text-black transition-colors"
+                  onClick={toggleMobileMenu}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </Link>
+              </div>
             </div>
 
-            {/* 메뉴 컨텐츠 */}
-            <div className="bg-orange-500 flex-1 p-6 overflow-y-auto">
-              <div className="space-y-6 pt-4">
-                {menuItems.map((item) => (
-                  <div key={item.href}>
-                    <div className="flex items-center justify-between">
-                      <Link
-                        href={item.href}
-                        onClick={toggleMobileMenu}
-                        className="flex-1 text-black font-bold text-3xl hover:text-gray-800 transition-colors"
-                      >
-                        {item.label}
-                      </Link>
-                      {item.subItems.length > 0 && (
+            {/* 메뉴 컨텐츠 - 그라데이션 배경 */}
+            <div className="bg-gradient-to-r from-[rgba(0,0,0,0.1)] to-[rgba(0,0,0,0.1)] bg-[#f57520] px-[26px] pt-[44px] pb-[20px]">
+              <div className="flex flex-col gap-[32px]">
+                <div className="flex flex-col gap-[16px]">
+                  {menuItems.map((item) => (
+                    <div key={item.href} className="flex flex-col">
+                      {item.subItems.length > 0 ? (
                         <button
                           onClick={() => toggleSubMenu(item.href)}
-                          className="ml-3 text-black hover:text-gray-800 transition-transform"
+                          className="flex items-center gap-2 text-left"
                         >
-                          <svg
-                            className={`w-6 h-6 transition-transform ${expandedMenus.includes(item.href) ? 'rotate-90' : ''}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                          </svg>
+                          <span className="text-[28px] font-extrabold text-white leading-[1.75]">
+                            {item.label}
+                          </span>
+                          <div className="flex items-center justify-center">
+                            <svg
+                              className={`w-6 h-6 transition-transform text-white ${
+                                expandedMenus.includes(item.href) ? '' : 'rotate-180'
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                          </div>
                         </button>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          onClick={toggleMobileMenu}
+                          className="text-[28px] font-extrabold text-white leading-[1.75]"
+                        >
+                          {item.label}
+                        </Link>
                       )}
-                    </div>
-                    {item.subItems.length > 0 && (
-                      <div 
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                          expandedMenus.includes(item.href) 
-                            ? 'max-h-40 opacity-100 mt-3' 
-                            : 'max-h-0 opacity-0 mt-0'
-                        }`}
-                      >
-                        <div className="ml-4 space-y-2">
+                      {item.subItems.length > 0 && expandedMenus.includes(item.href) && (
+                        <div className="flex flex-col gap-0 mt-2">
                           {item.subItems.map((subItem) => (
                             <Link
                               key={subItem.href}
                               href={subItem.href}
                               onClick={toggleMobileMenu}
-                              className="block text-black text-lg font-bold hover:text-gray-800 transition-colors"
+                              className="text-[15px] font-bold text-white leading-[1.5] mt-2"
                             >
                               {subItem.label}
                             </Link>
                           ))}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              {/* Admin 버튼 (관리자만 표시) */}
-              {user?.role === 'ADMIN' && (
-                <>
-                  <div className="border-t border-gray-300 my-4"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* 구분선 */}
+                <div className="h-px bg-white/20"></div>
+                
+                {/* Admin 버튼 (관리자만 표시) */}
+                {user?.role === 'ADMIN' && (
                   <Link
                     href="/admin"
                     onClick={toggleMobileMenu}
-                    className="block w-full py-3 px-4 text-center text-white font-bold border-2 border-white rounded-lg hover:bg-white hover:text-orange-500 transition-colors"
+                    className="border border-white rounded-full px-3 py-1 inline-flex items-center justify-center w-fit"
                   >
-                    Admin
+                    <span className="text-[15px] font-bold text-white leading-[1.5]">
+                      Admin
+                    </span>
                   </Link>
-                </>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* 하단 배너 */}
-            <div className="bg-white py-6 border-t border-gray-200 flex-shrink-0">
-              <div className="px-4 flex justify-between items-start gap-4">
-                {/* 왼쪽: 로고 정보 */}
-                <div className="flex-shrink-0">
-                  <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
-                  <h3 className="text-sm font-bold text-black">
-                    GCS<span className="text-[#f57520]">:</span>Web
-                  </h3>
-                </div>
-                
-                {/* 오른쪽: 회사 정보 */}
-                <div className="flex-1 text-right space-y-1 min-w-0">
-                  <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
-                  <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
-                  <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
-                  <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
+            {/* Footer */}
+            <div className="bg-[#f8f6f4] flex-shrink-0">
+              <div className="h-[34px]"></div>
+              <div className="px-[21px] py-[21px]">
+                <div className="flex flex-col gap-[45px]">
+                  {/* 고객지원 */}
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">
+                      고객지원
+                    </h3>
+                    <div className="flex flex-col gap-3 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px]">
+                      <p>
+                        <span className="font-bold">전화</span> : 010-5238-0236
+                      </p>
+                      <p>
+                        <span className="font-bold">이메일</span> : gcsweb01234@gmail.com
+                      </p>
+                      <p>
+                        <span className="font-bold">주소</span> : 서울특별시 강북구 솔샘로 174 136동 304호
+                      </p>
+                    </div>
+                  </div>
                   
-                  <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
-                    <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
-                    <span className="text-[10px] text-gray-400">|</span>
-                    <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
-                    <span className="text-[10px] text-gray-400">|</span>
-                    <span className="text-[10px] text-gray-500">site by 제작담</span>
+                  {/* 사업자 정보 */}
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">
+                      사업자 정보
+                    </h3>
+                    <div className="flex flex-col gap-3 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px]">
+                      <div className="flex gap-10">
+                        <p>
+                          <span className="font-bold">대표</span> : 안성은
+                        </p>
+                        <p>
+                          <span className="font-bold">회사명</span> : 안북스 스튜디오
+                        </p>
+                      </div>
+                      <p>
+                        <span className="font-bold">사업자등록번호</span> : 693-01-03164
+                      </p>
+                      <p>
+                        <span className="font-bold">통신판매업신고번호</span> : 제2025-서울중구-0000호
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* 로고 및 저작권 */}
+                  <div className="flex flex-col justify-between h-[41px]">
+                    <div className="h-[21px]">
+                      <Link href="/" className="text-lg font-bold text-black">
+                        GCS<span className="text-[#f57520]">:</span>Web
+                      </Link>
+                    </div>
+                    <p className="text-[8px] text-[#443e3c] leading-[1.5]">
+                      © 2025 GCS:Web. All rights reserved.
+                    </p>
                   </div>
                 </div>
               </div>
+              <div className="h-[34px]"></div>
             </div>
           </div>
         </div>
