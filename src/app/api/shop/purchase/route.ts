@@ -368,7 +368,7 @@ export async function POST(request: Request) {
     let billingScheduleId: string | null = null
     let billingPaymentId: string | null = null
     let billingChannelKey: string | null = null
-    let billingScheduledAt: Date | null = hasFundProducts ? fundProductDeadline ?? null : null
+    const billingScheduledAt: Date | null = hasFundProducts ? fundProductDeadline ?? null : null
     let billingScheduleResponse: CreatePaymentScheduleResponse | null = null
 
     if (hasFundProducts) {
