@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { normalizeProductType, getProductTypeMeta } from '@/lib/shop/product-types'
-import { AdminUserManagementTab, AdminOrdersTab } from '@/app/admin/admin-tabs'
 
 function getProductTypeLabel(typeId?: string | null) {
   if (!typeId) return ''
@@ -48,20 +47,14 @@ type TabKey =
   | 'orders'
   | 'cart'
   | 'archive'
-  | 'allOrders'
   | 'sellerOrders'
-  | 'userManagement'
-  | 'contentManagement'
 
 const TAB_LABELS: Record<TabKey, string> = {
   profile: '개인정보수정',
   orders: '내 주문내역',
   cart: '장바구니',
   archive: '내 아카이브',
-  allOrders: '모든 주문내역',
-  sellerOrders: '내 상품 판매내역',
-  userManagement: '사용자 관리',
-  contentManagement: '콘텐츠 관리'
+  sellerOrders: '내 상품 판매내역'
 }
 
 interface UserInfo {
@@ -134,10 +127,7 @@ function MyPageContent() {
     'orders',
     'cart',
     'archive',
-    'allOrders',
-    'sellerOrders',
-    'userManagement',
-    'contentManagement'
+    'sellerOrders'
   ]
 
   const availableTabs = useMemo<TabKey[]>(() => {
@@ -149,13 +139,10 @@ function MyPageContent() {
       tabs.push('sellerOrders')
     }
     
-    // 관리자 권한이 있으면 관리자 탭들 추가
-    if (user?.role === 'ADMIN') {
-      tabs.push('allOrders', 'userManagement', 'contentManagement')
-    }
+    // 관리자 탭은 제거 - Admin 페이지에서 관리
     
     return tabs
-  }, [user?.isSeller, user?.role])
+  }, [user?.isSeller])
 
   const isValidTab = (value: string | null): value is TabKey => {
     return allTabs.includes(value as TabKey)
@@ -907,14 +894,8 @@ function MyPageContent() {
                 <MyArchiveTab user={user} />
               ) : activeTab === 'orders' ? (
                 <MyOrdersTab />
-              ) : activeTab === 'allOrders' ? (
-                <AdminOrdersTab />
               ) : activeTab === 'sellerOrders' ? (
                 <SellerOrdersTab />
-              ) : activeTab === 'userManagement' ? (
-                <AdminUserManagementTab />
-              ) : activeTab === 'contentManagement' ? (
-                <ContentManagementPanel />
               ) : null}
             </div>
           </div>

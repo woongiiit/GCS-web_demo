@@ -36,7 +36,10 @@ export default function Navigation() {
     { 
       href: '/shop', 
       label: 'Shop',
-      subItems: []
+      subItems: [
+        { href: '/shop?type=fund', label: 'Fund' },
+        { href: '/shop?type=partner-up', label: 'Partner up' }
+      ]
     },
   ]
 
@@ -239,6 +242,20 @@ export default function Navigation() {
                   </div>
                 ))}
               </div>
+              
+              {/* Admin 버튼 (관리자만 표시) */}
+              {user?.role === 'ADMIN' && (
+                <>
+                  <div className="border-t border-gray-300 my-4"></div>
+                  <Link
+                    href="/admin"
+                    onClick={toggleMobileMenu}
+                    className="block w-full py-3 px-4 text-center text-white font-bold border-2 border-white rounded-lg hover:bg-white hover:text-orange-500 transition-colors"
+                  >
+                    Admin
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* 하단 배너 */}
