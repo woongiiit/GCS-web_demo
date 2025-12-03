@@ -49,6 +49,7 @@ type TabKey =
   | 'cart'
   | 'archive'
   | 'allOrders'
+  | 'sellerOrders'
   | 'userManagement'
   | 'contentManagement'
 
@@ -58,6 +59,7 @@ const TAB_LABELS: Record<TabKey, string> = {
   cart: '장바구니',
   archive: '내 아카이브',
   allOrders: '모든 주문내역',
+  sellerOrders: '내 상품 판매내역',
   userManagement: '사용자 관리',
   contentManagement: '콘텐츠 관리'
 }
@@ -131,18 +133,26 @@ function MyPageContent() {
     'cart',
     'archive',
     'allOrders',
+    'sellerOrders',
     'userManagement',
     'contentManagement'
   ]
 
   const availableTabs = useMemo<TabKey[]>(() => {
     const tabs: TabKey[] = ['profile', 'orders', 'cart', 'archive']
-    if (user?.isSeller || user?.role === 'ADMIN') {
-      tabs.push('allOrders')
+    
+    // 판매자 권한이 있으면 판매내역 탭 추가 (관리자여도 판매자면 보임)
+    // isSeller가 true인 경우에만 추가 (Boolean 또는 truthy 값 체크)
+    const isSeller = user?.isSeller === true || user?.isSeller === 'true' || Boolean(user?.isSeller)
+    if (user && isSeller) {
+      tabs.push('sellerOrders')
     }
+    
+    // 관리자 권한이 있으면 관리자 탭들 추가
     if (user?.role === 'ADMIN') {
-      tabs.push('userManagement', 'contentManagement')
+      tabs.push('allOrders', 'userManagement', 'contentManagement')
     }
+    
     return tabs
   }, [user?.isSeller, user?.role])
 
@@ -307,18 +317,10 @@ function MyPageContent() {
     }
 
     const rawTabParam = searchParams ? searchParams.get('tab') : null
-    const normalizedTabParam = rawTabParam === 'sellerOrders' ? 'allOrders' : rawTabParam
-
-    if (rawTabParam === 'sellerOrders') {
-      const params = new URLSearchParams(searchParams ? searchParams.toString() : '')
-      params.set('tab', 'allOrders')
-      const queryString = params.toString()
-      router.replace(queryString ? `/mypage?${queryString}` : '/mypage', { scroll: false })
-    }
 
     const defaultTab = availableTabs[0] ?? 'profile'
 
-    if (!normalizedTabParam) {
+    if (!rawTabParam) {
       if (activeTab !== defaultTab) {
         setActiveTab(defaultTab)
       }
@@ -326,12 +328,12 @@ function MyPageContent() {
       return
     }
 
-    if (isValidTab(normalizedTabParam) && availableTabs.includes(normalizedTabParam as TabKey)) {
-      if (activeTab !== normalizedTabParam) {
-        setActiveTab(normalizedTabParam as TabKey)
+    if (isValidTab(rawTabParam) && availableTabs.includes(rawTabParam as TabKey)) {
+      if (activeTab !== rawTabParam) {
+        setActiveTab(rawTabParam as TabKey)
       }
       setShowForbiddenTab(false)
-    } else if (isValidTab(normalizedTabParam)) {
+    } else if (isValidTab(rawTabParam)) {
       if (activeTab !== defaultTab) {
         setActiveTab(defaultTab)
       }
@@ -340,7 +342,7 @@ function MyPageContent() {
       if (activeTab !== defaultTab) {
         setActiveTab(defaultTab)
       }
-      setShowForbiddenTab(Boolean(normalizedTabParam))
+      setShowForbiddenTab(Boolean(rawTabParam))
     }
   }, [isLoading, searchParams, availableTabs, activeTab, router])
 
@@ -849,7 +851,9 @@ function MyPageContent() {
               ) : activeTab === 'orders' ? (
                 <MyOrdersTab />
               ) : activeTab === 'allOrders' ? (
-                user.role === 'ADMIN' ? <AdminOrdersTab /> : <AllOrdersTab />
+                <AdminOrdersTab />
+              ) : activeTab === 'sellerOrders' ? (
+                <SellerOrdersTab />
               ) : activeTab === 'userManagement' ? (
                 <AdminUserManagementTab />
               ) : activeTab === 'contentManagement' ? (
@@ -1561,6 +1565,439 @@ function ContentManagementPanel() {
       >
         콘텐츠 관리 페이지로 이동
       </Link>
+    </div>
+  )
+}
+
+// 판매자용 주문 목록 탭 컴포넌트
+type SellerOrderItem = {
+  id: string
+  quantity: number
+  price: number
+  selectedOptions?: unknown
+  product: {
+    id: string
+    name: string
+    type: string
+    images?: string[]
+  }
+}
+
+type SellerOrder = {
+  id: string
+  buyer: {
+    id: string
+    name: string
+    email: string
+    phone: string
+  }
+  totalAmount: number
+  shippingAddress: string
+  phone: string
+  buyerName?: string | null
+  buyerEmail?: string | null
+  notes?: string | null
+  partnerUpStatus?: string | null
+  partnerUpStatusUpdatedAt?: string | null
+  partnerUpStatusNote?: string | null
+  fundStatus?: string | null
+  fundStatusUpdatedAt?: string | null
+  fundStatusNote?: string | null
+  orderItems: SellerOrderItem[]
+  createdAt: string
+  updatedAt: string
+}
+
+function SellerOrdersTab() {
+  const [orders, setOrders] = useState<SellerOrder[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+  const [selectedProductType, setSelectedProductType] = useState<'PARTNER_UP' | 'FUND' | null>(null)
+  const [newStatus, setNewStatus] = useState<string>('')
+  const [statusNote, setStatusNote] = useState<string>('')
+
+  const formatCurrency = useCallback((value: number) => `${value.toLocaleString()}원`, [])
+
+  const parseOptions = useCallback((selectedOptions: unknown): string[] => {
+    if (!selectedOptions) return []
+    if (Array.isArray(selectedOptions)) {
+      return selectedOptions
+        .map((option) => {
+          if (option && typeof option === 'object' && 'name' in option && 'label' in option) {
+            const { name, label } = option as { name?: string; label?: string }
+            if (name && label) {
+              return `${name}: ${label}`
+            }
+          }
+          return null
+        })
+        .filter((value): value is string => !!value)
+    }
+    try {
+      const parsed = JSON.parse(JSON.stringify(selectedOptions))
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((option) => {
+            if (option && typeof option === 'object' && option.name && option.label) {
+              return `${option.name}: ${option.label}`
+            }
+            return null
+          })
+          .filter((value): value is string => !!value)
+      }
+    } catch (optionError) {
+      console.error('주문 옵션 파싱 실패:', optionError)
+    }
+    return []
+  }, [])
+
+  const fetchSellerOrders = useCallback(async (pageNum: number) => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`/api/mypage/orders/seller/status?page=${pageNum}&limit=10`, {
+        cache: 'no-store'
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '주문 내역을 불러오지 못했습니다.')
+      }
+      setOrders(Array.isArray(data.data.orders) ? (data.data.orders as SellerOrder[]) : [])
+      setTotalPages(data.data.pagination?.totalPages || 1)
+    } catch (fetchError) {
+      console.error('판매자 주문 내역 조회 오류:', fetchError)
+      setError(fetchError instanceof Error ? fetchError.message : '주문 내역을 불러오지 못했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSellerOrders(page)
+  }, [fetchSellerOrders, page])
+
+  const handleStatusUpdate = async (orderId: string, productType: 'PARTNER_UP' | 'FUND') => {
+    if (!newStatus) {
+      alert('상태를 선택해주세요.')
+      return
+    }
+
+    setUpdatingOrderId(orderId)
+    try {
+      const response = await fetch('/api/mypage/orders/seller/status', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId,
+          status: newStatus,
+          productType,
+          note: statusNote || undefined
+        })
+      })
+
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '주문 단계 업데이트에 실패했습니다.')
+      }
+
+      alert('주문 단계가 업데이트되었습니다.')
+      setSelectedOrderId(null)
+      setSelectedProductType(null)
+      setNewStatus('')
+      setStatusNote('')
+      await fetchSellerOrders(page)
+    } catch (error) {
+      console.error('주문 단계 업데이트 오류:', error)
+      alert(error instanceof Error ? error.message : '주문 단계 업데이트에 실패했습니다.')
+    } finally {
+      setUpdatingOrderId(null)
+    }
+  }
+
+  const getAvailableStatuses = (productType: 'PARTNER_UP' | 'FUND'): string[] => {
+    if (productType === 'PARTNER_UP') {
+      return ['ORDERED', 'CONFIRMED', 'PRODUCTION_STARTED', 'SHIPPED_OUT', 'SHIPPING', 'ARRIVED', 'RECEIVED']
+    } else {
+      return ['ORDERED', 'BILLING_COMPLETED', 'CONFIRMED', 'PRODUCTION_STARTED', 'SHIPPED_OUT', 'SHIPPING', 'ARRIVED', 'RECEIVED']
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-black"></div>
+          <p className="text-gray-600">주문 내역을 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {error}
+      </div>
+    )
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+        판매 내역이 없습니다.
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-black mb-6">내 상품 판매내역</h2>
+
+      <div className="space-y-6">
+        {orders.map((order) => {
+          return (
+            <div key={order.id} className="overflow-hidden rounded-lg border border-gray-200">
+              <div className="flex flex-wrap items-start justify-between gap-4 bg-gray-50 px-4 py-3">
+                <div>
+                  <p className="text-sm text-gray-500">주문 번호</p>
+                  <p className="text-base font-semibold text-black">{order.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">주문 일시</p>
+                  <p className="text-base font-semibold text-black">
+                    {new Date(order.createdAt).toLocaleString('ko-KR')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">구매자</p>
+                  <p className="text-base font-semibold text-black">{order.buyer.name}</p>
+                  <p className="text-xs text-gray-500">{order.buyer.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">총 결제 금액</p>
+                  <p className="text-lg font-bold text-black">{formatCurrency(order.totalAmount)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 px-4 py-4">
+                <div className="flex flex-col gap-2 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">받는 분</p>
+                    <p className="text-sm font-medium text-black">{order.buyerName || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">이메일</p>
+                    <p className="text-sm font-medium text-black">{order.buyerEmail || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">배송지</p>
+                    <p className="text-sm font-medium text-black">{order.shippingAddress}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">연락처</p>
+                    <p className="text-sm font-medium text-black">{order.phone}</p>
+                  </div>
+                  {order.notes && (
+                    <div className="md:text-right">
+                      <p className="text-sm text-gray-500">요청사항</p>
+                      <p className="text-sm font-medium text-black">{order.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <p className="mb-3 text-sm font-medium text-gray-700">주문 상품</p>
+                  <div className="space-y-3">
+                    {order.orderItems.map((item) => {
+                      const options = parseOptions(item.selectedOptions)
+                      const thumbnail = item.product?.images?.[0]
+                      const isPartnerUp = item.product.type === 'PARTNER_UP'
+                      const isFund = item.product.type === 'FUND'
+                      const currentStatus = isPartnerUp ? order.partnerUpStatus : isFund ? order.fundStatus : null
+                      const statusUpdatedAt = isPartnerUp ? order.partnerUpStatusUpdatedAt : isFund ? order.fundStatusUpdatedAt : null
+                      const currentStatusNote = isPartnerUp ? order.partnerUpStatusNote : isFund ? order.fundStatusNote : null
+                      const isSelected = selectedOrderId === order.id && selectedProductType === (isPartnerUp ? 'PARTNER_UP' : 'FUND')
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 md:flex-row"
+                        >
+                          <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                            {thumbnail ? (
+                              <img
+                                src={thumbnail}
+                                alt={item.product?.name ?? '상품 이미지'}
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/images/placeholder-product.jpg'
+                                }}
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                                No Image
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <h4 className="text-base font-semibold text-gray-900">
+                                {item.product?.name}
+                              </h4>
+                              <div className="text-right">
+                                <p className="text-xs text-gray-500">판매가</p>
+                                <p className="text-sm font-medium text-black">
+                                  {formatCurrency(item.price)}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">
+                              타입: {isPartnerUp ? 'Partner up' : isFund ? 'Fund' : '일반'}
+                            </p>
+                            {options.length > 0 && (
+                              <ul className="mt-3 space-y-1 text-sm text-gray-600">
+                                {options.map((option) => (
+                                  <li key={`${item.id}-${option}`}>{option}</li>
+                                ))}
+                              </ul>
+                            )}
+                            <p className="mt-3 text-sm text-gray-500">수량 {item.quantity}개</p>
+
+                            {/* 주문 단계 표시 및 업데이트 */}
+                            {(isPartnerUp || isFund) && (
+                              <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-3">
+                                <div className="mb-3 flex items-center justify-between">
+                                  <div>
+                                    <p className="text-xs font-medium text-orange-900">현재 주문 단계</p>
+                                    <p className="mt-1 text-sm font-semibold text-orange-900">
+                                      {currentStatus
+                                        ? isPartnerUp
+                                          ? getPartnerUpStatusLabel(currentStatus)
+                                          : getFundStatusLabel(currentStatus)
+                                        : '미설정'}
+                                    </p>
+                                    {statusUpdatedAt && (
+                                      <p className="mt-1 text-xs text-orange-600">
+                                        업데이트: {new Date(statusUpdatedAt).toLocaleString('ko-KR')}
+                                      </p>
+                                    )}
+                                    {currentStatusNote && (
+                                      <p className="mt-1 text-xs text-orange-700">{currentStatusNote}</p>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedOrderId(order.id)
+                                      setSelectedProductType(isPartnerUp ? 'PARTNER_UP' : 'FUND')
+                                      setNewStatus(currentStatus || '')
+                                      setStatusNote(currentStatusNote || '')
+                                    }}
+                                    className="rounded-lg bg-[#f57520] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e06510] transition-colors"
+                                  >
+                                    단계 변경
+                                  </button>
+                                </div>
+
+                                {isSelected && (
+                                  <div className="mt-3 space-y-3 rounded-lg border border-orange-300 bg-white p-3">
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        주문 단계 선택
+                                      </label>
+                                      <select
+                                        value={newStatus}
+                                        onChange={(e) => setNewStatus(e.target.value)}
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#f57520] focus:outline-none focus:ring-2 focus:ring-[#f57520]"
+                                      >
+                                        <option value="">선택하세요</option>
+                                        {getAvailableStatuses(isPartnerUp ? 'PARTNER_UP' : 'FUND').map(
+                                          (status) => (
+                                            <option key={status} value={status}>
+                                              {isPartnerUp
+                                                ? getPartnerUpStatusLabel(status)
+                                                : getFundStatusLabel(status)}
+                                            </option>
+                                          )
+                                        )}
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        메모 (선택사항)
+                                      </label>
+                                      <textarea
+                                        value={statusNote}
+                                        onChange={(e) => setStatusNote(e.target.value)}
+                                        placeholder="단계 변경 메모를 입력하세요"
+                                        rows={2}
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#f57520] focus:outline-none focus:ring-2 focus:ring-[#f57520]"
+                                      />
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleStatusUpdate(order.id, isPartnerUp ? 'PARTNER_UP' : 'FUND')}
+                                        disabled={!newStatus || updatingOrderId === order.id}
+                                        className="flex-1 rounded-lg bg-[#f57520] px-4 py-2 text-sm font-medium text-white hover:bg-[#e06510] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                      >
+                                        {updatingOrderId === order.id ? '업데이트 중...' : '저장'}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setSelectedOrderId(null)
+                                          setSelectedProductType(null)
+                                          setNewStatus('')
+                                          setStatusNote('')
+                                        }}
+                                        disabled={updatingOrderId === order.id}
+                                        className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      >
+                                        취소
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 페이지네이션 */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            이전
+          </button>
+          <span className="px-4 py-2 text-sm text-gray-600">
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            다음
+          </button>
+        </div>
+      )}
     </div>
   )
 }
