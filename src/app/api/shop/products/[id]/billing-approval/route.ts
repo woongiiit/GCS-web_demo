@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { permissions, permissionErrors } from '@/lib/permissions'
+// 관리자 권한은 requireAuth에서 확인
 
 // 관리자가 Fund 상품의 빌링키 결제를 승인
 export async function POST(
@@ -122,10 +122,10 @@ export async function POST(
         }
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('빌링키 결제 승인 오류:', error)
 
-    if (error.message === '로그인이 필요합니다') {
+    if (error instanceof Error && error.message === '로그인이 필요합니다') {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }
@@ -209,10 +209,10 @@ export async function DELETE(
         billingPaymentApproved: updatedProduct.billingPaymentApproved
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('빌링키 결제 승인 취소 오류:', error)
 
-    if (error.message === '로그인이 필요합니다') {
+    if (error instanceof Error && error.message === '로그인이 필요합니다') {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }

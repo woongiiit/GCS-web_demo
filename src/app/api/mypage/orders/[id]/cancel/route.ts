@@ -18,7 +18,7 @@ export async function POST(
     const user = await requireAuth()
     const orderId = params.id
 
-    if (!permissions.canPurchaseProduct(user.role as any)) {
+    if (!permissions.canPurchaseProduct(user.role as 'GENERAL' | 'MAJOR' | 'ADMIN')) {
       return NextResponse.json(
         { error: permissionErrors.cannotPurchase },
         { status: 403 }
@@ -171,10 +171,10 @@ export async function POST(
       success: true,
       message: '주문이 성공적으로 취소되었습니다.'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('주문 취소 오류:', error)
 
-    if (error.message === '로그인이 필요합니다') {
+    if (error instanceof Error && error.message === '로그인이 필요합니다') {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }

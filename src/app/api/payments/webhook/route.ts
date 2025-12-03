@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { cancelPortOnePayment, getPortOnePayment } from '@/lib/shop/payment'
+import { getPortOnePayment } from '@/lib/shop/payment'
 import type { Prisma } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
