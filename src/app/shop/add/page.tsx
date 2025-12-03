@@ -494,6 +494,7 @@ export default function ShopAddPage() {
           fundingGoalAmount: '',
           fundingDeadline: '',
           stock: '',
+          sellerTeamId: '',
         })
         setEditorContent('')
         setCoverImages([])
