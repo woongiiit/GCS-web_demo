@@ -17,6 +17,8 @@ const nextConfig = {
     // optimizeCss: true, // Railway에서 critters 모듈 오류로 인해 비활성화
   },
   compress: true,
+  // Prisma Client를 standalone 빌드에 포함시키기 위한 설정
+  serverExternalPackages: ['@prisma/client'],
 }
 
 module.exports = nextConfig
