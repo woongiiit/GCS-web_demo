@@ -987,9 +987,6 @@ type MyOrder = {
   fundStatusUpdatedAt?: string | null
   fundStatusNote?: string | null
   billingExecutedAt?: string | null
-  fundStatus?: string | null
-  fundStatusUpdatedAt?: string | null
-  fundStatusNote?: string | null
   createdAt: string
   orderItems: MyOrderItem[]
   paymentRecords: Array<{
