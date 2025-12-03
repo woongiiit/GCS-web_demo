@@ -142,8 +142,7 @@ function MyPageContent() {
     const tabs: TabKey[] = ['profile', 'orders', 'cart', 'archive']
     
     // 판매자 권한이 있으면 판매내역 탭 추가 (관리자여도 판매자면 보임)
-    // isSeller가 true인 경우에만 추가 (Boolean 또는 truthy 값 체크)
-    const isSeller = user?.isSeller === true || user?.isSeller === 'true' || Boolean(user?.isSeller)
+    const isSeller = Boolean(user?.isSeller)
     if (user && isSeller) {
       tabs.push('sellerOrders')
     }
