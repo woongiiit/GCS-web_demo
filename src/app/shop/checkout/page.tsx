@@ -235,6 +235,33 @@ export default function CheckoutPage() {
     return `${items[0].name} 외 ${items.length - 1}건`
   }, [items])
 
+  // 판매방식에 따른 UI 로직
+  const receiptMethodInfo = useMemo(() => {
+    if (items.length === 0) return { needsSelection: false, allowsDelivery: false, allowsPickup: false }
+    
+    // 모든 상품이 같은 판매방식을 가지고 있는지 확인
+    const firstItem = items[0]
+    const allSameDelivery = items.every(item => item.allowsDelivery === firstItem.allowsDelivery)
+    const allSamePickup = items.every(item => item.allowsPickup === firstItem.allowsPickup)
+    
+    const allowsDelivery = firstItem.allowsDelivery ?? false
+    const allowsPickup = firstItem.allowsPickup ?? false
+    
+    // 둘 다 선택된 경우 수령 방식 선택 필요
+    const needsSelection = allowsDelivery && allowsPickup
+    
+    return { needsSelection, allowsDelivery, allowsPickup }
+  }, [items])
+
+  // 배송지 입력이 필요한지 확인
+  const needsShippingAddress = useMemo(() => {
+    if (!receiptMethodInfo.allowsDelivery) return false
+    if (receiptMethodInfo.needsSelection) {
+      return selectedReceiptMethod === 'delivery'
+    }
+    return true
+  }, [receiptMethodInfo, selectedReceiptMethod])
+
   const handlePayment = async () => {
     if (!user) {
       alert('로그인이 필요합니다.')
