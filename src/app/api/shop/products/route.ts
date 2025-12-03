@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       originalPrice,
       discount,
       type,
+      sellerTeamId,
       fundingGoalAmount,
       fundingDeadline,
       images,
@@ -203,6 +204,7 @@ export async function POST(request: Request) {
       brand: typeof brand === 'string' && brand.trim().length > 0 ? brand.trim() : null,
       isActive: true,
       authorId: user.id, // 상품 등록자 ID 저장
+      sellerTeamId: sellerTeamId && sellerTeamId.trim() !== '' ? sellerTeamId : null,
     }
 
     if (parsedOptions.length > 0) {

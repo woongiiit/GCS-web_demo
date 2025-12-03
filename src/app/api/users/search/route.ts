@@ -6,12 +6,20 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // 관리자 권한 확인 (Archive 작성은 관리자만 가능)
-    const user = await requireAuth(['ADMIN'])
+    // 로그인 확인 (판매팀 멤버 추가를 위해 판매자도 사용 가능)
+    const user = await requireAuth()
     if (!user) {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 }
+      )
+    }
+
+    // 판매팀 멤버 추가는 판매자 권한 필요
+    if (!user.isSeller && user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: '판매자 권한이 필요합니다.' },
+        { status: 403 }
       )
     }
 
@@ -31,9 +39,12 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // 사용자 목록 조회 (이름, 이메일, 학번만)
+    // 사용자 목록 조회 (판매자만 필터링)
     const users = await prisma.user.findMany({
-      where,
+      where: {
+        ...where,
+        isSeller: true // 판매자만 검색
+      },
       select: {
         id: true,
         name: true,

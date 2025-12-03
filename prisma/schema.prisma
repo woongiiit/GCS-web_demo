@@ -53,6 +53,7 @@ model User {
   billingSchedules    BillingSchedule[]
   productReviews      ProductReview[]
   chatbotHistories    ChatBotHistory[]
+  sellerTeams         UserSellerTeam[] // 속한 판매팀들
 
   @@index([role])
   @@index([isSeller])
@@ -185,6 +186,8 @@ model Product {
   billingPaymentApprovedBy String? @map("billing_payment_approved_by") // 빌링키 결제 승인자 ID (관리자)
   authorId              String? // 상품 등록자 ID (관리자 또는 판매자)
   author                User?       @relation(fields: [authorId], references: [id])
+  sellerTeamId          String? @map("seller_team_id") // 판매팀 ID
+  sellerTeam            SellerTeam? @relation(fields: [sellerTeamId], references: [id])
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
 
@@ -196,6 +199,7 @@ model Product {
   reviews        ProductReview[]
 
   @@index([type, isActive, createdAt])
+  @@index([sellerTeamId])
   @@index([isActive, createdAt])
   @@index([isActive, likeCount])
   @@index([likeCount])
@@ -699,4 +703,34 @@ model ChatBotHistory {
   @@index([optionId])
   @@index([createdAt])
   @@map("chatbot_histories")
+}
+
+// 판매팀 모델
+model SellerTeam {
+  id          String   @id @default(cuid())
+  name        String   @unique // 판매팀 이름
+  description String? // 판매팀 설명
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 관계
+  members  UserSellerTeam[] // 판매팀 멤버들
+  products Product[] // 판매팀이 등록한 상품들
+
+  @@map("seller_teams")
+}
+
+// 사용자-판매팀 다대다 관계
+model UserSellerTeam {
+  id           String     @id @default(cuid())
+  userId       String     @map("user_id")
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sellerTeamId String     @map("seller_team_id")
+  sellerTeam   SellerTeam @relation(fields: [sellerTeamId], references: [id], onDelete: Cascade)
+  joinedAt     DateTime   @default(now()) @map("joined_at")
+
+  @@unique([userId, sellerTeamId])
+  @@index([userId])
+  @@index([sellerTeamId])
+  @@map("user_seller_teams")
 }

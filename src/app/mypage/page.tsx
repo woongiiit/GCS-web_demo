@@ -127,6 +127,8 @@ function MyPageContent() {
   const [cartMessageType, setCartMessageType] = useState<'success' | 'error'>('success')
   const [selectedCartIds, setSelectedCartIds] = useState<string[]>([])
   const [isDeletingCartItems, setIsDeletingCartItems] = useState(false)
+  const [sellerTeams, setSellerTeams] = useState<Array<{ id: string; name: string; description: string | null; memberCount: number; productCount: number }>>([])
+  const [isLoadingSellerTeams, setIsLoadingSellerTeams] = useState(false)
   const allTabs: TabKey[] = [
     'profile',
     'orders',
@@ -420,7 +422,25 @@ function MyPageContent() {
     if (activeTab === 'cart') {
       fetchCartItems()
     }
-  }, [activeTab, fetchCartItems])
+    if (activeTab === 'profile' && user?.isSeller) {
+      fetchSellerTeams()
+    }
+  }, [activeTab, fetchCartItems, user?.isSeller])
+
+  const fetchSellerTeams = async () => {
+    setIsLoadingSellerTeams(true)
+    try {
+      const response = await fetch('/api/mypage/seller-teams')
+      const data = await response.json()
+      if (data.success) {
+        setSellerTeams(data.data)
+      }
+    } catch (error) {
+      console.error('판매팀 목록 조회 오류:', error)
+    } finally {
+      setIsLoadingSellerTeams(false)
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -595,6 +615,44 @@ function MyPageContent() {
                       </div>
                     </div>
                   </div>
+
+                  {/* 판매팀 목록 (판매자인 경우) */}
+                  {user?.isSeller && (
+                    <div>
+                      <h2 className="text-2xl font-bold text-black mb-6">내 판매팀</h2>
+                      {isLoadingSellerTeams ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="text-center">
+                            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-black"></div>
+                            <p className="text-gray-600">판매팀 목록을 불러오는 중...</p>
+                          </div>
+                        </div>
+                      ) : sellerTeams.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                          속한 판매팀이 없습니다.
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {sellerTeams.map((team) => (
+                            <div key={team.id} className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <h3 className="text-lg font-semibold text-black">{team.name}</h3>
+                                  {team.description && (
+                                    <p className="text-sm text-gray-600 mt-1">{team.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-4 text-sm text-gray-600 mt-3">
+                                <span>멤버: {team.memberCount}명</span>
+                                <span>상품: {team.productCount}개</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* 비밀번호 변경 */}
                   <div>

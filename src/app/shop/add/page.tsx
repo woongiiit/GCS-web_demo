@@ -35,6 +35,7 @@ export default function ShopAddPage() {
     fundingGoalAmount: '',
     fundingDeadline: '',
     stock: '',
+    sellerTeamId: '',
   })
   const [customOptions, setCustomOptions] = useState<ProductOptionInput[]>([])
   // 상품 대표 이미지들 (상단 갤러리용)
@@ -47,6 +48,17 @@ export default function ShopAddPage() {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
+  // 판매팀 관련 상태
+  const [sellerTeams, setSellerTeams] = useState<Array<{ id: string; name: string }>>([])
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
+  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false)
+  const [newTeamName, setNewTeamName] = useState('')
+  const [newTeamDescription, setNewTeamDescription] = useState('')
+  const [teamMemberSearch, setTeamMemberSearch] = useState('')
+  const [teamMemberSearchResults, setTeamMemberSearchResults] = useState<Array<{ id: string; name: string; email: string }>>([])
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<Array<{ id: string; name: string; email: string }>>([])
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false)
+
   const selectedProductType = PRODUCT_TYPES.find((type) => type.id === formData.type) ?? PRODUCT_TYPES[0]
 
   // 상품 등록 권한이 없는 경우 접근 차단
@@ -55,6 +67,98 @@ export default function ShopAddPage() {
       router.push('/shop')
     }
   }, [role, isSeller, router])
+
+  // 판매팀 목록 불러오기
+  useEffect(() => {
+    if (isSeller) {
+      fetchSellerTeams()
+    }
+  }, [isSeller])
+
+  const fetchSellerTeams = async () => {
+    setIsLoadingTeams(true)
+    try {
+      const response = await fetch('/api/seller-teams')
+      const data = await response.json()
+      if (data.success) {
+        setSellerTeams(data.data.map((team: { id: string; name: string }) => ({
+          id: team.id,
+          name: team.name
+        })))
+      }
+    } catch (error) {
+      console.error('판매팀 목록 조회 오류:', error)
+    } finally {
+      setIsLoadingTeams(false)
+    }
+  }
+
+  // 판매팀 멤버 검색
+  const searchTeamMembers = async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.trim() === '') {
+      setTeamMemberSearchResults([])
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/users/search?search=${encodeURIComponent(searchTerm)}&limit=10`)
+      const data = await response.json()
+      if (data.success) {
+        // 판매자만 필터링
+        const sellers = data.data.filter((user: { id: string }) => {
+          // 이미 선택된 멤버는 제외
+          return !selectedTeamMembers.some(m => m.id === user.id)
+        })
+        setTeamMemberSearchResults(sellers)
+      }
+    } catch (error) {
+      console.error('멤버 검색 오류:', error)
+    }
+  }
+
+  // 판매팀 생성
+  const handleCreateTeam = async () => {
+    if (!newTeamName.trim()) {
+      alert('판매팀 이름을 입력해주세요.')
+      return
+    }
+
+    setIsCreatingTeam(true)
+    try {
+      const response = await fetch('/api/seller-teams', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newTeamName.trim(),
+          description: newTeamDescription.trim() || undefined,
+          memberIds: selectedTeamMembers.map(m => m.id)
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        // 새로 생성된 팀을 선택하고 목록 새로고침
+        setFormData(prev => ({ ...prev, sellerTeamId: data.data.id }))
+        await fetchSellerTeams()
+        setShowCreateTeamModal(false)
+        setNewTeamName('')
+        setNewTeamDescription('')
+        setSelectedTeamMembers([])
+        setTeamMemberSearch('')
+        setTeamMemberSearchResults([])
+        alert('판매팀이 생성되었습니다.')
+      } else {
+        alert(data.error || '판매팀 생성 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('판매팀 생성 오류:', error)
+      alert('판매팀 생성 중 오류가 발생했습니다.')
+    } finally {
+      setIsCreatingTeam(false)
+    }
+  }
 
   // 할인율 자동 계산
   useEffect(() => {
@@ -363,6 +467,7 @@ export default function ShopAddPage() {
           originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : null,
           discount: formData.discount ? parseInt(formData.discount) : null,
           type: formData.type,
+          sellerTeamId: formData.sellerTeamId || null,
           fundingGoalAmount: parsedFundingGoal,
           fundingDeadline: isFundType && fundingDeadlineValue ? fundingDeadlineValue : null,
           brand: formData.brand,
@@ -539,6 +644,39 @@ export default function ShopAddPage() {
                       <p className="mt-2 text-xs text-gray-500">
                         {selectedProductType.description}
                       </p>
+                    </div>
+
+                    {/* 판매팀 선택 */}
+                    <div className="mb-6">
+                      <label htmlFor="sellerTeamId" className="block text-sm font-medium text-gray-700 mb-2">
+                        판매팀
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          id="sellerTeamId"
+                          name="sellerTeamId"
+                          value={formData.sellerTeamId}
+                          onChange={(e) => {
+                            if (e.target.value === 'CREATE_NEW') {
+                              setShowCreateTeamModal(true)
+                            } else {
+                              setFormData(prev => ({ ...prev, sellerTeamId: e.target.value }))
+                            }
+                          }}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                          disabled={isLoadingTeams}
+                        >
+                          <option value="">판매팀을 선택하세요</option>
+                          {!isLoadingTeams && (
+                            <option value="CREATE_NEW">+ 판매팀 추가</option>
+                          )}
+                          {sellerTeams.map((team) => (
+                            <option key={team.id} value={team.id}>
+                              {team.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     {/* 상품명 */}
@@ -886,6 +1024,137 @@ export default function ShopAddPage() {
           </div>
         </div>
       </div>
+
+      {/* 판매팀 생성 모달 */}
+      {showCreateTeamModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-black mb-4">새 판매팀 생성</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="newTeamName" className="block text-sm font-medium text-gray-700 mb-2">
+                  판매팀 이름 *
+                </label>
+                <input
+                  id="newTeamName"
+                  type="text"
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                  placeholder="판매팀 이름을 입력하세요"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="newTeamDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                  판매팀 설명
+                </label>
+                <textarea
+                  id="newTeamDescription"
+                  value={newTeamDescription}
+                  onChange={(e) => setNewTeamDescription(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                  placeholder="판매팀 설명을 입력하세요 (선택사항)"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  멤버 추가
+                </label>
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    value={teamMemberSearch}
+                    onChange={(e) => {
+                      setTeamMemberSearch(e.target.value)
+                      searchTeamMembers(e.target.value)
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                    placeholder="이름, 이메일, 학번으로 검색..."
+                  />
+                </div>
+                {teamMemberSearchResults.length > 0 && (
+                  <div className="border border-gray-200 rounded-lg max-h-40 overflow-y-auto mb-2">
+                    {teamMemberSearchResults.map((user) => (
+                      <div
+                        key={user.id}
+                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        onClick={() => {
+                          if (!selectedTeamMembers.some(m => m.id === user.id)) {
+                            setSelectedTeamMembers([...selectedTeamMembers, user])
+                            setTeamMemberSearch('')
+                            setTeamMemberSearchResults([])
+                          }
+                        }}
+                      >
+                        <div className="font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm text-gray-500">{user.email}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {selectedTeamMembers.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">선택된 멤버:</p>
+                    {selectedTeamMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium text-gray-900">{member.name}</div>
+                          <div className="text-sm text-gray-500">{member.email}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTeamMembers(selectedTeamMembers.filter(m => m.id !== member.id))
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          제거
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateTeamModal(false)
+                  setNewTeamName('')
+                  setNewTeamDescription('')
+                  setSelectedTeamMembers([])
+                  setTeamMemberSearch('')
+                  setTeamMemberSearchResults([])
+                }}
+                className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateTeam}
+                disabled={isCreatingTeam || !newTeamName.trim()}
+                className={`flex-1 py-2 px-4 rounded-lg text-white transition-colors ${
+                  isCreatingTeam || !newTeamName.trim()
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-black hover:bg-gray-800'
+                }`}
+              >
+                {isCreatingTeam ? '생성 중...' : '생성하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
 
   )
