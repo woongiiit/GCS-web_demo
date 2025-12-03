@@ -53,6 +53,8 @@ type CartApiItem = {
     fundingGoalAmount?: number | null
     fundingCurrentAmount?: number | null
     fundingDeadline?: string | null
+    allowsDelivery?: boolean
+    allowsPickup?: boolean
   }
 }
 
@@ -70,6 +72,8 @@ type CheckoutItem = {
   fundingGoalAmount?: number | null
   fundingCurrentAmount?: number | null
   fundingDeadline?: string | null
+  allowsDelivery?: boolean
+  allowsPickup?: boolean
 }
 
 type PaymentConfig = {
@@ -131,6 +135,7 @@ export default function CheckoutPage() {
   const [buyerPhone, setBuyerPhone] = useState('')
   const [shippingAddressDetail, setShippingAddressDetail] = useState('')
   const [orderMemo, setOrderMemo] = useState('')
+  const [selectedReceiptMethod, setSelectedReceiptMethod] = useState<'delivery' | 'pickup' | null>(null)
   const [isPaying, setIsPaying] = useState(false)
   const [successResult, setSuccessResult] = useState<CheckoutSuccess | null>(null)
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null)
@@ -237,13 +242,22 @@ export default function CheckoutPage() {
       return
     }
 
-    if (!shippingAddress.trim()) {
-      setError('배송지를 입력해주세요.')
-      return
+    // 배송지 입력이 필요한 경우에만 검증
+    if (needsShippingAddress) {
+      if (!shippingAddress.trim()) {
+        setError('배송지를 입력해주세요.')
+        return
+      }
+
+      if (!shippingAddressDetail.trim()) {
+        setError('상세 주소를 입력해주세요.')
+        return
+      }
     }
 
-    if (!shippingAddressDetail.trim()) {
-      setError('상세 주소를 입력해주세요.')
+    // 수령 방식 선택이 필요한 경우 검증
+    if (receiptMethodInfo.needsSelection && !selectedReceiptMethod) {
+      setError('수령 방식을 선택해주세요.')
       return
     }
 
@@ -273,7 +287,9 @@ export default function CheckoutPage() {
       const { merchantCode, pgId, billingPgId, channelKey, billingChannelKey, storeId } = paymentConfig
       IMP.init(merchantCode)
 
-      const fullShippingAddress = `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
+      const fullShippingAddress = needsShippingAddress 
+        ? `${shippingAddress.trim()} ${shippingAddressDetail.trim()}`.trim()
+        : ''
       const hasFundItems = items.some((item) => item.productType === 'FUND')
       const hasNonFundItems = items.some((item) => item.productType !== 'FUND')
 
@@ -357,10 +373,10 @@ export default function CheckoutPage() {
               fullName: buyerName,
               email: buyerEmail,
               phoneNumber: buyerPhone,
-              address: {
+              address: needsShippingAddress ? {
                 addressLine1: shippingAddress.trim() || fullShippingAddress,
                 addressLine2: shippingAddressDetail.trim() || ''
-              }
+              } : undefined
             },
             customData: {
               productName: mainProductName || 'Fund 자동결제 등록'
@@ -412,7 +428,7 @@ export default function CheckoutPage() {
                         }))
                       }))
                     : undefined,
-                shippingAddress: fullShippingAddress,
+                shippingAddress: needsShippingAddress ? fullShippingAddress : null,
                 phone: buyerPhone.trim(),
                 buyerName: buyerName.trim(),
                 buyerEmail: buyerEmail.trim(),
@@ -488,7 +504,7 @@ export default function CheckoutPage() {
         buyer_name: buyerName,
         buyer_email: buyerEmail,
         buyer_tel: buyerPhone,
-        buyer_addr: fullShippingAddress,
+        buyer_addr: needsShippingAddress ? fullShippingAddress : '',
         ...(channelKey ? { channel_key: channelKey } : {})
       }
 
@@ -524,7 +540,7 @@ export default function CheckoutPage() {
                       }))
                     }))
                   : undefined,
-              shippingAddress: fullShippingAddress,
+              shippingAddress: needsShippingAddress ? fullShippingAddress : null,
               phone: buyerPhone.trim(),
               notes: orderMemo.trim() || undefined,
               payment: {
@@ -689,22 +705,56 @@ export default function CheckoutPage() {
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
                 <CheckoutItemsPanel items={items} />
-                <ShippingForm
-                  buyerName={buyerName}
-                  buyerEmail={buyerEmail}
-                  buyerPhone={buyerPhone}
-                  shippingAddress={shippingAddress}
-                  shippingAddressDetail={shippingAddressDetail}
-                  orderMemo={orderMemo}
-                  onBuyerNameChange={setBuyerName}
-                  onBuyerEmailChange={setBuyerEmail}
-                  onBuyerPhoneChange={setBuyerPhone}
-                  onShippingAddressChange={setShippingAddress}
-                  onShippingAddressDetailChange={setShippingAddressDetail}
-                  onOrderMemoChange={setOrderMemo}
-                  onAddressSearch={handleAddressSearch}
-                  isAddressSearchLoading={isAddressSearchLoading}
-                />
+                {/* 수령 방식 선택 (택배 발송과 현장 수령 둘 다 가능한 경우) */}
+                {receiptMethodInfo.needsSelection && (
+                  <div className="bg-white p-6 rounded-lg border border-gray-200">
+                    <h2 className="text-xl font-semibold text-black mb-4">수령 방식</h2>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="receiptMethod"
+                          value="delivery"
+                          checked={selectedReceiptMethod === 'delivery'}
+                          onChange={() => setSelectedReceiptMethod('delivery')}
+                          className="w-5 h-5 text-orange-500 border-gray-300 focus:ring-orange-500 focus:ring-2"
+                        />
+                        <span className="text-gray-700">택배로 받으시겠습니까?</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="receiptMethod"
+                          value="pickup"
+                          checked={selectedReceiptMethod === 'pickup'}
+                          onChange={() => setSelectedReceiptMethod('pickup')}
+                          className="w-5 h-5 text-orange-500 border-gray-300 focus:ring-orange-500 focus:ring-2"
+                        />
+                        <span className="text-gray-700">현장에서 직접 수령하시겠습니까?</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* 배송지 정보 (택배 발송이 가능한 경우에만 표시) */}
+                {needsShippingAddress && (
+                  <ShippingForm
+                    buyerName={buyerName}
+                    buyerEmail={buyerEmail}
+                    buyerPhone={buyerPhone}
+                    shippingAddress={shippingAddress}
+                    shippingAddressDetail={shippingAddressDetail}
+                    orderMemo={orderMemo}
+                    onBuyerNameChange={setBuyerName}
+                    onBuyerEmailChange={setBuyerEmail}
+                    onBuyerPhoneChange={setBuyerPhone}
+                    onShippingAddressChange={setShippingAddress}
+                    onShippingAddressDetailChange={setShippingAddressDetail}
+                    onOrderMemoChange={setOrderMemo}
+                    onAddressSearch={handleAddressSearch}
+                    isAddressSearchLoading={isAddressSearchLoading}
+                  />
+                )}
               </div>
               <aside>
                 <OrderSummary
@@ -776,7 +826,9 @@ export default function CheckoutPage() {
         productType: item.product.type,
         fundingGoalAmount: item.product.fundingGoalAmount ?? null,
         fundingCurrentAmount: item.product.fundingCurrentAmount ?? null,
-        fundingDeadline: item.product.fundingDeadline ?? null
+        fundingDeadline: item.product.fundingDeadline ?? null,
+        allowsDelivery: item.product.allowsDelivery ?? false,
+        allowsPickup: item.product.allowsPickup ?? false
       }))
 
       setItems(checkoutItems)
@@ -867,7 +919,9 @@ export default function CheckoutPage() {
           productType: product.type,
           fundingGoalAmount: product.fundingGoalAmount ?? null,
           fundingCurrentAmount: product.fundingCurrentAmount ?? null,
-          fundingDeadline: product.fundingDeadline ?? null
+          fundingDeadline: product.fundingDeadline ?? null,
+          allowsDelivery: product.allowsDelivery ?? false,
+          allowsPickup: product.allowsPickup ?? false
         }
       ])
     } catch (directError) {

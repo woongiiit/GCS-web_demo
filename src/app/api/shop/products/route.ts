@@ -32,6 +32,8 @@ export async function POST(request: Request) {
       discount,
       type,
       sellerTeamId,
+      allowsDelivery,
+      allowsPickup,
       fundingGoalAmount,
       fundingDeadline,
       images,
@@ -205,6 +207,8 @@ export async function POST(request: Request) {
       isActive: true,
       authorId: user.id, // 상품 등록자 ID 저장
       sellerTeamId: sellerTeamId && sellerTeamId.trim() !== '' ? sellerTeamId : null,
+      allowsDelivery: typeof allowsDelivery === 'boolean' ? allowsDelivery : false,
+      allowsPickup: typeof allowsPickup === 'boolean' ? allowsPickup : false,
     }
 
     if (parsedOptions.length > 0) {

@@ -47,10 +47,21 @@ export async function GET() {
         updatedAt: team.updatedAt
       }))
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('판매팀 목록 조회 오류:', error)
+    
+    // Prisma 에러 상세 정보 로깅
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('Prisma 에러 코드:', error.code)
+      console.error('Prisma 에러 메시지:', error)
+    }
+
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
     return NextResponse.json(
-      { error: '판매팀 목록 조회 중 오류가 발생했습니다.' },
+      { 
+        error: '판매팀 목록 조회 중 오류가 발생했습니다.',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }
@@ -188,8 +199,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Prisma 에러 상세 정보 로깅
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('Prisma 에러 코드:', error.code)
+      console.error('Prisma 에러 메시지:', error)
+    }
+
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
     return NextResponse.json(
-      { error: '판매팀 생성 중 오류가 발생했습니다.' },
+      { 
+        error: '판매팀 생성 중 오류가 발생했습니다.',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }

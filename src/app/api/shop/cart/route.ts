@@ -43,7 +43,9 @@ export async function GET() {
             type: true,
             fundingGoalAmount: true,
             fundingDeadline: true,
-            fundingCurrentAmount: true
+            fundingCurrentAmount: true,
+            allowsDelivery: true,
+            allowsPickup: true
           }
         },
         createdAt: true,

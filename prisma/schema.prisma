@@ -188,6 +188,8 @@ model Product {
   author                User?       @relation(fields: [authorId], references: [id])
   sellerTeamId          String? @map("seller_team_id") // 판매팀 ID
   sellerTeam            SellerTeam? @relation(fields: [sellerTeamId], references: [id])
+  allowsDelivery        Boolean     @default(false) @map("allows_delivery") // 택배 발송 가능 여부
+  allowsPickup          Boolean     @default(false) @map("allows_pickup") // 현장 수령 가능 여부
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
 

@@ -36,6 +36,8 @@ export default function ShopAddPage() {
     fundingDeadline: '',
     stock: '',
     sellerTeamId: '',
+    allowsDelivery: false,
+    allowsPickup: false,
   })
   const [customOptions, setCustomOptions] = useState<ProductOptionInput[]>([])
   // 상품 대표 이미지들 (상단 갤러리용)
@@ -468,6 +470,8 @@ export default function ShopAddPage() {
           discount: formData.discount ? parseInt(formData.discount) : null,
           type: formData.type,
           sellerTeamId: formData.sellerTeamId || null,
+          allowsDelivery: formData.allowsDelivery,
+          allowsPickup: formData.allowsPickup,
           fundingGoalAmount: parsedFundingGoal,
           fundingDeadline: isFundType && fundingDeadlineValue ? fundingDeadlineValue : null,
           brand: formData.brand,
@@ -495,6 +499,8 @@ export default function ShopAddPage() {
           fundingDeadline: '',
           stock: '',
           sellerTeamId: '',
+          allowsDelivery: false,
+          allowsPickup: false,
         })
         setEditorContent('')
         setCoverImages([])
@@ -677,6 +683,36 @@ export default function ShopAddPage() {
                             </option>
                           ))}
                         </select>
+                      </div>
+                    </div>
+
+                    {/* 판매방식 선택 */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        판매방식
+                      </label>
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.allowsDelivery}
+                            onChange={(e) => setFormData(prev => ({ ...prev, allowsDelivery: e.target.checked }))}
+                            className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+                          />
+                          <span className="text-gray-700">택배 발송</span>
+                        </label>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.allowsPickup}
+                            onChange={(e) => setFormData(prev => ({ ...prev, allowsPickup: e.target.checked }))}
+                            className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+                          />
+                          <span className="text-gray-700">현장 수령</span>
+                        </label>
+                        {!formData.allowsDelivery && !formData.allowsPickup && (
+                          <p className="text-xs text-red-500 mt-1">최소 하나의 판매방식을 선택해주세요.</p>
+                        )}
                       </div>
                     </div>
 
