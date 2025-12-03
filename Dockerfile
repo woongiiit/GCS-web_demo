@@ -68,7 +68,8 @@ USER nextjs
 EXPOSE 3000
 
 ENV HOSTNAME "0.0.0.0"
-# PORT는 Railway가 런타임에 설정하므로 여기서 설정하지 않음
-# Next.js standalone server.js는 자동으로 process.env.PORT를 읽습니다
+ENV PORT 3000
+# Railway가 런타임에 PORT 환경 변수를 설정하면 자동으로 사용됨
+# Next.js standalone server.js는 process.env.PORT를 우선적으로 읽습니다
 
 CMD ["node", "server.js"]
