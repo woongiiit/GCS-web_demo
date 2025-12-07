@@ -11,6 +11,7 @@ export default function Navigation() {
   const { user, isLoading, logout } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   const menuItems = [
     { 
@@ -321,7 +322,12 @@ export default function Navigation() {
                       <p className="w-full">
                         © 2025 GCS:Web. All rights reserved.
                       </p>
-                      <TermsOfServiceModal />
+                      <button 
+                        onClick={() => setIsTermsModalOpen(true)} 
+                        className="w-full text-left underline decoration-solid text-[8px] text-[#443e3c] leading-[1.5]"
+                      >
+                        이용약관
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -331,6 +337,7 @@ export default function Navigation() {
           </div>
         </div>
       )}
+      {isTermsModalOpen && <TermsOfServiceModal onClose={() => setIsTermsModalOpen(false)} />}
     </>
   )
 }
