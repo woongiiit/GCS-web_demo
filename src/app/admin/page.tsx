@@ -9,6 +9,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+// 이미지 상수 (Figma에서 추출한 이미지 URL)
+const imgMdiBell = "https://www.figma.com/api/mcp/asset/fec88dd4-2a71-4ffc-ab6d-7067c4e5c152"
+const imgMessageSquare = "https://www.figma.com/api/mcp/asset/61c2bfd6-81fa-44b0-87e3-a23138b3bb96"
+const imgSave = "https://www.figma.com/api/mcp/asset/ab057780-9b6a-41f9-b1af-6ce9ca190010"
+const imgLine297 = "https://www.figma.com/api/mcp/asset/06b40351-0cb3-4462-b8b5-385312e99264"
+
 export default function AdminPage() {
   return (
     <Suspense fallback={<AdminPageSuspenseFallback />}>
@@ -52,42 +58,39 @@ function AdminPageContent() {
       </div>
 
       {/* Mid Section */}
-      <div className="flex-1 flex flex-col gap-[60px] px-0 py-0">
+      <div className="flex-1 flex flex-col items-center justify-between px-0 py-0">
         {/* 알림/문의/로그 버튼들 */}
         <div className="border-b-2 border-[#eeebe6] flex items-center w-full">
           <Link 
             href="/admin/notifications"
-            className="flex-1 flex flex-col gap-3 items-center justify-center py-5 px-0"
+            className="flex-1 flex flex-col gap-[12px] items-center justify-center py-5 px-0"
           >
             <div className="relative size-6">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
+              <img alt="알림" className="block max-w-none size-full" src={imgMdiBell} />
             </div>
             <div className="flex gap-1 items-center text-[15px] leading-[1.5]">
               <span className="font-normal text-[#443e3c]">알림</span>
               <span className="font-bold text-[#ee4a08]">5</span>
             </div>
           </Link>
-          <div className="border-l-2 border-r-2 border-[#eeebe6] flex-1 flex flex-col gap-3 items-center justify-center py-5 px-0">
+          <Link 
+            href="/admin/inquiries"
+            className="border-l-2 border-r-2 border-[#eeebe6] flex-1 flex flex-col gap-[12px] items-center justify-center py-5 px-0"
+          >
             <div className="relative size-6">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+              <img alt="문의" className="block max-w-none size-full" src={imgMessageSquare} />
             </div>
             <div className="flex gap-1 items-center text-[15px] leading-[1.5]">
               <span className="font-normal text-[#443e3c]">문의</span>
               <span className="font-bold text-[#ee4a08]">5</span>
             </div>
-          </div>
+          </Link>
           <Link 
             href="/admin/logs"
-            className="flex-1 flex flex-col gap-3 items-center justify-center py-5 px-0"
+            className="flex-1 flex flex-col gap-[12px] items-center justify-center py-5 px-0"
           >
             <div className="relative size-6">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
+              <img alt="로그" className="block max-w-none size-full" src={imgSave} />
             </div>
             <div className="flex items-center text-[15px] leading-[1.5]">
               <span className="font-normal text-[#443e3c]">로그</span>
@@ -96,102 +99,103 @@ function AdminPageContent() {
         </div>
 
         {/* Body - 카드 섹션들 */}
-        <div className="flex flex-col gap-[40px] px-5 py-0">
+        <div className="flex flex-col gap-[16px] items-start mt-[128px]">
           {/* 판매 관리 카드 */}
-          <div className="bg-white rounded-xl p-4 flex flex-col gap-[44px]">
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2.5 items-center justify-center w-full">
+          <div className="bg-white rounded-[12px] p-4 flex flex-col w-[344px]">
+            <div className="flex flex-col gap-[8px] items-start w-full">
+              <div className="flex items-center justify-center w-full">
                 <p className="flex-1 font-bold text-[15px] leading-[1.5] text-[#443e3c]">
                   판매 관리
                 </p>
               </div>
-              <div className="h-px relative w-full">
-                <div className="absolute bottom-0 left-0 right-0 top-[-2px] border-t border-[#eeebe6]"></div>
+              <div className="h-0 relative w-full">
+                <div className="absolute bottom-0 left-0 right-0 top-[-2px]">
+                  <img alt="" className="block max-w-none size-full" src={imgLine297} />
+                </div>
               </div>
             </div>
-            <div className="flex gap-2.5 items-center w-full">
-              <div className="flex-1 flex flex-col font-bold gap-4 px-0 py-3 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px]">
-                <Link href="/admin/orders" className="w-full">
-                  모든 주문 내역
-                </Link>
-                <Link href="/admin/products" className="w-full">
-                  상품 관리
-                </Link>
-                <Link href="/admin/settlements" className="w-full">
-                  정산 내역
-                </Link>
+            <div className="flex items-center w-full">
+              <div className="flex-1 flex flex-col font-bold gap-[16px] px-0 py-3 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px]">
+                <p className="w-full">상품카드 관리</p>
+                <p className="w-full">전체 품목 관리</p>
+                <p className="w-full">정산 관리</p>
+                <p className="w-full">리뷰 관리</p>
               </div>
             </div>
           </div>
 
           {/* 사용자 관리 카드 */}
-          <div className="bg-white rounded-xl p-4 flex flex-col gap-[44px]">
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2.5 items-center justify-center w-full">
+          <div className="bg-white rounded-[12px] p-4 flex flex-col w-[344px]">
+            <div className="flex flex-col gap-[8px] items-start w-full">
+              <div className="flex items-center justify-center w-full">
                 <p className="flex-1 font-bold text-[15px] leading-[1.5] text-[#443e3c]">
                   사용자 관리
                 </p>
               </div>
-              <div className="h-px relative w-full">
-                <div className="absolute bottom-0 left-0 right-0 top-[-2px] border-t border-[#eeebe6]"></div>
+              <div className="h-0 relative w-full">
+                <div className="absolute bottom-0 left-0 right-0 top-[-2px]">
+                  <img alt="" className="block max-w-none size-full" src={imgLine297} />
+                </div>
               </div>
             </div>
-            <div className="flex flex-col gap-4 justify-center px-0 py-3">
-              <div className="flex flex-col font-bold gap-4 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
-                <Link href="/admin/users" className="w-full">
-                  회원 관리
-                </Link>
-                <Link href="/admin/seller-teams" className="w-full">
-                  판매팀 관리
-                </Link>
+            <div className="flex flex-col items-start justify-center px-0 py-3 w-full">
+              <div className="flex flex-col font-bold gap-[16px] text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
+                <p className="w-full">회원 관리</p>
+                <p className="w-full">판매팀 관리</p>
               </div>
             </div>
           </div>
 
           {/* 데이터 카드 */}
-          <div className="bg-white rounded-xl p-4 flex flex-col gap-[44px]">
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2.5 items-center justify-center w-full">
+          <div className="bg-white rounded-[12px] p-4 flex flex-col w-[344px]">
+            <div className="flex flex-col gap-[8px] items-start w-full">
+              <div className="flex items-center justify-center w-full">
                 <p className="flex-1 font-bold text-[15px] leading-[1.5] text-[#443e3c]">
                   데이터
                 </p>
               </div>
-              <div className="h-px relative w-full">
-                <div className="absolute bottom-0 left-0 right-0 top-[-2px] border-t border-[#eeebe6]"></div>
+              <div className="h-0 relative w-full">
+                <div className="absolute bottom-0 left-0 right-0 top-[-2px]">
+                  <img alt="" className="block max-w-none size-full" src={imgLine297} />
+                </div>
               </div>
             </div>
-            <div className="flex flex-col gap-4 justify-center px-0 py-3">
-              <div className="flex flex-col font-bold gap-4 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
-                <p className="w-full">뭘 넣을까요?</p>
-                <p className="w-full">몰라영</p>
+            <div className="flex flex-col font-bold gap-[16px] items-start justify-center px-0 py-3 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
+              <div className="flex flex-col gap-[16px] items-start w-full">
+                <p className="w-full">사이트 활동</p>
+                <p className="w-full">매출 현황</p>
               </div>
+              <p className="w-full">콘텐츠 통계</p>
+              <p className="w-full">사용자 통계</p>
             </div>
           </div>
 
-          {/* 기타 카드 */}
-          <div className="bg-white rounded-xl p-4 flex flex-col gap-[44px]">
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2.5 items-center justify-center w-full">
+          {/* 설정 카드 */}
+          <div className="bg-white rounded-[12px] p-4 flex flex-col w-[344px]">
+            <div className="flex flex-col gap-[8px] items-start w-full">
+              <div className="flex items-center justify-center w-full">
                 <p className="flex-1 font-bold text-[15px] leading-[1.5] text-[#443e3c]">
-                  기타
+                  설정
                 </p>
               </div>
-              <div className="h-px relative w-full">
-                <div className="absolute bottom-0 left-0 right-0 top-[-2px] border-t border-[#eeebe6]"></div>
+              <div className="h-0 relative w-full">
+                <div className="absolute bottom-0 left-0 right-0 top-[-2px]">
+                  <img alt="" className="block max-w-none size-full" src={imgLine297} />
+                </div>
               </div>
             </div>
-            <div className="flex gap-2.5 items-center w-full">
-              <div className="flex flex-col gap-4 px-0 py-3">
-                <Link href="/admin/terms" className="font-bold text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
-                  다 때려박음
-                </Link>
+            <div className="flex items-center w-full">
+              <div className="flex flex-col gap-0 px-0 py-3">
+                <p className="font-bold text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
+                  이용약관 관리
+                </p>
               </div>
             </div>
-            <div className="flex gap-2.5 items-center w-full">
-              <div className="flex flex-col gap-4 px-0 py-3">
-                <Link href="/admin/deleted" className="font-bold text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
+            <div className="flex items-center w-full">
+              <div className="flex flex-col gap-0 px-0 py-3">
+                <p className="font-bold text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
                   삭제항목
-                </Link>
+                </p>
               </div>
             </div>
           </div>
@@ -211,10 +215,10 @@ function AdminPageContent() {
                 <span className="font-bold">전화</span> : 010-5238-0236
               </p>
               <p>
-                <span className="font-bold">이메일</span> : gcs.web@dongguk.edu
+                <span className="font-bold">이메일</span> : gcsweb01234@gmail.com
               </p>
               <p>
-                <span className="font-bold">주소</span> : 서울특별시 강북구 솔샘로 174, 136동 304호
+                <span className="font-bold">주소</span> : 서울특별시 강북구 솔샘로 174 136동 304호
               </p>
             </div>
           </div>
@@ -243,15 +247,20 @@ function AdminPageContent() {
           </div>
           
           {/* 로고 및 저작권 */}
-          <div className="flex flex-col justify-between h-[41px]">
+          <div className="flex flex-col gap-[8px] items-start w-[181px]">
             <div className="h-[21px]">
               <Link href="/" className="text-lg font-bold text-black">
                 GCS<span className="text-[#f57520]">:</span>Web
               </Link>
             </div>
-            <p className="text-[8px] text-[#443e3c] leading-[1.5]">
-              © 2025 GCS:Web. All rights reserved.
-            </p>
+            <div className="flex flex-col text-[8px] text-[#443e3c] leading-[1.5] w-full">
+              <p className="w-full">
+                © 2025 GCS:Web. All rights reserved. 
+              </p>
+              <p className="w-full underline decoration-solid">
+                이용약관
+              </p>
+            </div>
           </div>
         </div>
         <div className="h-[34px]"></div>
