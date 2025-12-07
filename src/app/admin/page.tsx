@@ -116,7 +116,7 @@ function AdminPageContent() {
             </div>
             <div className="flex items-center w-full">
               <div className="flex-1 flex flex-col font-bold gap-[16px] px-0 py-3 text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px]">
-                <p className="w-full">상품카드 관리</p>
+                <Link href="/admin/product-cards" className="w-full">상품카드 관리</Link>
                 <p className="w-full">전체 품목 관리</p>
                 <p className="w-full">정산 관리</p>
                 <p className="w-full">리뷰 관리</p>
