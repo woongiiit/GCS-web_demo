@@ -1,627 +1,934 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import HomepageTermsModal from '@/components/HomepageTermsModal'
+import PrivacyPolicyModal from '@/components/PrivacyPolicyModal'
+
+// 이미지 상수 (Figma에서 추출한 이미지 URL)
+const imgVector827 = "https://www.figma.com/api/mcp/asset/7e181655-5c1b-451e-a8d5-fdbf073f37fd"
+const imgVector828 = "https://www.figma.com/api/mcp/asset/f720a260-fee5-4db7-ac7b-85e93a9c255e"
+const imgEllipse5406 = "https://www.figma.com/api/mcp/asset/19874800-c05a-4ec4-a796-9b3e985cae4d"
+const imgEllipse5405 = "https://www.figma.com/api/mcp/asset/005f71e3-8164-41e0-bbbd-88082f255fce"
+const imgEllipse5404 = "https://www.figma.com/api/mcp/asset/2d27c7bc-3c36-4cf2-a2a4-bbc2b53a42d7"
+const imgLine336 = "https://www.figma.com/api/mcp/asset/5e49690b-51c9-4590-aa82-0586802bdfd8"
+const imgLine297 = "https://www.figma.com/api/mcp/asset/da440d6a-cfa9-4df0-b4eb-e18aad5fbcd2"
+const imgWeuiBackFilled = "https://www.figma.com/api/mcp/asset/b9549685-7b14-425c-b3f1-905099411dc7"
+const imgRightArrow = "https://www.figma.com/api/mcp/asset/0be9a1e8-4180-4acb-8832-2403b3b2081a"
+const imgCheckFilled = "https://www.figma.com/api/mcp/asset/14b97bcb-a8a3-4493-b4e2-d6e80e978b0a"
+const imgCheckLight = "https://www.figma.com/api/mcp/asset/0be9a1e8-4180-4acb-8832-2403b3b2081a"
+const imgLogo1 = "https://www.figma.com/api/mcp/asset/f9f4d1c5-405e-4c9b-81d3-247dd227b5af"
+const imgLogo2 = "https://www.figma.com/api/mcp/asset/baaba4c4-1904-45b4-81f6-fcf7a3569bd4"
+const imgLogo3 = "https://www.figma.com/api/mcp/asset/b5270e1e-8975-40ae-bdb0-9d430733c1e0"
+const imgLogo4 = "https://www.figma.com/api/mcp/asset/cc317737-4ba7-4aaa-bcb5-694d80bfbe4e"
+const imgLogo5 = "https://www.figma.com/api/mcp/asset/5befd4ff-6c5f-4953-8670-34ea24651429"
+const imgRadioFilled = "https://www.figma.com/api/mcp/asset/246f5511-6666-4b97-bd46-c6aaf8268268"
+const imgRadioRegular = "https://www.figma.com/api/mcp/asset/376859ba-7c48-4959-be2f-b3929f643445"
+const imgEye = "https://www.figma.com/api/mcp/asset/20c0ddc6-bbc3-4007-b24d-5c39d795be6f"
+const imgCheckCircle = "https://www.figma.com/api/mcp/asset/14b97bcb-a8a3-4493-b4e2-d6e80e978b0a"
+
+type Step = 'terms' | 'info'
+
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+}
+
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, '')
+  if (digits.length === 0) return ''
+  let formatted = digits.slice(0, 3)
+  if (digits.length > 3) {
+    formatted += '-' + digits.slice(3, 7)
+  }
+  if (digits.length > 7) {
+    formatted += '-' + digits.slice(7, 11)
+  }
+  return formatted
+}
+
+function validatePassword(password: string): { isValid: boolean; message: string } {
+  if (password.length < 8) {
+    return { isValid: false, message: '불가능' }
+  }
+  if (!/^[a-zA-Z0-9]+$/.test(password)) {
+    return { isValid: false, message: '불가능' }
+  }
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+    return { isValid: false, message: '불가능' }
+  }
+  return { isValid: true, message: '가능' }
+}
 
 export default function SignupPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    userType: 'GENERAL', // 'GENERAL' 또는 'MAJOR'
-    studentId: '',
-    major: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    verificationCode: '' // 이메일 인증번호
-  })
+  const [step, setStep] = useState<Step>('terms')
+  const router = useRouter()
 
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
+  // 약관 동의 상태
+  const [agreeAll, setAgreeAll] = useState(false)
+  const [agreeAge, setAgreeAge] = useState(false)
+  const [agreeTerms, setAgreeTerms] = useState(false)
+  const [agreePrivacy, setAgreePrivacy] = useState(false)
+
+  // 모달 상태
+  const [isHomepageTermsOpen, setIsHomepageTermsOpen] = useState(false)
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false)
+
+  // 회원정보 입력 상태
+  const [nickname, setNickname] = useState('')
+  const [phone, setPhone] = useState('')
+  const [userType, setUserType] = useState<'GENERAL' | 'MAJOR'>('GENERAL')
+  const [studentId, setStudentId] = useState('')
+  const [major, setMajor] = useState('')
+  const [email, setEmail] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // 검증 및 상태
+  const [nicknameChecked, setNicknameChecked] = useState(false)
+  const [isNicknameAvailable, setIsNicknameAvailable] = useState<boolean | null>(null)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(false)
+  const [timer, setTimer] = useState(300)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isEmailVerified, setIsEmailVerified] = useState(false)
-  const [isSendingCode, setIsSendingCode] = useState(false)
-  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
-  const [codeSent, setCodeSent] = useState(false)
-  const [remainingTime, setRemainingTime] = useState(0)
+  const [error, setError] = useState('')
+
+  // 전체 동의 체크박스 동작
+  useEffect(() => {
+    if (agreeAll) {
+      setAgreeAge(true)
+      setAgreeTerms(true)
+      setAgreePrivacy(true)
+    } else {
+      if (agreeAge && agreeTerms && agreePrivacy) {
+        // 모든 개별 동의가 체크되어 있으면 전체 동의도 체크
+      } else {
+        // 하나라도 해제되면 전체 동의 해제
+      }
+    }
+  }, [agreeAll, agreeAge, agreeTerms, agreePrivacy])
+
+  useEffect(() => {
+    if (agreeAge && agreeTerms && agreePrivacy && !agreeAll) {
+      setAgreeAll(true)
+    } else if ((!agreeAge || !agreeTerms || !agreePrivacy) && agreeAll) {
+      setAgreeAll(false)
+    }
+  }, [agreeAge, agreeTerms, agreePrivacy])
+
+  // 타이머 카운트다운
+  useEffect(() => {
+    if (step === 'info' && timer > 0 && emailSent && !emailVerified) {
+      const interval = setInterval(() => {
+        setTimer((prev) => (prev <= 1 ? 0 : prev - 1))
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [step, timer, emailSent, emailVerified])
+
+  // 비밀번호 검증
+  const passwordValidation = validatePassword(password)
+  const passwordMatch = confirmPassword ? password === confirmPassword : null
+
+  const handleBack = () => {
+    if (step === 'info') {
+      setStep('terms')
+    } else {
+      router.back()
+    }
+  }
+
+  // 닉네임 중복 확인
+  const handleCheckNickname = async () => {
+    if (!nickname.trim()) {
+      setError('닉네임을 입력해주세요.')
+      return
+    }
+    try {
+      // TODO: 실제 API 호출
+      setNicknameChecked(true)
+      setIsNicknameAvailable(true)
+      setError('')
+    } catch (err) {
+      console.error('닉네임 중복 확인 오류:', err)
+    }
+  }
 
   // 이메일 인증번호 전송
-  const handleSendVerificationCode = async () => {
-    if (!formData.email) {
-      setErrors(prev => ({ ...prev, email: '이메일을 먼저 입력해주세요.' }))
+  const handleSendEmailCode = async () => {
+    if (!email.trim()) {
+      setError('이메일을 입력해주세요.')
       return
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      setErrors(prev => ({ ...prev, email: '올바른 이메일 형식을 입력해주세요.' }))
-      return
-    }
-
-    setIsSendingCode(true)
-    setErrors(prev => ({ ...prev, email: '', verificationCode: '' }))
-
     try {
-      const response = await fetch('/api/auth/send-verification-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: formData.email })
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setCodeSent(true)
-        setRemainingTime(300) // 5분 = 300초
-        alert('인증번호가 전송되었습니다. 이메일을 확인해주세요.')
-      } else {
-        alert(data.error || '인증번호 전송에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('인증번호 전송 오류:', error)
-      alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
-    } finally {
-      setIsSendingCode(false)
+      // TODO: 실제 API 호출
+      setEmailSent(true)
+      setTimer(300)
+      setError('')
+    } catch (err) {
+      console.error('인증번호 전송 오류:', err)
     }
   }
 
-  // 이메일 인증번호 검증
+  // 인증번호 확인
   const handleVerifyCode = async () => {
-    if (!formData.verificationCode) {
-      setErrors(prev => ({ ...prev, verificationCode: '인증번호를 입력해주세요.' }))
+    if (!verificationCode.trim()) {
+      setError('인증번호를 입력해주세요.')
       return
     }
-
-    if (!/^\d{6}$/.test(formData.verificationCode)) {
-      setErrors(prev => ({ ...prev, verificationCode: '인증번호는 6자리 숫자여야 합니다.' }))
-      return
-    }
-
-    setIsVerifyingCode(true)
-    setErrors(prev => ({ ...prev, verificationCode: '' }))
-
     try {
-      const response = await fetch('/api/auth/verify-email-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: formData.email, 
-          code: formData.verificationCode,
-          purpose: 'signup'
-        })
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsEmailVerified(true)
-        setCodeSent(false)
-        setRemainingTime(0)
-        alert('이메일 인증이 완료되었습니다!')
-      } else {
-        setErrors(prev => ({ 
-          ...prev, 
-          verificationCode: data.error || '인증번호가 올바르지 않습니다.' 
-        }))
-        
-        if (data.remainingAttempts !== undefined) {
-          alert(`남은 시도 횟수: ${data.remainingAttempts}회`)
-        }
-      }
-    } catch (error) {
-      console.error('인증번호 검증 오류:', error)
-      alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
-    } finally {
-      setIsVerifyingCode(false)
+      // TODO: 실제 API 호출
+      setEmailVerified(true)
+      setEmailSent(false)
+      setTimer(0)
+      setError('')
+    } catch (err) {
+      console.error('인증번호 검증 오류:', err)
+      setError('인증번호가 올바르지 않습니다.')
     }
   }
 
-  // 카운트다운 타이머
-  React.useEffect(() => {
-    let timer: NodeJS.Timeout
-    if (remainingTime > 0) {
-      timer = setInterval(() => {
-        setRemainingTime(prev => {
-          if (prev <= 1) {
-            setCodeSent(false)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+  // 회원가입 제출
+  const handleSignup = async () => {
+    if (!nickname || !phone || !email || !password || !confirmPassword) {
+      setError('모든 필수 항목을 입력해주세요.')
+      return
     }
-    return () => clearInterval(timer)
-  }, [remainingTime])
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    
-    // 전화번호 자동 포맷팅
-    if (name === 'phone') {
-      // 숫자만 추출
-      const numbers = value.replace(/\D/g, '')
-      
-      // 3-4-4 형식으로 포맷팅
-      let formatted = numbers
-      if (numbers.length >= 3) {
-        formatted = numbers.slice(0, 3)
-        if (numbers.length >= 7) {
-          formatted += '-' + numbers.slice(3, 7)
-          if (numbers.length >= 11) {
-            formatted += '-' + numbers.slice(7, 11)
-          } else if (numbers.length > 7) {
-            formatted += '-' + numbers.slice(7)
-          }
-        } else if (numbers.length > 3) {
-          formatted += '-' + numbers.slice(3)
-        }
-      }
-      
-      setFormData(prev => ({
-        ...prev,
-        [name]: formatted
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
+    if (!emailVerified) {
+      setError('이메일 인증을 완료해주세요.')
+      return
     }
-    
-    // 회원 유형이 변경되면 학번, 주전공 필드 초기화
-    if (name === 'userType') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        studentId: value === 'GENERAL' ? '' : prev.studentId,
-        major: value === 'GENERAL' ? '' : prev.major
-      }))
+    if (!passwordValidation.isValid) {
+      setError('비밀번호 형식이 올바르지 않습니다.')
+      return
     }
-    
-    // 입력 시 해당 필드의 에러 메시지 제거
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
+    if (password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.')
+      return
     }
-  }
-
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {}
-
-    // 이름 검증
-    if (!formData.name.trim()) {
-      newErrors.name = '이름을 입력해주세요.'
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = '이름은 2글자 이상이어야 합니다.'
-    }
-
-    // 학번 검증 (전공 회원만)
-    if (formData.userType === 'MAJOR') {
-      if (!formData.studentId.trim()) {
-        newErrors.studentId = '학번을 입력해주세요.'
-      } else if (!/^\d{10}$/.test(formData.studentId.trim())) {
-        newErrors.studentId = '학번은 10자리 숫자여야 합니다.'
-      }
-    }
-
-    // 주전공 검증 (전공 회원만)
-    if (formData.userType === 'MAJOR') {
-      if (!formData.major.trim()) {
-        newErrors.major = '주전공을 입력해주세요.'
-      } else if (formData.major.trim().length < 2) {
-        newErrors.major = '주전공은 2글자 이상이어야 합니다.'
-      }
-    }
-
-    // 이메일 검증
-    if (!formData.email.trim()) {
-      newErrors.email = '이메일을 입력해주세요.'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      newErrors.email = '올바른 이메일 형식을 입력해주세요.'
-    } else if (!isEmailVerified) {
-      newErrors.email = '이메일 인증을 완료해주세요.'
-    }
-
-    // 전화번호 검증
-    if (!formData.phone.trim()) {
-      newErrors.phone = '전화번호를 입력해주세요.'
-    } else if (!/^010-\d{4}-\d{4}$/.test(formData.phone.trim())) {
-      newErrors.phone = '전화번호는 010-XXXX-XXXX 형식으로 입력해주세요.'
-    }
-
-    // 비밀번호 검증
-    if (!formData.password) {
-      newErrors.password = '비밀번호를 입력해주세요.'
-    } else if (formData.password.length < 8) {
-      newErrors.password = '비밀번호는 8자리 이상이어야 합니다.'
-    } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = '비밀번호는 영문과 숫자를 포함해야 합니다.'
-    }
-
-    // 비밀번호 확인 검증
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = '비밀번호 확인을 입력해주세요.'
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = '비밀번호가 일치하지 않습니다.'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) {
+    if (userType === 'MAJOR' && (!studentId || !major)) {
+      setError('학번과 전공을 입력해주세요.')
       return
     }
 
     setIsSubmitting(true)
+    setError('')
     
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
-          userType: formData.userType,
-          studentId: formData.userType === 'MAJOR' ? formData.studentId : null,
-          major: formData.userType === 'MAJOR' ? formData.major : null,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password
-        })
+          name: nickname || name, // 닉네임이 있으면 닉네임을 이름으로 사용, 없으면 이름 사용
+          phone: phone.replace(/-/g, ''),
+          email,
+          password,
+          userType,
+          studentId: userType === 'MAJOR' ? studentId : null,
+          major: userType === 'MAJOR' ? major : null,
+        }),
       })
 
       const data = await response.json()
-
       if (response.ok) {
-        // 성공 시 로그인 페이지로 이동
-        alert('회원가입이 완료되었습니다! 자동으로 로그인되었습니다.')
-        window.location.href = '/'
+        router.push('/login')
       } else {
-        // 서버에서 반환된 에러 메시지 표시
-        alert(data.error || '회원가입 중 오류가 발생했습니다.')
+        setError(data.error || '회원가입에 실패했습니다.')
       }
-      
-    } catch (error) {
-      console.error('회원가입 오류:', error)
-      alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
+    } catch (err) {
+      console.error('회원가입 오류:', err)
+      setError('서버 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const canProceedToInfo = agreeAge && agreeTerms && agreePrivacy
+  const canSignup = nickname && phone && emailVerified && passwordValidation.isValid && passwordMatch === true && (userType === 'GENERAL' || (studentId && major))
+
   return (
-    <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
-      <div className="relative min-h-screen bg-white px-4 py-6 sm:px-0">
-        <div className="max-w-2xl mx-auto pt-32">
-          {/* 페이지 제목 */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-black mb-4">회원가입</h1>
-            <p className="text-gray-600 mb-8">GCS:Web Demo에 오신 것을 환영합니다</p>
-            
-            {/* 홈 아이콘 */}
-            <Link href="/" className="inline-block mb-8">
-              <div className="w-6 h-6 mx-auto">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-black">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-              </div>
-            </Link>
+    <div className="fixed inset-0 bg-white overflow-auto">
+      <div className="relative min-h-screen w-full overflow-hidden">
+        {/* 배경 디자인 요소들 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute left-[-47.67px] top-[-22.16px] w-[522.88px] h-[294.65px] flex items-center justify-center rotate-[339.444deg]">
+            <img alt="" className="block max-w-none size-full" src={imgVector827} />
           </div>
+          <div className="absolute left-[-27.92px] top-[-23.12px] w-[567.01px] h-[447.70px] flex items-center justify-center rotate-[333.242deg]">
+            <img alt="" className="block max-w-none size-full" src={imgVector828} />
+          </div>
+          <div className="absolute left-[106px] top-[-101px] w-[173.07px] h-[292.81px] flex items-center justify-center rotate-[5.928deg]">
+            <img alt="" className="block max-w-none size-full" src={imgEllipse5406} />
+          </div>
+          <div className="absolute left-[192px] top-[-20px] w-[263.09px] h-[265.69px] flex items-center justify-center rotate-[43.746deg]">
+            <img alt="" className="block max-w-none size-full" src={imgEllipse5405} />
+          </div>
+          <div className="absolute left-[5px] top-[68px] w-[145px] h-[145px]">
+            <img alt="" className="block max-w-none size-full" src={imgEllipse5404} />
+          </div>
+        </div>
 
-          {/* 회원가입 폼 */}
-          <div className="bg-gray-50 min-h-screen px-4 py-6">
-            <div className="bg-white rounded-lg shadow-md p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                
-                {/* 이름 */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-black mb-2">
-                    이름 *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                      errors.name ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                    }`}
-                    placeholder="홍길동"
-                  />
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-500">{errors.name}</p>
-                  )}
-                </div>
+        {/* 상단 네비게이션 */}
+        <div className="absolute left-[16px] top-[39px] w-[24px] h-[24px] flex items-center justify-center z-10">
+          <button onClick={handleBack} className="h-[24px] w-[12px] flex items-center justify-center" aria-label="뒤로가기">
+            <img alt="뒤로가기" className="block max-w-none size-full" src={imgWeuiBackFilled} />
+          </button>
+        </div>
 
-                {/* 회원 유형 */}
-                <div>
-                  <label className="block text-sm font-medium text-black mb-3">
-                    회원 유형 *
-                  </label>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="userType-general"
-                        name="userType"
-                        value="GENERAL"
-                        checked={formData.userType === 'GENERAL'}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-black focus:ring-black border-gray-300"
-                      />
-                      <label htmlFor="userType-general" className="ml-3 text-sm font-medium text-gray-700">
-                        일반 회원
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="userType-major"
-                        name="userType"
-                        value="MAJOR"
-                        checked={formData.userType === 'MAJOR'}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-black focus:ring-black border-gray-300"
-                      />
-                      <label htmlFor="userType-major" className="ml-3 text-sm font-medium text-gray-700">
-                        전공 회원
-                      </label>
+        {/* 로고 */}
+        <div className="absolute left-1/2 top-[89px] -translate-x-1/2 h-[29.61px] w-[84px] z-10 shadow-[0px_4px_4px_0px_rgba(197,54,9,0.3)]">
+          <Link href="/" className="text-lg font-bold text-white">
+            GCS<span className="text-white">:</span>Web
+          </Link>
+        </div>
+
+        {/* 메인 컨텐츠 */}
+        <div className="absolute left-0 top-[181px] w-full bg-[#f8f6f4] rounded-tl-[12px] rounded-tr-[12px] shadow-[0px_-4px_10px_0px_rgba(238,74,8,0.4)] pt-[96px] pb-[24px] px-[16px]">
+          <div className="flex flex-col gap-[40px] items-center">
+            {/* 제목 */}
+            <div className="h-[33px] relative w-full">
+              <div className="absolute left-0 top-0 w-full">
+                <div className="h-[33px] relative">
+                  <div className="absolute left-[-40px] top-[5px] w-[24px] h-[24px] flex items-center justify-center">
+                    <div className="flex-none scale-y-[-100%]">
+                      <div className="relative size-[24px]">
+                        <div className="absolute contents left-[9px] top-[5px]">
+                          <div className="absolute flex h-[14px] items-center justify-center left-[9px] top-[5px] w-[6px]">
+                            <div className="flex-none rotate-[270deg]">
+                              <div className="h-[6px] relative w-[14px]">
+                                <img alt="" className="block max-w-none size-full" src={imgRightArrow} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                  <div className="absolute left-1/2 top-0 -translate-x-1/2">
+                    <p className="font-bold leading-[1.5] text-[22px] text-[#443e3c] text-center">
+                      회원가입
+                    </p>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                {/* 학번 (전공 회원만) */}
-                {formData.userType === 'MAJOR' && (
-                  <div>
-                    <label htmlFor="studentId" className="block text-sm font-medium text-black mb-2">
-                      학번 *
-                    </label>
-                    <input
-                      type="text"
-                      id="studentId"
-                      name="studentId"
-                      value={formData.studentId}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                        errors.studentId ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                      }`}
-                      placeholder="예: 2020112008"
-                      maxLength={10}
-                    />
-                    {errors.studentId && (
-                      <p className="mt-1 text-sm text-red-500">{errors.studentId}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* 주전공 (전공 회원만) */}
-                {formData.userType === 'MAJOR' && (
-                  <div>
-                    <label htmlFor="major" className="block text-sm font-medium text-black mb-2">
-                      주전공 *
-                    </label>
-                    <input
-                      type="text"
-                      id="major"
-                      name="major"
-                      value={formData.major}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                        errors.major ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                      }`}
-                      placeholder="예: 산업시스템공학과"
-                    />
-                    {errors.major && (
-                      <p className="mt-1 text-sm text-red-500">{errors.major}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* 이메일 */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
-                    이메일 (아이디) *
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      disabled={isEmailVerified}
-                      className={`flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                        errors.email ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                      } ${isEmailVerified ? 'bg-green-50 border-green-300' : ''}`}
-                      placeholder="example@dongguk.edu"
-                    />
+            {step === 'terms' ? (
+              <div className="flex flex-col gap-[48px] items-start w-full">
+                {/* 약관 동의 목록 */}
+                <div className="flex flex-col gap-[16px] items-start w-full px-2">
+                  {/* 약관 전체 동의 */}
+                  <div className="flex gap-[12px] items-center w-full pr-3">
                     <button
                       type="button"
-                      onClick={handleSendVerificationCode}
-                      disabled={isSendingCode || isEmailVerified || !formData.email}
-                      className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
-                        isSendingCode || isEmailVerified || !formData.email
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
+                      onClick={() => setAgreeAll(!agreeAll)}
+                      className="relative shrink-0 size-[24px] flex items-center justify-center"
                     >
-                      {isSendingCode ? '전송중...' : isEmailVerified ? '인증완료' : '인증번호 전송'}
+                      {agreeAll ? (
+                        <img alt="체크됨" className="block max-w-none size-full" src={imgCheckFilled} />
+                      ) : (
+                        <div className="border-[1.5px] border-[#2a2a2e] rounded-[5px] size-[20px] relative">
+                          <div className="absolute flex inset-[31.25%_35.42%_43.75%_39.58%] items-center justify-center">
+                            <div className="flex-none h-[5.657px] rotate-[225deg] w-[2.828px]">
+                              <div className="relative size-full">
+                                <img alt="" className="block max-w-none size-full" src={imgCheckLight} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                    <div className="flex flex-1 items-center">
+                      <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                        약관 전체 동의
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {}}
+                      className="flex items-center justify-center relative shrink-0"
+                    >
+                      <div className="flex-none rotate-[180deg] scale-y-[-100%]">
+                        <div className="relative size-[16.667px]">
+                          <div className="absolute contents left-[7.5px] top-[4.17px]">
+                            <div className="absolute flex h-[11.667px] items-center justify-center left-[7.5px] top-[4.17px] w-[5px]">
+                              <div className="flex-none rotate-[270deg]">
+                                <div className="h-[5px] relative w-[11.667px]">
+                                  <img alt="" className="block max-w-none size-full" src={imgRightArrow} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </button>
                   </div>
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-                  )}
-                  
-                  {/* 이메일 인증번호 입력 */}
-                  {codeSent && !isEmailVerified && (
-                    <div className="mt-3">
-                      <div className="flex gap-2">
+
+                  {/* 구분선 */}
+                  <div className="h-px relative w-full">
+                    <img alt="" className="block max-w-none size-full" src={imgLine336} />
+                  </div>
+
+                  {/* 만 14세 이상 */}
+                  <div className="flex gap-[12px] items-center w-full pr-3">
+                    <button
+                      type="button"
+                      onClick={() => setAgreeAge(!agreeAge)}
+                      className="relative shrink-0 size-[24px] flex items-center justify-center"
+                    >
+                      {agreeAge ? (
+                        <img alt="체크됨" className="block max-w-none size-full" src={imgCheckFilled} />
+                      ) : (
+                        <div className="border-[1.5px] border-[#2a2a2e] rounded-[5px] size-[20px] relative">
+                          <div className="absolute flex inset-[31.25%_35.42%_43.75%_39.58%] items-center justify-center">
+                            <div className="flex-none h-[5.657px] rotate-[225deg] w-[2.828px]">
+                              <div className="relative size-full">
+                                <img alt="" className="block max-w-none size-full" src={imgCheckLight} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                    <div className="flex flex-1 items-center">
+                      <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                        [필수] 만 14세 이상입니다.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 홈페이지 이용약관 동의 */}
+                  <div className="flex gap-[12px] items-center w-full pr-3">
+                    <button
+                      type="button"
+                      onClick={() => setAgreeTerms(!agreeTerms)}
+                      className="relative shrink-0 size-[24px] flex items-center justify-center"
+                    >
+                      {agreeTerms ? (
+                        <img alt="체크됨" className="block max-w-none size-full" src={imgCheckFilled} />
+                      ) : (
+                        <div className="border-[1.5px] border-[#2a2a2e] rounded-[5px] size-[20px] relative">
+                          <div className="absolute flex inset-[31.25%_35.42%_43.75%_39.58%] items-center justify-center">
+                            <div className="flex-none h-[5.657px] rotate-[225deg] w-[2.828px]">
+                              <div className="relative size-full">
+                                <img alt="" className="block max-w-none size-full" src={imgCheckLight} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                    <div className="flex flex-1 items-center">
+                      <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                        [필수] 홈페이지 이용약관 동의
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsHomepageTermsOpen(true)}
+                      className="flex items-center justify-center relative shrink-0"
+                    >
+                      <div className="flex-none rotate-[180deg] scale-y-[-100%]">
+                        <div className="relative size-[16.667px]">
+                          <div className="absolute contents left-[7.5px] top-[4.17px]">
+                            <div className="absolute flex h-[11.667px] items-center justify-center left-[7.5px] top-[4.17px] w-[5px]">
+                              <div className="flex-none rotate-[270deg]">
+                                <div className="h-[5px] relative w-[11.667px]">
+                                  <img alt="" className="block max-w-none size-full" src={imgRightArrow} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+          </div>
+
+                  {/* 개인정보 수집·이용 동의 */}
+                  <div className="flex gap-[12px] items-center w-full pr-3">
+                    <button
+                      type="button"
+                      onClick={() => setAgreePrivacy(!agreePrivacy)}
+                      className="relative shrink-0 size-[24px] flex items-center justify-center"
+                    >
+                      {agreePrivacy ? (
+                        <img alt="체크됨" className="block max-w-none size-full" src={imgCheckFilled} />
+                      ) : (
+                        <div className="border-[1.5px] border-[#2a2a2e] rounded-[5px] size-[20px] relative">
+                          <div className="absolute flex inset-[31.25%_35.42%_43.75%_39.58%] items-center justify-center">
+                            <div className="flex-none h-[5.657px] rotate-[225deg] w-[2.828px]">
+                              <div className="relative size-full">
+                                <img alt="" className="block max-w-none size-full" src={imgCheckLight} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                    <div className="flex flex-1 items-center">
+                      <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                        [필수] 개인정보 수집·이용 동의
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsPrivacyPolicyOpen(true)}
+                      className="flex items-center justify-center relative shrink-0"
+                    >
+                      <div className="flex-none rotate-[180deg] scale-y-[-100%]">
+                        <div className="relative size-[16.667px]">
+                          <div className="absolute contents left-[7.5px] top-[4.17px]">
+                            <div className="absolute flex h-[11.667px] items-center justify-center left-[7.5px] top-[4.17px] w-[5px]">
+                              <div className="flex-none rotate-[270deg]">
+                                <div className="h-[5px] relative w-[11.667px]">
+                                  <img alt="" className="block max-w-none size-full" src={imgRightArrow} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 다음 버튼 */}
+                <div className="flex flex-col items-center w-full px-2">
+                  <button
+                    type="button"
+                    onClick={() => canProceedToInfo && setStep('info')}
+                    disabled={!canProceedToInfo}
+                    className={`w-full h-[55px] rounded-[12px] flex items-center justify-center p-4 ${
+                      canProceedToInfo
+                        ? 'bg-[#443e3c] cursor-pointer hover:opacity-90'
+                        : 'bg-[#c9c1b7] cursor-not-allowed'
+                    }`}
+                  >
+                    <p className="font-normal leading-[1.5] text-[15px] text-[#f8f6f4]">
+                      다음
+                    </p>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-[68px] items-start w-full pb-24">
+                {/* 회원정보 입력 섹션 */}
+                <div className="flex flex-col gap-[32px] items-center w-full px-2">
+                  {/* 회원정보 */}
+                  <div className="flex flex-col gap-[20px] items-start w-full">
+                    <p className="font-bold leading-[1.5] text-[17px] text-[#5f5a58] w-full">
+                      회원정보
+                    </p>
+                    <div className="flex flex-col gap-[16px] items-start w-full">
+                      {/* 닉네임 */}
+                      <div className="flex flex-col gap-[2px] items-start w-full">
+                        <div className="flex flex-col gap-[5px] items-start w-full">
+                          <div className="flex gap-[4px] items-center w-full">
+                            <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                              닉네임
+                            </p>
+                          </div>
+                          <div className="flex gap-[5px] items-start w-full">
+                            <div className={`border ${error && !nickname ? 'border-[#f06115]' : 'border-[#5f5a58]'} flex flex-1 h-[48px] items-center justify-between p-3 rounded-[12px] bg-white`}>
+                              <input
+                                type="text"
+                                value={nickname}
+                                onChange={(e) => {
+                                  setNickname(e.target.value)
+                                  setNicknameChecked(false)
+                                  setIsNicknameAvailable(null)
+                                  setError('')
+                                }}
+                                placeholder="닉네임 입력"
+                                className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af]"
+                              />
+                              <div className="flex items-center justify-center w-[35px]" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleCheckNickname}
+                              disabled={!nickname || nicknameChecked}
+                              className={`h-[48px] rounded-[12px] flex items-center justify-center px-3 w-[70px] ${
+                                !nickname || nicknameChecked
+                                  ? 'bg-[#c9c1b7] cursor-not-allowed'
+                                  : 'bg-[#443e3c] cursor-pointer hover:opacity-90'
+                              }`}
+                            >
+                              <p className="font-normal leading-[1.5] text-[13px] text-[#f8f6f4] tracking-[-0.26px]">
+                                중복 확인
+                              </p>
+                            </button>
+                          </div>
+                        </div>
+                        {isNicknameAvailable === true && nicknameChecked && (
+                          <p className="font-normal leading-[1.75] text-[#f06115] text-[10px] w-full whitespace-pre-wrap">
+                            사용할 수 있는 닉네임입니다.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* 전화번호 */}
+                      <div className="flex flex-col gap-[2px] items-start w-full">
+                        <div className="flex flex-col gap-[5px] items-start w-full">
+                          <div className="flex gap-[4px] items-center w-full">
+                            <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                              전화번호
+                            </p>
+                          </div>
+                          <div className="border border-[#5f5a58] flex h-[48px] items-center justify-between p-3 rounded-[12px] bg-white w-full">
+                      <input
+                              type="tel"
+                              value={phone}
+                              onChange={(e) => {
+                                setPhone(formatPhone(e.target.value))
+                                setError('')
+                              }}
+                              placeholder="010-1234-5678"
+                              maxLength={13}
+                              className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af]"
+                            />
+                            <div className="flex items-center w-[24px]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 구분선 */}
+                  <div className="h-px relative w-full">
+                    <img alt="" className="block max-w-none size-full" src={imgLine297} />
+                  </div>
+
+                  {/* 회원유형 */}
+                  <div className="flex flex-col gap-[20px] items-start w-full">
+                    <p className="font-bold leading-[1.5] text-[17px] text-[#5f5a58] w-full">
+                      회원유형
+                    </p>
+                    <div className="flex gap-[8px] items-center w-full">
+                      <button
+                        type="button"
+                        onClick={() => setUserType('GENERAL')}
+                        className="relative shrink-0 size-[16px] flex items-center justify-center"
+                      >
+                        <img alt={userType === 'GENERAL' ? '선택됨' : '선택 안됨'} className="block max-w-none size-full" src={userType === 'GENERAL' ? imgRadioFilled : imgRadioRegular} />
+                      </button>
+                      <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                        일반 회원
+                      </p>
+                    </div>
+                    <div className="flex gap-[8px] items-center w-full">
+                      <button
+                        type="button"
+                        onClick={() => setUserType('MAJOR')}
+                        className="relative shrink-0 size-[16px] flex items-center justify-center"
+                      >
+                        <img alt={userType === 'MAJOR' ? '선택됨' : '선택 안됨'} className="block max-w-none size-full" src={userType === 'MAJOR' ? imgRadioFilled : imgRadioRegular} />
+                      </button>
+                      <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                        전공 회원
+                      </p>
+                    </div>
+
+                    {/* 전공 회원 추가 필드 */}
+                    {userType === 'MAJOR' && (
+                      <div className="flex flex-col gap-[16px] items-start w-full mt-4">
+                        {/* 학번 */}
+                        <div className="flex flex-col gap-[2px] items-start w-full">
+                          <div className="flex flex-col gap-[5px] items-start w-full">
+                            <div className="flex gap-[4px] items-center w-full">
+                              <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                                학번
+                              </p>
+                            </div>
+                            <div className="border border-[#5f5a58] flex h-[48px] items-center justify-between p-3 rounded-[12px] bg-white w-full">
+                              <input
+                                type="text"
+                                value={studentId}
+                                onChange={(e) => {
+                                  setStudentId(e.target.value.replace(/\D/g, '').slice(0, 10))
+                                  setError('')
+                                }}
+                                placeholder="학번 입력"
+                                maxLength={10}
+                                className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af]"
+                              />
+                              <div className="flex items-center w-[24px]" />
+                    </div>
+                  </div>
+                </div>
+
+                        {/* 전공 */}
+                        <div className="flex flex-col gap-[2px] items-start w-full">
+                          <div className="flex flex-col gap-[5px] items-start w-full">
+                            <div className="flex gap-[4px] items-center w-full">
+                              <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                                전공
+                              </p>
+                            </div>
+                            <div className="border border-[#5f5a58] flex h-[48px] items-center justify-between p-3 rounded-[12px] bg-white w-full">
+                    <input
+                      type="text"
+                                value={major}
+                                onChange={(e) => {
+                                  setMajor(e.target.value)
+                                  setError('')
+                                }}
+                                placeholder="전공 입력"
+                                className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af]"
+                              />
+                              <div className="flex items-center w-[24px]" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 구분선 */}
+                  <div className="h-px relative w-full">
+                    <img alt="" className="block max-w-none size-full" src={imgLine297} />
+                  </div>
+
+                  {/* ID/PW */}
+                  <div className="flex flex-col gap-[20px] items-start w-full">
+                    <p className="font-bold leading-[1.5] text-[17px] text-[#5f5a58] w-full">
+                      ID/PW
+                    </p>
+                    <div className="flex flex-col gap-[16px] items-start w-full">
+                      {/* 아이디 (이메일) */}
+                      <div className="flex flex-col gap-[2px] items-start w-full">
+                        <div className="flex flex-col gap-[5px] items-start w-full">
+                          <div className="flex gap-[4px] items-center w-full">
+                            <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                              아이디 (이메일)
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between w-full gap-2">
+                            <div className={`border ${emailSent && !emailVerified ? 'border-[#5f5a58]' : emailVerified ? 'border-[#14ae5c]' : error && !email ? 'border-[#f06115]' : 'border-[#5f5a58]'} flex flex-1 h-[48px] items-center justify-between p-3 rounded-[12px] bg-white`}>
+                    <input
+                      type="email"
+                                value={email}
+                                onChange={(e) => {
+                                  setEmail(e.target.value)
+                                  setEmailSent(false)
+                                  setEmailVerified(false)
+                                  setError('')
+                                }}
+                      placeholder="example@dongguk.edu"
+                                disabled={emailVerified}
+                                className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af] disabled:opacity-50"
+                    />
+                              <div className="flex items-center justify-center w-[35px]" />
+                            </div>
+                    <button
+                      type="button"
+                              onClick={handleSendEmailCode}
+                              disabled={!email || emailVerified || emailSent}
+                              className={`h-[48px] rounded-[12px] flex items-center justify-center px-3 ${
+                                !email || emailVerified || emailSent
+                                  ? 'bg-[#c9c1b7] cursor-not-allowed'
+                                  : 'bg-[#443e3c] cursor-pointer hover:opacity-90'
+                              }`}
+                            >
+                              <p className="font-normal leading-[1.5] text-[13px] text-[#f8f6f4] tracking-[-0.26px] text-center whitespace-nowrap">
+                                {emailSent ? '전송' : '인증번호 전송'}
+                              </p>
+                    </button>
+                  </div>
+                        </div>
+                        {emailSent && !emailVerified && (
+                          <p className="font-normal leading-[1.75] text-[#f06115] text-[10px] w-full whitespace-pre-wrap">
+                            인증번호가 전송되었습니다.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* 인증번호 */}
+                      <div className="flex flex-col gap-[2px] items-start w-full">
+                        <div className="flex flex-col gap-[5px] items-start w-full">
+                          <div className="flex gap-[4px] items-center w-full">
+                            <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                              인증번호
+                            </p>
+                          </div>
+                          <div className="flex gap-[5px] items-start w-full">
+                            <div className={`border ${error && error.includes('인증번호') ? 'border-[#f06115]' : emailVerified ? 'border-[#14ae5c]' : 'border-[#5f5a58]'} flex flex-1 h-[48px] items-center justify-between p-3 rounded-[12px] bg-white`}>
                         <input
                           type="text"
-                          name="verificationCode"
-                          value={formData.verificationCode}
-                          onChange={handleInputChange}
-                          placeholder="인증번호 6자리"
+                                inputMode="numeric"
+                                value={verificationCode}
+                                onChange={(e) => {
+                                  setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                                  setError('')
+                                }}
+                                placeholder="인증번호 입력"
                           maxLength={6}
-                          className={`flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                            errors.verificationCode ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                          }`}
-                        />
+                                disabled={emailVerified || !emailSent}
+                                className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af] disabled:opacity-50"
+                              />
+                              {emailSent && timer > 0 && !emailVerified && (
+                                <div className="flex items-center justify-center w-[35px]">
+                                  <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                                    {formatTime(timer)}
+                                  </p>
+                                </div>
+                              )}
+                              {emailVerified && (
+                                <div className="flex items-center justify-center w-[35px]">
+                                  <p className="font-normal leading-[1.5] text-[13px] text-[#14ae5c] tracking-[-0.26px]">
+                                    완료
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                         <button
                           type="button"
                           onClick={handleVerifyCode}
-                          disabled={isVerifyingCode || !formData.verificationCode}
-                          className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
-                            isVerifyingCode || !formData.verificationCode
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-green-600 text-white hover:bg-green-700'
-                          }`}
-                        >
-                          {isVerifyingCode ? '확인중...' : '인증하기'}
+                              disabled={!verificationCode || emailVerified || !emailSent || timer === 0}
+                              className={`h-[48px] rounded-[12px] flex items-center justify-center px-3 w-[70px] ${
+                                !verificationCode || emailVerified || !emailSent || timer === 0
+                                  ? 'bg-[#c9c1b7] cursor-not-allowed'
+                                  : 'bg-[#443e3c] cursor-pointer hover:opacity-90'
+                              }`}
+                            >
+                              <p className="font-normal leading-[1.5] text-[13px] text-[#f8f6f4] tracking-[-0.26px]">
+                                확인
+                              </p>
                         </button>
                       </div>
-                      {errors.verificationCode && (
-                        <p className="mt-1 text-sm text-red-500">{errors.verificationCode}</p>
-                      )}
-                      {remainingTime > 0 && (
-                        <p className="mt-1 text-sm text-blue-600">
-                          인증번호가 전송되었습니다. ({Math.floor(remainingTime / 60)}:{(remainingTime % 60).toString().padStart(2, '0')} 후 만료)
-                        </p>
-                      )}
                     </div>
-                  )}
-                  
-                  {isEmailVerified && (
-                    <p className="mt-1 text-sm text-green-600 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      이메일 인증이 완료되었습니다.
+                        {emailVerified && (
+                          <p className="font-normal leading-[1.75] text-[#f06115] text-[10px] w-full whitespace-pre-wrap">
+                            인증이 완료되었습니다.
                     </p>
                   )}
                 </div>
 
-                {/* 전화번호 */}
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-black mb-2">
-                    전화번호 *
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                      errors.phone ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                    }`}
-                    placeholder="010-1234-5678"
-                    maxLength={13}
-                  />
-                  {errors.phone && (
-                    <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
-                  )}
-                </div>
-
-                {/* 비밀번호 */}
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-black mb-2">
-                    비밀번호 *
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                      errors.password ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                    }`}
-                    placeholder="8자리 이상, 영문+숫자 조합"
-                  />
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-500">{errors.password}</p>
-                  )}
+                      {/* 새 비밀번호 */}
+                      <div className="flex flex-col gap-[2px] items-start w-full">
+                        <div className="flex flex-col gap-[5px] items-start w-full">
+                          <div className="flex gap-[4px] items-center w-full">
+                            <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                              새 비밀번호
+                            </p>
+                          </div>
+                          <div className="border border-[#5f5a58] flex flex-1 h-[48px] items-center justify-between p-3 rounded-[12px] bg-white w-full">
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              value={password}
+                              onChange={(e) => {
+                                setPassword(e.target.value)
+                                setError('')
+                              }}
+                              placeholder="8자 이상 영문, 숫자 조합"
+                              className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af]"
+                            />
+                            <div className="flex items-center gap-2">
+                              {password && (
+                                <p className={`font-normal leading-[1.5] text-[13px] tracking-[-0.26px] ${
+                                  passwordValidation.isValid ? 'text-[#14ae5c]' : 'text-[#f06115]'
+                                }`}>
+                                  {passwordValidation.message}
+                                </p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="size-[24px] flex items-center justify-center"
+                                aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                              >
+                                <img alt="비밀번호 토글" className="block max-w-none size-full" src={imgEye} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="font-normal leading-[1.75] text-[10px] text-[#5f5a58] w-full whitespace-pre-wrap">
+                          8자 이상 영문, 숫자 조합
+                        </p>
                 </div>
 
                 {/* 비밀번호 확인 */}
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-2">
-                    비밀번호 확인 *
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors ${
-                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300 focus:border-black'
-                    }`}
-                    placeholder="비밀번호를 다시 입력하세요"
-                  />
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
-                  )}
+                      <div className="flex flex-col gap-[2px] items-start w-full">
+                        <div className="flex flex-col gap-[5px] items-start w-full">
+                          <div className="flex gap-[4px] items-center w-full">
+                            <p className="font-normal leading-[1.5] text-[13px] text-[#5f5a58] tracking-[-0.26px]">
+                              비밀번호 확인
+                            </p>
+                          </div>
+                          <div className="border border-[#5f5a58] flex flex-1 h-[48px] items-center justify-between p-3 rounded-[12px] bg-white w-full">
+                            <input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              value={confirmPassword}
+                              onChange={(e) => {
+                                setConfirmPassword(e.target.value)
+                                setError('')
+                              }}
+                              placeholder="8자 이상 영문, 숫자 조합"
+                              className="font-normal leading-[1.5] text-[13px] tracking-[-0.26px] flex-1 bg-transparent outline-none text-[#5f5a58] placeholder:text-[#b7b3af]"
+                            />
+                            <div className="flex items-center gap-2">
+                              {confirmPassword && (
+                                <p className={`font-normal leading-[1.5] text-[13px] tracking-[-0.26px] ${
+                                  passwordMatch ? 'text-[#14ae5c]' : 'text-[#f06115]'
+                                }`}>
+                                  {passwordMatch ? '일치' : '불일치'}
+                                </p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="size-[24px] flex items-center justify-center"
+                                aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                              >
+                                <img alt="비밀번호 토글" className="block max-w-none size-full" src={imgEye} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="font-normal leading-[1.75] text-[10px] text-[#5f5a58] w-full whitespace-pre-wrap">
+                          8자 이상 영문, 숫자 조합
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* 제출 버튼 */}
-                <div className="pt-4">
+                {/* 회원가입 버튼 */}
+                <div className="flex flex-col items-center w-full px-2">
+                  {error && (
+                    <p className="font-normal leading-[1.75] text-[#f06115] text-[10px] w-full mb-4 text-center">
+                      {error}
+                    </p>
+                  )}
                   <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`w-full py-4 px-6 rounded-lg font-medium text-white transition-colors ${
-                      isSubmitting
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2'
+                    type="button"
+                    onClick={handleSignup}
+                    disabled={!canSignup || isSubmitting}
+                    className={`w-full h-[55px] rounded-[12px] flex items-center justify-center p-4 ${
+                      canSignup && !isSubmitting
+                        ? 'bg-[#443e3c] cursor-pointer hover:opacity-90'
+                        : 'bg-[#c9c1b7] cursor-not-allowed'
                     }`}
                   >
-                    {isSubmitting ? (
-                      <div className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        처리 중...
-                      </div>
-                    ) : (
-                      '회원가입'
-                    )}
+                    <p className="font-normal leading-[1.5] text-[15px] text-[#f8f6f4]">
+                      {isSubmitting ? '처리 중...' : '회원가입'}
+                    </p>
                   </button>
                 </div>
-
-                {/* 로그인 링크 */}
-                <div className="text-center pt-4">
-                  <p className="text-gray-600">
-                    이미 계정이 있으신가요?{' '}
-                    <Link href="/login" className="text-black font-medium hover:underline">
-                      로그인
-                    </Link>
-                  </p>
                 </div>
-              </form>
-            </div>
-          </div>
-
-          {/* 푸터 */}
-          <div className="text-center text-gray-400 text-xs mt-12">
-            DONGGUK UNIVERSITY
+            )}
           </div>
         </div>
       </div>
+
+      {/* 약관 모달들 */}
+      <HomepageTermsModal isOpen={isHomepageTermsOpen} onClose={() => setIsHomepageTermsOpen(false)} />
+      <PrivacyPolicyModal isOpen={isPrivacyPolicyOpen} onClose={() => setIsPrivacyPolicyOpen(false)} />
     </div>
   )
 }
