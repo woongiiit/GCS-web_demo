@@ -27,6 +27,7 @@ export default function AdminPage() {
 function AdminPageContent() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   // 로그인하지 않은 경우 또는 관리자가 아닌 경우 리다이렉트
   useEffect(() => {
@@ -258,12 +259,18 @@ function AdminPageContent() {
               <p className="w-full">
                 © 2025 GCS:Web. All rights reserved. 
               </p>
-              <TermsOfServiceModal />
+              <button 
+                onClick={() => setIsTermsModalOpen(true)} 
+                className="w-full text-left underline decoration-solid text-[8px] text-[#443e3c] leading-[1.5]"
+              >
+                이용약관
+              </button>
             </div>
           </div>
         </div>
         <div className="h-[34px]"></div>
       </div>
+      {isTermsModalOpen && <TermsOfServiceModal onClose={() => setIsTermsModalOpen(false)} />}
     </div>
   )
 }
