@@ -8,6 +8,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import TermsOfServiceModal from '@/components/TermsOfServiceModal'
 
 // 이미지 상수 (Figma에서 추출한 이미지 URL)
 const imgMdiBell = "https://www.figma.com/api/mcp/asset/fec88dd4-2a71-4ffc-ab6d-7067c4e5c152"
@@ -257,9 +258,7 @@ function AdminPageContent() {
               <p className="w-full">
                 © 2025 GCS:Web. All rights reserved. 
               </p>
-              <p className="w-full underline decoration-solid">
-                이용약관
-              </p>
+              <TermsOfServiceModal />
             </div>
           </div>
         </div>

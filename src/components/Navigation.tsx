@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useState } from 'react'
+import TermsOfServiceModal from './TermsOfServiceModal'
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -209,75 +210,58 @@ export default function Navigation() {
             </div>
 
             {/* 메뉴 컨텐츠 - 그라데이션 배경 */}
-            <div className="bg-gradient-to-r from-[rgba(0,0,0,0.1)] to-[rgba(0,0,0,0.1)] bg-[#f57520] px-[26px] pt-[44px] pb-[20px]">
-              <div className="flex flex-col gap-[32px]">
-                <div className="flex flex-col gap-[16px]">
-                  {menuItems.map((item) => (
-                    <div key={item.href} className="flex flex-col">
-                      {item.subItems.length > 0 ? (
-                        <button
-                          onClick={() => toggleSubMenu(item.href)}
-                          className="flex items-center gap-2 text-left"
-                        >
-                          <span className="text-[28px] font-extrabold text-white leading-[1.75]">
-                            {item.label}
-                          </span>
-                          <div className="flex items-center justify-center">
-                            <svg
-                              className={`w-6 h-6 transition-transform text-white ${
-                                expandedMenus.includes(item.href) ? '' : 'rotate-180'
-                              }`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                          </div>
-                        </button>
-                      ) : (
-                        <Link
-                          href={item.href}
-                          onClick={toggleMobileMenu}
-                          className="text-[28px] font-extrabold text-white leading-[1.75]"
-                        >
+            <div className="bg-gradient-to-r from-[rgba(0,0,0,0.1)] to-[rgba(0,0,0,0.1)] bg-[#f57520] px-[26px] pt-[44px] pb-[88px]">
+              <div className="flex flex-col gap-[16px]">
+                {menuItems.map((item) => (
+                  <div key={item.href} className="flex flex-col">
+                    {item.subItems.length > 0 ? (
+                      <button
+                        onClick={() => toggleSubMenu(item.href)}
+                        className="flex items-center gap-2 text-left cursor-pointer"
+                      >
+                        <span className="text-[28px] font-extrabold text-white leading-[1.75]">
                           {item.label}
-                        </Link>
-                      )}
-                      {item.subItems.length > 0 && expandedMenus.includes(item.href) && (
-                        <div className="flex flex-col gap-0 mt-2">
-                          {item.subItems.map((subItem) => (
-                            <Link
-                              key={subItem.href}
-                              href={subItem.href}
-                              onClick={toggleMobileMenu}
-                              className="text-[15px] font-bold text-white leading-[1.5] mt-2"
-                            >
-                              {subItem.label}
-                            </Link>
-                          ))}
+                        </span>
+                        <div className="flex items-center justify-center relative shrink-0 size-[24px]">
+                          <svg
+                            className={`w-6 h-6 transition-transform text-white ${
+                              expandedMenus.includes(item.href) ? '' : 'rotate-180'
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* 구분선 */}
-                <div className="h-px bg-white/20"></div>
-                
-                {/* Admin 버튼 (관리자만 표시) */}
-                {user?.role === 'ADMIN' && (
-                  <Link
-                    href="/admin"
-                    onClick={toggleMobileMenu}
-                    className="border border-white rounded-full px-3 py-1 inline-flex items-center justify-center w-fit"
-                  >
-                    <span className="text-[15px] font-bold text-white leading-[1.5]">
-                      Admin
-                    </span>
-                  </Link>
-                )}
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        onClick={toggleMobileMenu}
+                        className="text-[28px] font-extrabold text-white leading-[1.75]"
+                      >
+                        {item.label}
+                      </Link>
+                    )}
+                    {item.subItems.length > 0 && expandedMenus.includes(item.href) && (
+                      <div className="flex flex-col gap-0 mt-2">
+                        {item.subItems.map((subItem) => (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            onClick={toggleMobileMenu}
+                            className="text-[15px] font-bold text-white leading-[1.5] mt-2"
+                          >
+                            {subItem.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
+                
             </div>
 
             {/* Footer */}
@@ -327,15 +311,18 @@ export default function Navigation() {
                   </div>
                   
                   {/* 로고 및 저작권 */}
-                  <div className="flex flex-col justify-between h-[41px]">
+                  <div className="flex flex-col gap-[8px] items-start w-[181px]">
                     <div className="h-[21px]">
-                      <Link href="/" className="text-lg font-bold text-black">
+                      <Link href="/" className="text-lg font-bold text-black" onClick={toggleMobileMenu}>
                         GCS<span className="text-[#f57520]">:</span>Web
                       </Link>
                     </div>
-                    <p className="text-[8px] text-[#443e3c] leading-[1.5]">
-                      © 2025 GCS:Web. All rights reserved.
-                    </p>
+                    <div className="flex flex-col text-[8px] text-[#443e3c] leading-[1.5] w-full">
+                      <p className="w-full">
+                        © 2025 GCS:Web. All rights reserved.
+                      </p>
+                      <TermsOfServiceModal />
+                    </div>
                   </div>
                 </div>
               </div>
