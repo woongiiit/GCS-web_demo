@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 
 // 이미지 상수 (Figma에서 추출한 이미지 URL)
-const imgBack = "https://www.figma.com/api/mcp/asset/bad87d57-9fe1-4d0b-a682-58e7e41becb6"
+const imgBack = "https://www.figma.com/api/mcp/asset/f28212f7-b09d-4acb-a0b6-3d89e9ba9c9a"
 
 interface SettlementHistory {
   id: string
@@ -38,6 +38,15 @@ function SettlementsPageContent() {
   const [sellerTeam, setSellerTeam] = useState('')
   const [settlementHistories, setSettlementHistories] = useState<SettlementHistory[]>([])
   const [isLoadingHistories, setIsLoadingHistories] = useState(true)
+
+  // 정산 정보 입력 폼 상태
+  const [formSellerTeam, setFormSellerTeam] = useState('')
+  const [totalRevenue, setTotalRevenue] = useState(0)
+  const [totalProductionCost, setTotalProductionCost] = useState(0)
+  const [refundAmount, setRefundAmount] = useState(0)
+  const [totalFee, setTotalFee] = useState(0)
+  const [paymentDate, setPaymentDate] = useState('')
+  const [attachment, setAttachment] = useState<File | null>(null)
 
   useEffect(() => {
     if (user && user.role === 'ADMIN') {
@@ -125,6 +134,43 @@ function SettlementsPageContent() {
     router.back()
   }
 
+  // 최종 정산액 계산
+  const finalSettlementAmount = totalRevenue - totalProductionCost - refundAmount - totalFee
+
+  const handleSubmitSettlement = async () => {
+    try {
+      // TODO: 실제 API 호출
+      // const formData = new FormData()
+      // formData.append('sellerTeam', formSellerTeam)
+      // formData.append('totalRevenue', totalRevenue.toString())
+      // formData.append('totalProductionCost', totalProductionCost.toString())
+      // formData.append('refundAmount', refundAmount.toString())
+      // formData.append('totalFee', totalFee.toString())
+      // formData.append('paymentDate', paymentDate)
+      // if (attachment) {
+      //   formData.append('attachment', attachment)
+      // }
+      // const response = await fetch('/api/admin/settlements', {
+      //   method: 'POST',
+      //   body: formData
+      // })
+      
+      console.log('정산 보내기:', {
+        formSellerTeam,
+        totalRevenue,
+        totalProductionCost,
+        refundAmount,
+        totalFee,
+        paymentDate,
+        finalSettlementAmount
+      })
+      alert('정산이 완료되었습니다.')
+    } catch (error) {
+      console.error('정산 보내기 오류:', error)
+      alert('정산 보내기에 실패했습니다.')
+    }
+  }
+
   return (
     <div className="bg-[#f8f6f4] min-h-screen flex flex-col">
       {/* Nav Bar */}
@@ -147,6 +193,206 @@ function SettlementsPageContent() {
 
       {/* Body */}
       <div className="flex-1 flex flex-col gap-4 items-start p-4 overflow-y-auto">
+        {/* 정산 정보 입력 */}
+        <div className="bg-white flex flex-col gap-4 items-start pb-0 pt-4 px-4 rounded-[12px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] w-full">
+          <div className="flex h-6 items-start relative w-full">
+            <p className="flex-1 font-normal leading-6 text-[16px] text-[#443e3c] whitespace-pre-wrap">
+              정산 정보 입력
+            </p>
+          </div>
+
+          {/* 판매팀 */}
+          <div className="flex flex-col gap-2 items-start w-full">
+            <div className="flex h-6 items-start relative w-full">
+              <p className="flex-1 font-normal leading-6 text-[16px] text-[#5f5a58] whitespace-pre-wrap">
+                판매팀
+              </p>
+            </div>
+            <select
+              value={formSellerTeam}
+              onChange={(e) => setFormSellerTeam(e.target.value)}
+              className="border border-[#5f5a58] h-[42px] rounded-[10px] w-full px-3 text-[14px] bg-white"
+            >
+              <option value="">판매팀을 선택하세요</option>
+              <option value="유랑">유랑</option>
+              <option value="MUA">MUA</option>
+              <option value="여명">여명</option>
+            </select>
+          </div>
+
+          {/* 총 매출액 */}
+          <div className="flex flex-col gap-2 items-start w-full">
+            <div className="flex h-6 items-start relative w-full">
+              <p className="flex-1 font-normal leading-6 text-[16px] text-[#5f5a58] whitespace-pre-wrap">
+                총 매출액
+              </p>
+            </div>
+            <input
+              type="number"
+              value={totalRevenue || ''}
+              onChange={(e) => setTotalRevenue(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="border border-[#5f5a58] h-[42px] rounded-[10px] w-full px-3 text-[16px] text-[rgba(68,62,60,0.5)]"
+            />
+          </div>
+
+          {/* 총 제작비 */}
+          <div className="flex flex-col gap-2 items-start w-full">
+            <div className="flex h-6 items-start relative w-full">
+              <p className="flex-1 font-normal leading-6 text-[16px] text-[#5f5a58] whitespace-pre-wrap">
+                총 제작비
+              </p>
+            </div>
+            <input
+              type="number"
+              value={totalProductionCost || ''}
+              onChange={(e) => setTotalProductionCost(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="border border-[#5f5a58] h-[42px] rounded-[10px] w-full px-3 text-[16px] text-[rgba(68,62,60,0.5)]"
+            />
+          </div>
+
+          {/* 환불 금액 */}
+          <div className="flex flex-col gap-2 items-start w-full">
+            <div className="flex h-6 items-start relative w-full">
+              <p className="flex-1 font-normal leading-6 text-[16px] text-[#5f5a58] whitespace-pre-wrap">
+                환불 금액
+              </p>
+            </div>
+            <input
+              type="number"
+              value={refundAmount || ''}
+              onChange={(e) => setRefundAmount(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="border border-[#5f5a58] h-[42px] rounded-[10px] w-full px-3 text-[16px] text-[rgba(68,62,60,0.5)]"
+            />
+          </div>
+
+          {/* 총 수수료 */}
+          <div className="flex flex-col gap-2 items-start w-full">
+            <div className="flex h-6 items-start relative w-full">
+              <p className="flex-1 font-normal leading-6 text-[16px] text-[#5f5a58] whitespace-pre-wrap">
+                총 수수료
+              </p>
+            </div>
+            <input
+              type="number"
+              value={totalFee || ''}
+              onChange={(e) => setTotalFee(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="border border-[#5f5a58] h-[42px] rounded-[10px] w-full px-3 text-[16px] text-[rgba(68,62,60,0.5)]"
+            />
+          </div>
+
+          {/* 지급 예정일 */}
+          <div className="flex flex-col gap-2 items-start w-full">
+            <div className="flex h-6 items-start relative w-full">
+              <p className="flex-1 font-normal leading-6 text-[16px] text-[#5f5a58] whitespace-pre-wrap">
+                지급 예정일
+              </p>
+            </div>
+            <input
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              className="border border-[#5f5a58] h-[42px] rounded-[10px] w-full px-3 text-[14px]"
+            />
+          </div>
+
+          {/* 첨부 내용 */}
+          <div className="flex flex-col gap-2 items-start w-full mb-4">
+            <div className="flex h-6 items-start relative w-full">
+              <p className="flex-1 font-normal leading-6 text-[16px] text-[#5f5a58] whitespace-pre-wrap">
+                첨부 내용
+              </p>
+            </div>
+            <label className="border border-[#5f5a58] h-[48px] rounded-[10px] w-full px-3 py-2.5 flex items-center cursor-pointer">
+              <input
+                type="file"
+                onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+              <p className="font-normal leading-6 text-[16px] text-[rgba(68,62,60,0.5)]">
+                {attachment ? attachment.name : '파일 첨부'}
+              </p>
+            </label>
+          </div>
+        </div>
+
+        {/* 정산 요약 */}
+        <div className="bg-white flex flex-col gap-4 items-start pb-0 pt-4 px-4 rounded-[12px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] w-full">
+          <div className="flex h-6 items-start relative w-full">
+            <p className="flex-1 font-normal leading-6 text-[16px] text-[#443e3c] whitespace-pre-wrap">
+              정산 요약
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 items-center w-full">
+            {/* 요약 카드 그리드 */}
+            <div className="flex flex-wrap gap-2.5 items-start w-full">
+              {/* 총 매출액 */}
+              <div className="bg-[#f8f6f4] h-[76px] relative rounded-[10px] w-[149px] p-3">
+                <p className="font-normal leading-6 text-[16px] text-[#85817e] mb-2">
+                  총 매출액
+                </p>
+                <p className="font-normal leading-6 text-[16px] text-[#443e3c]">
+                  {totalRevenue.toLocaleString()}원
+                </p>
+              </div>
+
+              {/* 총 제작비 */}
+              <div className="bg-[#f8f6f4] h-[76px] relative rounded-[10px] w-[149px] p-3">
+                <p className="font-normal leading-6 text-[16px] text-[#85817e] mb-2">
+                  총 제작비
+                </p>
+                <p className="font-normal leading-6 text-[16px] text-[#f06115]">
+                  {totalProductionCost.toLocaleString()}원
+                </p>
+              </div>
+
+              {/* 총 수수료 */}
+              <div className="bg-[#f8f6f4] h-[76px] relative rounded-[10px] w-[149px] p-3">
+                <p className="font-normal leading-6 text-[16px] text-[#85817e] mb-2">
+                  총 수수료
+                </p>
+                <p className="font-normal leading-6 text-[16px] text-[#f06115]">
+                  {totalFee.toLocaleString()}원
+                </p>
+              </div>
+
+              {/* 환불 금액 */}
+              <div className="bg-[#f8f6f4] h-[76px] relative rounded-[10px] w-[149px] p-3">
+                <p className="font-normal leading-6 text-[16px] text-[#85817e] mb-2">
+                  환불 금액
+                </p>
+                <p className="font-normal leading-6 text-[16px] text-[#f06115]">
+                  {refundAmount.toLocaleString()}원
+                </p>
+              </div>
+            </div>
+
+            {/* 최종 정산액 */}
+            <div className="bg-[#ee4a08] h-[76px] relative rounded-[10px] w-full p-3">
+              <p className="font-normal leading-6 text-[16px] text-[#f8f6f4] mb-2">
+                최종 정산액
+              </p>
+              <p className="font-normal leading-6 text-[16px] text-[#f8f6f4]">
+                {finalSettlementAmount.toLocaleString()}원
+              </p>
+            </div>
+          </div>
+
+          {/* 정산 보내기 버튼 */}
+          <button
+            onClick={handleSubmitSettlement}
+            className="bg-[#fd6f22] h-10 relative rounded-[10px] w-full mb-4"
+          >
+            <p className="font-normal leading-6 text-[16px] text-[#f8f6f4] text-center">
+              정산 보내기
+            </p>
+          </button>
+        </div>
+
         {/* 정산 내역 조회 */}
         <div className="bg-white flex flex-col gap-4 items-start pb-0 pt-4 px-4 rounded-[12px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] w-full">
           <div className="flex h-6 items-start relative w-full">
