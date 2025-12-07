@@ -1,49 +1,28 @@
 'use client'
 
-import { useState } from 'react'
-
 const imgMaterialSymbolsLightClose = "https://www.figma.com/api/mcp/asset/50c917d8-9e57-4668-9595-442c1fbdee86"
 
-export default function TermsOfServiceModal() {
-  const [isOpen, setIsOpen] = useState(false)
+interface TermsOfServiceModalProps {
+  onClose: () => void
+}
 
-  const handleOpen = () => {
-    setIsOpen(true)
-  }
-
-  const handleClose = () => {
-    setIsOpen(false)
-  }
-
-  if (!isOpen) {
-    return (
-      <button
-        onClick={handleOpen}
-        className="w-full text-left underline decoration-solid leading-[1.5] cursor-pointer"
-      >
-        이용약관
-      </button>
-    )
-  }
-
+export default function TermsOfServiceModal({ onClose }: TermsOfServiceModalProps) {
   return (
-    <>
-      {/* 모달 오버레이 */}
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* 모달 컨텐츠 */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-        onClick={handleClose}
+        className="bg-white rounded-lg max-w-[375px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 items-end pb-10 pt-3 px-5"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* 모달 컨텐츠 */}
-        <div
-          className="bg-white rounded-lg max-w-[375px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 items-end pb-10 pt-3 px-5"
-          onClick={(e) => e.stopPropagation()}
+        {/* 닫기 버튼 */}
+        <button
+          onClick={onClose}
+          className="relative shrink-0 size-[24px] cursor-pointer"
+          aria-label="닫기"
         >
-          {/* 닫기 버튼 */}
-          <button
-            onClick={handleClose}
-            className="relative shrink-0 size-[24px] cursor-pointer"
-            aria-label="닫기"
-          >
             <img alt="닫기" className="block max-w-none size-full" src={imgMaterialSymbolsLightClose} />
           </button>
 
@@ -71,9 +50,8 @@ export default function TermsOfServiceModal() {
                 <br aria-hidden="true" />⑥ 해지 : 회원이 이용계약을 해약하는 것을 말합니다.
               </p>
             </div>
-          </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
