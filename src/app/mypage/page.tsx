@@ -177,10 +177,10 @@ function MyPageContent() {
               </div>
               <div className="flex items-center px-0 py-0 w-full">
                 <div className="flex flex-col font-bold gap-[16px] items-start px-0 py-[12px] text-[13px] text-[#85817e] leading-[1.5] tracking-[-0.26px] w-full">
-                  <Link href="/mypage?tab=orders" className="w-full">
+                  <Link href="/mypage/orders" className="w-full">
                     주문 내역
                   </Link>
-                  <Link href="/mypage?tab=orders" className="w-full">
+                  <Link href="/mypage/orders/cancel" className="w-full">
                     주문 취소/변경 내역
                   </Link>
                   <p className="w-full">리뷰 쓰기</p>
