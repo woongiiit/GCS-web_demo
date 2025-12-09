@@ -141,7 +141,10 @@ function MyPageContent() {
                 </p>
               </div>
             </Link>
-            <div className="border-l-2 border-r-2 border-[#eeebe6] flex-1 flex flex-col gap-[12px] items-center justify-center py-5 px-0">
+            <Link 
+              href="/mypage/likes"
+              className="border-l-2 border-r-2 border-[#eeebe6] flex-1 flex flex-col gap-[12px] items-center justify-center py-5 px-0"
+            >
               <div className="relative size-[24px]">
                 <img alt="좋아요" className="block max-w-none size-full" src={imgIconParkSolidLike} />
               </div>
@@ -153,7 +156,7 @@ function MyPageContent() {
                   5
                 </p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Menu Sections */}
