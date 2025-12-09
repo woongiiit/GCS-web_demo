@@ -3,26 +3,234 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 
+// Figma ?��?지 ?�셋 URL
+const img15 = "https://www.figma.com/api/mcp/asset/2d3d1652-8692-4526-bc0e-0d12ef32aced";
+const img = "https://www.figma.com/api/mcp/asset/e98384d0-da13-4bb4-8f17-eed376fa94fb";
+const img1 = "https://www.figma.com/api/mcp/asset/46b0d905-4963-47d5-85c1-c3fb0d7b0d4d";
+const img2 = "https://www.figma.com/api/mcp/asset/e29ae3e6-1e22-4532-a2bc-11ecb3f11e4e";
+const img3 = "https://www.figma.com/api/mcp/asset/60698448-4b9f-447c-8ba4-0ae328c0a351";
+const img4 = "https://www.figma.com/api/mcp/asset/ef08ede0-94ff-4359-b0ab-1569102f0134";
+const imgVector = "https://www.figma.com/api/mcp/asset/0a995d7f-de2e-4118-ae65-eb1ce18c5c52";
+const imgEllipse33 = "https://www.figma.com/api/mcp/asset/a64a5532-6b5e-496e-a097-2795fe5eaa7b";
+const imgRectangle2 = "https://www.figma.com/api/mcp/asset/bcac8693-6418-4ca0-8f72-cfd1d6efb8ff";
+const imgBurger = "https://www.figma.com/api/mcp/asset/072f7790-bf98-40f2-a30e-9810b119bae2";
+const img5 = "https://www.figma.com/api/mcp/asset/3e922fd1-d3b6-4c16-b656-29ce2c510927";
+const img6 = "https://www.figma.com/api/mcp/asset/49b44c54-d352-4fba-957d-e0eef2807346";
+const img7 = "https://www.figma.com/api/mcp/asset/2065aeff-5198-4db5-8a17-110b855c7746";
+const img8 = "https://www.figma.com/api/mcp/asset/8e1ac3cc-d216-4688-aa15-af7317fa0960";
+const img9 = "https://www.figma.com/api/mcp/asset/c1cb625d-09ce-41f3-a12d-492ed7e1a320";
+const imgRectangle2823 = "https://www.figma.com/api/mcp/asset/c563b6d3-bf4e-4d5e-baa3-53d9919aa020";
+const imgEllipse5500 = "https://www.figma.com/api/mcp/asset/4a7dadcd-6334-4360-ab52-416cdc1663dd";
+const imgVector833 = "https://www.figma.com/api/mcp/asset/3e0937a4-188d-4440-8afb-01c250a13233";
+const imgVector832 = "https://www.figma.com/api/mcp/asset/c67ec032-bbd3-4e57-b118-cd149c833abb";
+const imgEllipse5499 = "https://www.figma.com/api/mcp/asset/5e3cac17-231b-41de-aba8-9786ecbc75a2";
+const imgEllipse5498 = "https://www.figma.com/api/mcp/asset/01de0ab6-e574-4e4c-a267-6bcc2726283d";
+const img10 = "https://www.figma.com/api/mcp/asset/316bc817-cd0d-429f-a016-004c8a485c9d";
+const img11 = "https://www.figma.com/api/mcp/asset/f37cb3f3-f073-4ebf-9d97-d79094b1d589";
+const img12 = "https://www.figma.com/api/mcp/asset/86e46eff-6cce-499c-bef5-48f766278a46";
+const img13 = "https://www.figma.com/api/mcp/asset/2a580831-a472-4cc2-9bcd-e642ab898a27";
+const img14 = "https://www.figma.com/api/mcp/asset/958abeb9-dba2-4e7d-a87a-db65334651bd";
+const imgLine321 = "https://www.figma.com/api/mcp/asset/246ee4de-fbea-417b-b60e-84f4cd557bf9";
+const imgVector1 = "https://www.figma.com/api/mcp/asset/d08fc08c-0b59-45a6-a170-19404df8702c";
+const imgVector2 = "https://www.figma.com/api/mcp/asset/1ff3edf4-6378-492d-87ba-4ccdcfa7d648";
+
+// ?�이�?컴포?�트
+function LsiconRightFilled({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="absolute inset-[25.91%_36.2%_25.91%_35.29%]">
+        <img alt="" className="block max-w-none size-full" src={imgVector} />
+      </div>
+    </div>
+  );
+}
+
+function IconexLightUser({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="absolute contents left-[5px] top-[3px]">
+        <div className="absolute flex items-center justify-center left-[8px] size-[8px] top-[3px]">
+          <div className="flex-none rotate-[180deg] scale-y-[-100%]">
+            <div className="relative size-[8px]">
+              <div className="absolute inset-[-9.38%]">
+                <img alt="" className="block max-w-none size-full" src={imgEllipse33} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute h-[7.5px] left-[5px] top-[13px] w-[14px]">
+          <div className="absolute inset-[3.85%_-5.36%_-6.03%_-5.36%]">
+            <img alt="" className="block max-w-none size-full" src={imgRectangle2} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IconexLightBurger({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="absolute h-[12px] left-[4px] top-[6px] w-[16px]">
+        <div className="absolute inset-[-6.25%_-4.69%]">
+          <img alt="" className="block max-w-none size-full" src={imgBurger} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// NavBar 컴포?�트
+function NavBar() {
+  return (
+    <div>
+      <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
+      <div className="bg-[#f8f6f4] h-[44px] overflow-clip relative shadow-[0px_4px_10px_0px_rgba(99,81,73,0.1)] shrink-0 w-full">
+        <IconexLightBurger className="absolute left-[16px] size-[24px] top-[10px]" />
+        <IconexLightUser className="absolute inset-[22.73%_4.27%_22.73%_89.33%]" />
+        <Link href="/" className="absolute h-[18.9px] left-[160.69px] top-[12.55px] w-[53.62px]">
+          <div className="absolute bottom-0 left-0 right-[82.19%] top-[1.48%]">
+            <img className="block max-w-none size-full" alt="GCS Logo" src={img5} />
+          </div>
+          <div className="absolute bottom-0 left-[68.67%] right-0 top-0">
+            <img className="block max-w-none size-full" alt="GCS Logo" src={img6} />
+          </div>
+          <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
+            <img className="block max-w-none size-full" alt="GCS Logo" src={img7} />
+          </div>
+          <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
+            <img className="block max-w-none size-full" alt="GCS Logo" src={img8} />
+          </div>
+          <div className="absolute bottom-0 left-[36.07%] right-[32.86%] top-[1.48%]">
+            <img className="block max-w-none size-full" alt="GCS Logo" src={img9} />
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// Footer 컴포?�트
+function Footer() {
+  return (
+    <div className="bg-[#f8f6f4]">
+      <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
+      <div className="bg-[#f8f6f4] content-stretch flex items-center overflow-clip p-[21px] relative shrink-0 w-full">
+        <div className="content-stretch flex flex-col gap-[45px] items-start relative shrink-0 w-[263px]">
+          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+            <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
+              <p className="leading-[1.5] whitespace-pre-wrap">고객지??/p>
+            </div>
+            <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
+              <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�화</span>
+                  <span>: 010-5238-0236</span>
+                </p>
+              </div>
+              <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
+                <p className="leading-[1.5] text-[13px]">
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�메??/span>
+                  <span>: gcsweb01234@gmail.com</span>
+                </p>
+              </div>
+              <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                  <span className="font-bold not-italic tracking-[-0.26px]">주소</span>
+                  <span>: ?�울?�별??강북�??�샘�?174 136??304??/span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+            <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
+              <p className="leading-[1.5] whitespace-pre-wrap">?�업???�보</p>
+            </div>
+            <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
+              <div className="content-stretch flex gap-[40px] items-center relative shrink-0 whitespace-nowrap">
+                <div className="flex flex-col justify-center relative shrink-0">
+                  <p className="leading-[1.5] text-[13px]">
+                    <span className="font-bold not-italic tracking-[-0.26px]">?�??/span>
+                    <span>: ?�성?�</span>
+                  </p>
+                </div>
+                <div className="flex flex-col justify-center relative shrink-0">
+                  <p className="leading-[1.5] text-[13px]">
+                    <span className="font-bold not-italic tracking-[-0.26px]">?�사�?/span>
+                    <span>: ?�북???�튜?�오</span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�업?�등록번??/span>
+                  <span>: 693-01-03164</span>
+                </p>
+              </div>
+              <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�신?�매?�신고번??/span>
+                  <span>: ??025-?�울중구-0000??/span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-[181px]">
+            <div className="h-[21px] relative shrink-0 w-[59px]">
+              <div className="absolute bottom-0 left-0 right-[82.19%] top-[1.48%]">
+                <img className="block max-w-none size-full" alt="GCS Logo" src={img} />
+              </div>
+              <div className="absolute bottom-0 left-[68.67%] right-0 top-0">
+                <img className="block max-w-none size-full" alt="GCS Logo" src={img1} />
+              </div>
+              <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
+                <img className="block max-w-none size-full" alt="GCS Logo" src={img2} />
+              </div>
+              <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
+                <img className="block max-w-none size-full" alt="GCS Logo" src={img3} />
+              </div>
+              <div className="absolute bottom-0 left-[36.07%] right-[32.86%] top-[1.48%]">
+                <img className="block max-w-none size-full" alt="GCS Logo" src={img4} />
+              </div>
+            </div>
+            <div className="content-stretch flex flex-col items-start leading-[0] not-italic relative shrink-0 text-[8px] text-[#443e3c] w-full">
+              <div className="flex flex-col justify-center relative shrink-0 w-full">
+                <p className="leading-[1.5] whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
+              </div>
+              <div className="flex flex-col justify-center relative shrink-0 w-full">
+                <p className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap">?�용?��?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
+    </div>
+  );
+}
+
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([])
   const [news, setNews] = useState<any[]>([])
   const [bestProducts, setBestProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
+  const [currentShopIndex, setCurrentShopIndex] = useState(0)
   const slideIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const shopSlideIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     fetchHomeData()
   }, [])
 
-  // 자동 슬라이드 기능
+  // ?�동 ?�라?�드 기능 - ?�로?�트
   useEffect(() => {
     if (projects.length > 1) {
       slideIntervalRef.current = setInterval(() => {
         setCurrentProjectIndex((prevIndex) => 
           prevIndex === projects.length - 1 ? 0 : prevIndex + 1
         )
-      }, 5000) // 5초마다 자동 슬라이드
+      }, 5000)
     }
 
     return () => {
@@ -32,19 +240,38 @@ export default function Home() {
     }
   }, [projects.length])
 
-  // 컴포넌트 언마운트 시 cleanup
+  // ?�동 ?�라?�드 기능 - ?�품
+  useEffect(() => {
+    if (bestProducts.length > 1) {
+      shopSlideIntervalRef.current = setInterval(() => {
+        setCurrentShopIndex((prevIndex) => 
+          prevIndex === bestProducts.length - 1 ? 0 : prevIndex + 1
+        )
+      }, 5000)
+    }
+
+    return () => {
+      if (shopSlideIntervalRef.current) {
+        clearInterval(shopSlideIntervalRef.current)
+      }
+    }
+  }, [bestProducts.length])
+
+  // 컴포?�트 ?�마?�트 ??cleanup
   useEffect(() => {
     return () => {
       if (slideIntervalRef.current) {
         clearInterval(slideIntervalRef.current)
       }
+      if (shopSlideIntervalRef.current) {
+        clearInterval(shopSlideIntervalRef.current)
+      }
     }
   }, [])
 
-  // 수동 슬라이드 함수
-  const goToSlide = (index: number) => {
+  // ?�동 ?�라?�드 ?�수 - ?�로?�트
+  const goToProjectSlide = (index: number) => {
     setCurrentProjectIndex(index)
-    // 수동 클릭 시 자동 슬라이드 재시작
     if (slideIntervalRef.current) {
       clearInterval(slideIntervalRef.current)
     }
@@ -55,9 +282,21 @@ export default function Home() {
     }, 5000)
   }
 
+  // ?�동 ?�라?�드 ?�수 - ?�품
+  const goToShopSlide = (index: number) => {
+    setCurrentShopIndex(index)
+    if (shopSlideIntervalRef.current) {
+      clearInterval(shopSlideIntervalRef.current)
+    }
+    shopSlideIntervalRef.current = setInterval(() => {
+      setCurrentShopIndex((prevIndex) => 
+        prevIndex === bestProducts.length - 1 ? 0 : prevIndex + 1
+      )
+    }, 5000)
+  }
+
   const fetchHomeData = async () => {
     try {
-      // 병렬로 데이터 조회하여 성능 최적화
       const [projectsRes, newsRes, productsRes] = await Promise.all([
         fetch('/api/archive/projects?featured=true'),
         fetch('/api/archive/news'),
@@ -82,476 +321,242 @@ export default function Home() {
         setBestProducts(productsData.data.slice(0, 3))
       }
     } catch (error) {
-      console.error('홈 데이터 조회 오류:', error)
+      console.error('???�이??조회 ?�류:', error)
     } finally {
       setIsLoading(false)
     }
   }
   return (
-    <>
-      {/* 통합 레이아웃 - 모든 화면 크기에서 동일 */}
-      <div className="min-h-screen bg-[#f57520] -mt-4">
-        {/* 모바일 주황색 섹션 - 텍스트만 포함 */}
-        <div className="relative h-[clamp(240px,35vh,280px)] bg-[#f57520] pt-16">
-          {/* GCS:Web 텍스트 - 주황색 영역의 왼쪽 아래 끝에 맞닿게 배치 */}
-          <div className="absolute bottom-0 left-[2vw] text-white text-[clamp(3rem,14vw,4.25rem)] font-bold z-10">
-            GCS:Web
+    <div className="bg-[#f8f6f4] min-h-screen flex flex-col items-start relative w-full">
+      <div className="flex flex-col items-start relative shrink-0 w-full">
+        <NavBar />
+      </div>
+      
+      {/* Hero Section */}
+      <div className="h-[243.75px] overflow-clip relative shrink-0 w-full max-w-[375px]">
+        <div className="absolute h-[243.75px] left-0 top-0 w-full">
+          <img alt="" className="block max-w-none size-full object-cover" src={imgRectangle2823} />
+        </div>
+        <div className="absolute h-[392.578px] left-[-82.62px] top-[-29px] w-[467.285px]">
+          <div className="absolute inset-[-22.39%_-18.81%]">
+            <img alt="" className="block max-w-none size-full" src={imgEllipse5500} />
+          </div>
+        </div>
+        <div className="absolute flex h-[212.668px] items-center justify-center left-[-35.16px] top-[54.23px] w-[427.441px]">
+          <div className="flex-none rotate-[180deg] scale-y-[-100%]">
+            <div className="h-[212.668px] relative w-[427.441px]">
+              <img alt="" className="block max-w-none size-full" src={imgVector833} />
+            </div>
+          </div>
+        </div>
+        <div className="absolute h-[181.574px] left-[-79.1px] top-[149.71px] w-[427.502px]">
+          <img alt="" className="block max-w-none size-full" src={imgVector832} />
+        </div>
+        <div className="absolute flex items-center justify-center left-1/2 size-[304.117px] top-[calc(50%+98.74px)] translate-x-[-50%] translate-y-[-50%]">
+          <div className="flex-none rotate-[131.046deg]">
+            <div className="relative size-[215.556px]">
+              <div className="absolute inset-[-23.11%_-20.39%_-17.67%_-20.39%]">
+                <img alt="" className="block max-w-none size-full" src={imgEllipse5499} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute flex items-center justify-center left-[calc(50%+146.99px)] size-[197.888px] top-[-51.56px] translate-x-[-50%]">
+          <div className="flex-none rotate-[131.046deg]">
+            <div className="relative size-[140.262px]">
+              <div className="absolute inset-[-6.27%_-18.8%_-14.62%_-2.09%]">
+                <img alt="" className="block max-w-none size-full" src={imgEllipse5498} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute flex flex-col items-center left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] w-[343px]">
+          <div className="h-[52.441px] relative shrink-0 w-[148.242px]">
+            <div className="absolute bottom-0 left-0 right-[82.19%] top-[1.48%]">
+              <img alt="GCS Logo" className="block max-w-none size-full" src={img10} />
+            </div>
+            <div className="absolute bottom-0 left-[68.67%] right-0 top-0">
+              <img alt="GCS Logo" className="block max-w-none size-full" src={img11} />
+            </div>
+            <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
+              <img alt="GCS Logo" className="block max-w-none size-full" src={img12} />
+            </div>
+            <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
+              <img alt="GCS Logo" className="block max-w-none size-full" src={img13} />
+            </div>
+            <div className="absolute bottom-0 left-[36.07%] right-[32.86%] top-[1.48%]">
+              <img alt="GCS Logo" className="block max-w-none size-full" src={img14} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="flex items-center justify-center px-[16px] py-[44px] relative shrink-0 w-full">
+        <div className="flex flex-col items-center relative shrink-0 w-full max-w-[343px]">
+          <div className="h-0 relative shrink-0 w-full">
+            <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
+              <img alt="" className="block max-w-none size-full" src={imgLine321} />
+            </div>
           </div>
           
-          {/* 동국대학교 텍스트와 흰색 바들을 통합 컨테이너로 관리 - 모든 환경에서 적절한 간격 */}
-          <div className="absolute bottom-[clamp(18vh,28%,40vh)] md:bottom-[clamp(18vh,28%,38vh)] left-[clamp(3vw,5vw,8vw)] transform rotate-[23deg] origin-bottom-left">
-            <div className="text-white italic text-[clamp(12px,3.5vw,15px)] mb-[clamp(4px,1vw,6px)]">
-              Dongguk University
-            </div>
-            <div className="w-[clamp(160px,60vw,224px)] h-[clamp(1px,0.3vw,2px)] bg-white mb-[clamp(2px,0.5vw,4px)]"></div>
-            <div className="w-[clamp(160px,60vw,224px)] h-[clamp(12px,3.5vw,16px)] bg-white"></div>
-          </div>
-        </div>
-
-        {/* 주황색 직사각형들을 위한 영역 */}
-        <div className="relative h-[clamp(180px,28vh,220px)] bg-white">
-          <div className="absolute top-0 left-[2.5vw] w-[clamp(180px,70vw,300px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-7deg]"></div>
-          <div className="absolute top-[18%] left-[5vw] w-[clamp(190px,75vw,310px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[0deg]"></div>
-          <div className="absolute top-[26%] left-[4.5vw] w-[clamp(185px,72vw,305px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-1.5deg]"></div>
-          <div className="absolute top-[34.5%] left-[2.5vw] w-[clamp(180px,70vw,300px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-2deg]"></div>
-          <div className="absolute top-[44.5%] left-[6vw] w-[clamp(195px,75vw,310px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[0deg]"></div>
-          <div className="absolute top-[52%] left-[7.5vw] w-[clamp(200px,75vw,310px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[0deg]"></div>
-          <div className="absolute top-[61%] left-[5vw] w-[clamp(190px,73vw,308px)] h-[clamp(14px,4vw,18px)] bg-[#f57520] z-0 transform rotate-[-0.5deg]"></div>
-        </div>
-
-        {/* 콘텐츠 영역 */}
-        <div className="bg-white px-4 pb-8">
-            
-            {/* Project Archive 섹션 */}
-            <div className="mb-10">
-              <h2 className="text-xl font-bold mb-1">
-                Project Archive
-              </h2>
-              <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
-              
-              {isLoading ? (
-                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
-                </div>
-              ) : projects.length > 0 ? (
-                <>
-                  {/* 슬라이드 컨테이너 */}
-                  <div className="relative overflow-hidden bg-gray-50 rounded-lg">
-                    <div 
-                      className="flex transition-transform duration-500 ease-in-out"
-                      style={{ transform: `translateX(-${currentProjectIndex * 100}%)` }}
-                    >
-                      {projects.map((project) => (
-                        <div key={project.id} className="w-full flex-shrink-0">
-                          <Link href={`/archive/projects/${project.id}`}>
-                            <div className="p-4 flex items-start justify-between hover:bg-gray-100 transition-colors cursor-pointer">
-                              <div className="flex-1">
-                                <h3 className="font-bold text-base mb-2">{project.year} {project.title}</h3>
-                                <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
-                                  {project.description}
-                                </p>
-                              </div>
-                              {project.images && project.images[0] && (
-                                <div className="ml-4 flex-shrink-0">
-                                  <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
-                                    <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
-                                      e.currentTarget.style.display = 'none'
-                                      e.currentTarget.parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full bg-[#f57520] text-white text-2xl font-bold">GCS</span>'
-                                    }} />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </Link>
-                        </div>
-                      ))}
-                    </div>
+          {/* Archive Section */}
+          <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
+            <div className="flex flex-col gap-[16px] items-start relative shrink-0 w-full">
+              <div className="flex flex-col items-start px-[16px] py-0 relative shrink-0 w-full">
+                <Link href="/archive" className="flex items-center opacity-80 pl-0 pr-[2px] py-0 relative shrink-0 w-full">
+                  <div className="flex flex-col items-start mr-[-2px] relative shrink-0">
+                    <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-[24px] text-[#1a1918]">
+                      Archive
+                    </p>
                   </div>
-
-                  {/* 슬라이드 인디케이터 */}
-                  {projects.length > 1 && (
-                    <div className="flex justify-center mt-3 space-x-2">
+                  <LsiconRightFilled className="mr-[-2px] relative shrink-0 size-[32px]" />
+                </Link>
+              </div>
+              <div className="flex flex-col gap-[20px] items-center relative shrink-0 w-full">
+                {isLoading ? (
+                  <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center h-32 w-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
+                  </div>
+                ) : projects.length > 0 ? (
+                  <>
+                    <div className="flex items-center px-[12px] py-0 relative shrink-0 w-full">
+                      <Link href={`/archive/projects/${projects[currentProjectIndex]?.id}`} className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 w-full">
+                        <div className="aspect-[1080/1350] flex-[1_0_0] min-h-px min-w-px relative shadow-[0px_4.4px_11px_0px_rgba(0,0,0,0.2)] shrink-0">
+                          {projects[currentProjectIndex]?.images?.[0] ? (
+                            <img 
+                              alt={projects[currentProjectIndex].title} 
+                              className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" 
+                              src={projects[currentProjectIndex].images[0]}
+                              onError={(e) => {
+                                e.currentTarget.src = img15
+                              }}
+                            />
+                          ) : (
+                            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={img15} />
+                          )}
+                        </div>
+                      </Link>
+                    </div>
+                    <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[16px] text-[#1a1918]">
+                      GCS???�로?�트�?만나보세??
+                    </p>
+                    <div className="flex gap-[12px] items-center justify-center relative shrink-0 w-full">
                       {projects.map((_, index) => (
                         <button
                           key={index}
-                          onClick={() => goToSlide(index)}
-                          className={`w-3 h-3 rounded-full transition-colors ${
-                            index === currentProjectIndex 
-                              ? 'bg-[#f57520]' 
-                              : 'bg-gray-300 hover:bg-gray-400'
-                          }`}
-                          aria-label={`슬라이드 ${index + 1}로 이동`}
-                        />
+                          onClick={() => goToProjectSlide(index)}
+                          className={`relative shrink-0 size-[6px] ${index === currentProjectIndex ? 'opacity-100' : 'opacity-50'}`}
+                        >
+                          <img 
+                            alt="" 
+                            className="block max-w-none size-full" 
+                            src={index === currentProjectIndex ? imgVector2 : imgVector1} 
+                          />
+                        </button>
                       ))}
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
-                  등록된 프로젝트가 없습니다.
-                </div>
-              )}
+                  </>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
+                    ?�록???�로?�트가 ?�습?�다.
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* News 섹션 */}
-            <div className="mb-10">
-              <h2 className="text-xl font-bold mb-1">
-                News
-              </h2>
-              <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
-              
-              {isLoading ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-gray-100 rounded-lg overflow-hidden h-32 animate-pulse"></div>
-                  ))}
-                </div>
-              ) : news.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-3 gap-2">
-                    {news.slice(0, 3).map((item) => (
-                      <Link key={item.id} href={`/archive/news/${item.id}`}>
-                        <div className="bg-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-                          <div className="h-20 bg-gray-300 overflow-hidden">
-                            {item.images && item.images[0] ? (
-                              <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" onError={(e) => {
-                                e.currentTarget.src = '/images/placeholder-news.jpg'
-                              }} />
-                            ) : (
-                              <div className="w-full h-full bg-gray-300 flex items-center justify-center px-2">
-                                <p className="text-xs font-semibold text-gray-700 line-clamp-2 text-center">{item.title}</p>
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-2">
-                            <p className="text-xs font-semibold line-clamp-1">{item.title}</p>
-                            <p className="text-xs text-gray-500 line-clamp-1">— {item.year}년</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="flex justify-center mt-3 space-x-1">
-                    {news.slice(0, 4).map((_, index) => (
-                      <span key={index} className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-[#f57520]' : 'bg-gray-300'}`}></span>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
-                  등록된 뉴스가 없습니다.
-                </div>
-              )}
+            <div className="h-0 relative shrink-0 w-full">
+              <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
+                <img alt="" className="block max-w-none size-full" src={imgLine321} />
+              </div>
             </div>
-
-            {/* Shop 섹션 */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-1">
-                Shop
-              </h2>
-              <span className="block w-8 h-0.5 bg-[#f57520] mb-2"></span>
-              
-              {isLoading ? (
-                <div className="grid grid-cols-3 gap-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="text-center">
-                      <div className="bg-gray-100 rounded-lg h-24 mb-2 animate-pulse"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : bestProducts.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-3 gap-3">
-                    {bestProducts.slice(0, 3).map((product) => (
-                      <Link key={product.id} href={`/shop/${product.id}`}>
-                        <div className="text-center cursor-pointer hover:opacity-80 transition-opacity">
-                          <div className="bg-gray-100 rounded-lg h-24 mb-2 overflow-hidden">
-                            {product.images && product.images[0] ? (
-                              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
-                                e.currentTarget.src = '/images/placeholder-product.jpg'
-                              }} />
-                            ) : (
-                              <div className="w-full h-full bg-gray-200"></div>
-                            )}
-                          </div>
-                          <p className="text-xs font-semibold line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-gray-500 line-clamp-1">{product.brand || 'GCS'}</p>
-                          <p className="text-[11px] text-gray-500 flex items-center justify-center gap-1 mt-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
-                            </svg>
-                            <span>{product.likeCount ?? 0}</span>
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="flex justify-center mt-3 space-x-1">
-                    {bestProducts.slice(0, 4).map((_, index) => (
-                      <span key={index} className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-[#f57520]' : 'bg-gray-300'}`}></span>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
-                  등록된 상품이 없습니다.
-                </div>
-              )}
           </div>
 
-        </div>
-
-        {/* 하단 배너 */}
-        <div className="bg-white py-6 border-t border-gray-200">
-          <div className="px-4 flex justify-between items-start gap-4">
-            {/* 왼쪽: 로고 정보 */}
-            <div className="flex-shrink-0">
-              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
-              <h3 className="text-sm font-bold text-black">
-                GCS<span className="text-[#f57520]">:</span>Web
-              </h3>
+          {/* Shop Section */}
+          <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
+            <div className="flex flex-col gap-[16px] items-start relative shrink-0 w-full">
+              <div className="flex flex-col items-start px-[16px] py-0 relative shrink-0 w-full">
+                <Link href="/shop" className="flex items-center opacity-80 pl-0 pr-[2px] py-0 relative shrink-0 w-full">
+                  <div className="flex flex-col items-start mr-[-2px] relative shrink-0">
+                    <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-[24px] text-[#1a1918]">
+                      Shop
+                    </p>
+                  </div>
+                  <LsiconRightFilled className="mr-[-2px] relative shrink-0 size-[32px]" />
+                </Link>
+                <div className="flex flex-col items-start relative shrink-0 w-full">
+                  <div className="flex flex-col items-start relative shrink-0">
+                    <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[12px] text-[#1a1918]">
+                      GCS ?�계?�공 ?�생?�의 ?�작 ?�품???�개?�니??
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-[32px] items-start relative shrink-0 w-full">
+                {isLoading ? (
+                  <div className="grid grid-cols-3 gap-[3.427px] w-full">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-gray-100 rounded-lg h-[136.635px] animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : bestProducts.length > 0 ? (
+                  <>
+                    <div className="flex gap-[3.427px] items-center px-[4.112px] py-0 relative shrink-0 w-full overflow-x-auto">
+                      {bestProducts.map((product, index) => (
+                        <Link 
+                          key={product.id} 
+                          href={`/shop/${product.id}`}
+                          className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 flex-shrink-0"
+                        >
+                          <div className="h-[136.635px] relative shadow-[0px_1.508px_3.769px_0px_rgba(0,0,0,0.2)] shrink-0 w-[109.308px]">
+                            {product.images?.[0] ? (
+                              <img 
+                                alt={product.name} 
+                                className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" 
+                                src={product.images[0]}
+                                onError={(e) => {
+                                  e.currentTarget.src = img15
+                                }}
+                              />
+                            ) : (
+                              <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={img15} />
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="flex gap-[12px] items-center justify-center relative shrink-0 w-full">
+                      {bestProducts.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => goToShopSlide(index)}
+                          className={`relative shrink-0 size-[6px] ${index === currentShopIndex ? 'opacity-100' : 'opacity-50'}`}
+                        >
+                          <img 
+                            alt="" 
+                            className="block max-w-none size-full" 
+                            src={index === currentShopIndex ? imgVector2 : imgVector1} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
+                    ?�록???�품???�습?�다.
+                  </div>
+                )}
+              </div>
             </div>
-            
-            {/* 오른쪽: 회사 정보 */}
-            <div className="flex-1 text-right space-y-1 min-w-0">
-              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
-              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
-              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
-              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
-              
-              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
-                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
-                <span className="text-[10px] text-gray-400">|</span>
-                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
-                <span className="text-[10px] text-gray-400">|</span>
-                <span className="text-[10px] text-gray-500">site by 제작담</span>
+            <div className="h-0 relative shrink-0 w-full">
+              <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
+                <img alt="" className="block max-w-none size-full" src={imgLine321} />
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* 데스크톱 전용 레이아웃 - 제거됨 */}
-      <div className="hidden">
-        <div className="max-w-6xl mx-auto pt-32">
-          {/* 페이지 제목 */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-black mb-4">GCS</h1>
-            <p className="text-gray-600 mb-8">Graphic Communication Science</p>
-            
-            {/* 홈 아이콘 */}
-            <div className="inline-block mb-8">
-              <div className="w-6 h-6 mx-auto">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-black">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* 컨텐츠 영역 (데스크톱) */}
-          <div className="bg-gray-50 min-h-screen px-4 py-6">
-            
-            {/* 환영 섹션 */}
-            <div className="mb-12">
-              <div className="bg-white rounded-lg p-8 mb-8">
-                <h2 className="text-3xl font-bold text-black mb-4 text-center">환영합니다</h2>
-                <p className="text-gray-600 text-center text-lg leading-relaxed">
-                  동국대학교 GCS 연계전공 홈페이지에 오신 것을 환영합니다.
-                </p>
-              </div>
-            </div>
-
-            {/* 주요 섹션들 */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-black mb-6">주요 섹션</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                
-                {/* About GCS */}
-                <Link href="/about" className="group">
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="h-48 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${'#5B7C99'}20, ${'#5B7C99'}40)` }}>
-                      <div className="text-center">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#5B7C99' }}>
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        </div>
-                        <span className="font-semibold" style={{ color: '#5B7C99' }}>About GCS</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#5B7C99'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>학부 소개</h3>
-                      <p className="text-gray-600 text-sm">GCS:Web 전공 소개, 개설 과목, 교수진 정보를 확인하세요.</p>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Archive */}
-                <Link href="/archive" className="group">
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="h-48 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${'#8A9A5B'}20, ${'#8A9A5B'}40)` }}>
-                      <div className="text-center">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8A9A5B' }}>
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                          </svg>
-                        </div>
-                        <span className="font-semibold" style={{ color: '#8A9A5B' }}>Archive</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#8A9A5B'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>프로젝트 & 뉴스</h3>
-                      <p className="text-gray-600 text-sm">학부 프로젝트와 최신 소식을 연도별로 확인하세요.</p>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Community */}
-                <Link href="/community" className="group">
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="h-48 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${'#B85C47'}20, ${'#B85C47'}40)` }}>
-                      <div className="text-center">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#B85C47' }}>
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                        </div>
-                        <span className="font-semibold" style={{ color: '#B85C47' }}>Community</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#B85C47'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>커뮤니티</h3>
-                      <p className="text-gray-600 text-sm">학생들과 소통하고 정보를 공유하는 공간입니다.</p>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Shop */}
-                <Link href="/shop" className="group">
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="h-48 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${'#AFA79D'}20, ${'#AFA79D'}40)` }}>
-                      <div className="text-center">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#AFA79D' }}>
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                        </div>
-                        <span className="font-semibold" style={{ color: '#AFA79D' }}>Shop</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 group-hover:transition-colors transition-colors" style={{ color: 'inherit' }} onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#AFA79D'} onMouseLeave={(e) => (e.target as HTMLElement).style.color = 'inherit'}>GCS Shop</h3>
-                      <p className="text-gray-600 text-sm">GCS 브랜드 상품을 만나보세요. 의류, 문구, 액세서리 등 다양한 상품이 있습니다.</p>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* News & Updates */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <div className="h-48 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${'#D4A056'}20, ${'#D4A056'}40)` }}>
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#D4A056' }}>
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                        </svg>
-                      </div>
-                      <span className="font-semibold" style={{ color: '#D4A056' }}>News</span>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">최신 소식</h3>
-                    <p className="text-gray-600 text-sm">학부의 최신 소식과 공지사항을 확인하세요.</p>
-                  </div>
-                </div>
-
-                {/* Contact */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <div className="h-48 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${'#5F4B66'}20, ${'#5F4B66'}40)` }}>
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#5F4B66' }}>
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <span className="font-semibold" style={{ color: '#5F4B66' }}>Contact</span>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">문의하기</h3>
-                    <p className="text-gray-600 text-sm">학부에 대한 문의사항이 있으시면 언제든 연락주세요.</p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* 통계 섹션 */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-black mb-6">GCS 통계</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="bg-white rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold mb-2" style={{ color: '#5B7C99' }}>500+</div>
-                  <div className="text-gray-600">재학생</div>
-                </div>
-                <div className="bg-white rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold mb-2" style={{ color: '#8A9A5B' }}>50+</div>
-                  <div className="text-gray-600">졸업생</div>
-                </div>
-                <div className="bg-white rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold mb-2" style={{ color: '#B85C47' }}>20+</div>
-                  <div className="text-gray-600">수상 실적</div>
-                </div>
-                <div className="bg-white rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold mb-2" style={{ color: '#AFA79D' }}>10+</div>
-                  <div className="text-gray-600">프로그램</div>
-                </div>
-              </div>
-            </div>
-
-            {/* 최근 활동 */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-black mb-6">최근 활동</h2>
-              <div className="space-y-4">
-                <div className="bg-white rounded-lg p-4 border-l-4" style={{ borderLeftColor: '#D4A056' }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">2025년 신입생 오리엔테이션</h3>
-                      <p className="text-gray-600 text-sm">3월 2일 - 3월 6일</p>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-sm" style={{ backgroundColor: '#D4A05620', color: '#D4A056' }}>진행중</span>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border-l-4" style={{ borderLeftColor: '#8A9A5B' }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">GCS 웹 개발 워크숍</h3>
-                      <p className="text-gray-600 text-sm">2월 15일 - 2월 16일</p>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-sm" style={{ backgroundColor: '#8A9A5B20', color: '#8A9A5B' }}>완료</span>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 border-l-4" style={{ borderLeftColor: '#5F4B66' }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">졸업작품 전시회</h3>
-                      <p className="text-gray-600 text-sm">2월 10일 - 2월 12일</p>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-sm" style={{ backgroundColor: '#5F4B6620', color: '#5F4B66' }}>완료</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* 푸터 */}
-          <div className="text-center text-gray-400 text-xs mt-12">
-            DONGGUK UNIVERSITY
-          </div>
-        </div>
-      </div>
-    </>
+      
+      <Footer />
+    </div>
   )
 }
