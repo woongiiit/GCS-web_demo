@@ -100,7 +100,7 @@ function MyPageContent() {
                     </div>
                   </button>
                 </div>
-                <Link href="/mypage?tab=profile" className="relative shrink-0 size-[24px]" aria-label="설정">
+                <Link href="/mypage/settings" className="relative shrink-0 size-[24px]" aria-label="설정">
                   <div className="absolute contents left-[2.52px] top-[2px]">
                     <div className="absolute flex items-center justify-center left-[9px] size-[6px] top-[9px]">
                       <div className="flex-none rotate-[180deg] scale-y-[-100%]">
