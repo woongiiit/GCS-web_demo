@@ -183,7 +183,9 @@ function MyPageContent() {
                   <Link href="/mypage/orders/cancel" className="w-full">
                     주문 취소/변경 내역
                   </Link>
-                  <p className="w-full">리뷰 쓰기</p>
+                  <Link href="/mypage/reviews" className="w-full">
+                    리뷰 쓰기
+                  </Link>
                 </div>
               </div>
             </div>
