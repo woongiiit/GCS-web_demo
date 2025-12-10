@@ -325,9 +325,7 @@ export default function Home() {
   }
   return (
     <div className="bg-[#f8f6f4] min-h-screen flex flex-col items-start relative w-full">
-      <div className="flex flex-col items-start relative shrink-0 w-full">
-        <NavBar />
-          </div>
+      <NavBar />
           
       {/* Hero Section */}
       <div className="h-[243.75px] overflow-clip relative shrink-0 w-full max-w-[375px]">
