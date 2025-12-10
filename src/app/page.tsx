@@ -237,12 +237,13 @@ export default function Home() {
     }
   }, [projects.length])
 
-  // Auto slide functionality - products
+  // Auto slide functionality - products (3개씩 그룹으로 로테이션)
   useEffect(() => {
-    if (bestProducts.length > 1) {
+    const groupCount = Math.ceil(bestProducts.length / 3)
+    if (groupCount > 1) {
       shopSlideIntervalRef.current = setInterval(() => {
         setCurrentShopIndex((prevIndex) =>
-          prevIndex === bestProducts.length - 1 ? 0 : prevIndex + 1
+          prevIndex === groupCount - 1 ? 0 : prevIndex + 1
         )
       }, 5000)
     }
@@ -279,15 +280,16 @@ export default function Home() {
     }, 5000)
   }
 
-  // Manual slide function - products
+  // Manual slide function - products (3개씩 그룹으로 로테이션)
   const goToShopSlide = (index: number) => {
     setCurrentShopIndex(index)
     if (shopSlideIntervalRef.current) {
       clearInterval(shopSlideIntervalRef.current)
     }
+    const groupCount = Math.ceil(bestProducts.length / 3)
     shopSlideIntervalRef.current = setInterval(() => {
       setCurrentShopIndex((prevIndex) =>
-        prevIndex === bestProducts.length - 1 ? 0 : prevIndex + 1
+        prevIndex === groupCount - 1 ? 0 : prevIndex + 1
       )
     }, 5000)
   }
@@ -297,7 +299,7 @@ export default function Home() {
       const [projectsRes, newsRes, productsRes] = await Promise.all([
         fetch('/api/archive/projects?featured=true'),
         fetch('/api/archive/news'),
-        fetch('/api/shop/products?sort=likes&limit=3')
+        fetch('/api/shop/products?sort=likes&limit=9')
       ])
 
       const [projectsData, newsData, productsData] = await Promise.all([
@@ -315,7 +317,7 @@ export default function Home() {
       }
 
       if (productsData.success) {
-        setBestProducts(productsData.data.slice(0, 3))
+        setBestProducts(productsData.data.slice(0, 9))
       }
     } catch (error) {
       console.error('홈 데이터 조회 오류:', error)
@@ -496,7 +498,9 @@ export default function Home() {
               ) : bestProducts.length > 0 ? (
                 <>
                     <div className="flex gap-1 sm:gap-2 md:gap-3 items-center px-1 sm:px-2 md:px-3 py-0 relative shrink-0 w-full overflow-x-auto scrollbar-hide">
-                      {bestProducts.map((product, index) => (
+                      {bestProducts
+                        .slice(currentShopIndex * 3, currentShopIndex * 3 + 3)
+                        .map((product, index) => (
                         <Link
                           key={product.id}
                           href={`/shop/${product.id}`}
@@ -520,7 +524,7 @@ export default function Home() {
                     ))}
                   </div>
                     <div className="flex gap-3 sm:gap-4 md:gap-5 items-center justify-center relative shrink-0 w-full">
-                      {bestProducts.map((_, index) => (
+                      {Array.from({ length: Math.ceil(bestProducts.length / 3) }).map((_, index) => (
                         <button
                           key={index}
                           onClick={() => goToShopSlide(index)}
