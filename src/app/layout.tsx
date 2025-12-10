@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import ChatBot from '@/components/ChatBot'
+import NavBar from '@/components/NavBar'
 import { AuthProvider } from '@/contexts/AuthContext'
 import './globals.css'
 
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <div className="min-h-screen bg-white">
+            <NavBar />
             <main>
               {children}
             </main>

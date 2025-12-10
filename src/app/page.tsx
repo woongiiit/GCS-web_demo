@@ -81,7 +81,7 @@ function IconexLightBurger({ className }: { className?: string }) {
 
 function NavBar() {
   return (
-    <div>
+    <div className="fixed top-0 left-0 right-0 z-50">
       <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
       <div className="bg-[#f8f6f4] h-[44px] overflow-clip relative shadow-[0px_4px_10px_0px_rgba(99,81,73,0.1)] shrink-0 w-full">
         <IconexLightBurger className="absolute left-[16px] size-[24px] top-[10px]" />
@@ -325,7 +325,7 @@ export default function Home() {
   }
   return (
     <div className="bg-[#f8f6f4] min-h-screen flex flex-col items-start relative w-full">
-      <NavBar />
+      <div className="h-[78px] shrink-0 w-full" />
           
       {/* Hero Section */}
       <div className="h-[243.75px] overflow-clip relative shrink-0 w-full max-w-[375px]">
