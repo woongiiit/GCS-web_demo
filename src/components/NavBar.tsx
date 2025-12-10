@@ -125,7 +125,7 @@ export default function NavBar() {
           >
             <IconexLightUser className="size-full" />
           </Link>
-          <Link href="/" className="absolute h-[18.9px] left-[160.69px] top-[12.55px] w-[53.62px]">
+          <Link href="/" className="absolute h-[18.9px] left-1/2 -translate-x-1/2 top-[12.55px] w-[53.62px]">
             <div className="absolute inset-[1.48%_82.19%_0_0]">
               <img className="block max-w-none size-full" alt="GCS Logo" src={img5} />
             </div>
