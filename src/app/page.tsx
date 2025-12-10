@@ -111,69 +111,69 @@ function NavBar() {
 function Footer() {
   return (
     <div className="bg-[#f8f6f4]">
-      <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
-      <div className="bg-[#f8f6f4] content-stretch flex items-center overflow-clip p-[21px] relative shrink-0 w-full">
-        <div className="content-stretch flex flex-col gap-[45px] items-start relative shrink-0 w-[263px]">
-          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
-            <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
+      <div className="bg-[#f8f6f4] h-8 sm:h-9 md:h-10 shrink-0 w-full" />
+      <div className="bg-[#f8f6f4] content-stretch flex items-center overflow-clip p-4 sm:p-5 md:p-6 relative shrink-0 w-full">
+        <div className="content-stretch flex flex-col gap-8 sm:gap-10 md:gap-12 items-start relative shrink-0 w-full max-w-[263px] sm:max-w-[400px] md:max-w-[600px]">
+          <div className="content-stretch flex flex-col gap-2 sm:gap-3 md:gap-4 items-start relative shrink-0 w-full">
+            <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-base sm:text-lg md:text-xl text-[#443e3c] w-full">
               <p className="leading-[1.5] whitespace-pre-wrap">고객지원</p>
             </div>
-            <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
+            <div className="content-stretch flex flex-col gap-3 sm:gap-4 md:gap-5 items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
-                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                <p className="leading-[1.5] text-xs sm:text-sm md:text-base whitespace-pre-wrap">
                   <span className="font-bold not-italic tracking-[-0.26px]">전화</span>
                   <span>: 010-5238-0236</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
-                <p className="leading-[1.5] text-[13px]">
+                <p className="leading-[1.5] text-xs sm:text-sm md:text-base">
                   <span className="font-bold not-italic tracking-[-0.26px]">이메일</span>
                   <span>: gcsweb01234@gmail.com</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
-                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                <p className="leading-[1.5] text-xs sm:text-sm md:text-base whitespace-pre-wrap">
                   <span className="font-bold not-italic tracking-[-0.26px]">주소</span>
                   <span>: 서울특별시 강북구 수유동 174-136 304호</span>
                 </p>
               </div>
             </div>
           </div>
-          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
-            <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
+          <div className="content-stretch flex flex-col gap-2 sm:gap-3 md:gap-4 items-start relative shrink-0 w-full">
+            <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-base sm:text-lg md:text-xl text-[#443e3c] w-full">
               <p className="leading-[1.5] whitespace-pre-wrap">회사정보</p>
             </div>
-            <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
-              <div className="content-stretch flex gap-[40px] items-center relative shrink-0 whitespace-nowrap">
+            <div className="content-stretch flex flex-col gap-3 sm:gap-4 md:gap-5 items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
+              <div className="content-stretch flex flex-col sm:flex-row gap-2 sm:gap-8 md:gap-10 items-start sm:items-center relative shrink-0">
                 <div className="flex flex-col justify-center relative shrink-0">
-                  <p className="leading-[1.5] text-[13px]">
+                  <p className="leading-[1.5] text-xs sm:text-sm md:text-base">
                     <span className="font-bold not-italic tracking-[-0.26px]">대표</span>
                     <span>: 최성일</span>
                   </p>
                 </div>
                 <div className="flex flex-col justify-center relative shrink-0">
-                  <p className="leading-[1.5] text-[13px]">
+                  <p className="leading-[1.5] text-xs sm:text-sm md:text-base">
                     <span className="font-bold not-italic tracking-[-0.26px]">사업자</span>
                     <span>: 강북구 튜토리오</span>
                   </p>
                 </div>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
-                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                <p className="leading-[1.5] text-xs sm:text-sm md:text-base whitespace-pre-wrap">
                   <span className="font-bold not-italic tracking-[-0.26px]">사업자등록번호</span>
                   <span>: 693-01-03164</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
-                <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                <p className="leading-[1.5] text-xs sm:text-sm md:text-base whitespace-pre-wrap">
                   <span className="font-bold not-italic tracking-[-0.26px]">통신판매업신고번호</span>
                   <span>: 제2025-서울중구-0000호</span>
                 </p>
               </div>
             </div>
           </div>
-          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-[181px]">
-            <div className="h-[21px] relative shrink-0 w-[59px]">
+          <div className="content-stretch flex flex-col gap-2 sm:gap-3 md:gap-4 items-start relative shrink-0 w-full sm:w-[181px]">
+            <div className="h-5 sm:h-6 md:h-7 relative shrink-0 w-[59px] sm:w-[70px] md:w-[80px]">
               <div className="absolute bottom-0 left-0 right-[82.19%] top-[1.48%]">
                 <img className="block max-w-none size-full" alt="GCS Logo" src={img} />
               </div>
@@ -190,7 +190,7 @@ function Footer() {
                 <img className="block max-w-none size-full" alt="GCS Logo" src={img4} />
               </div>
             </div>
-            <div className="content-stretch flex flex-col items-start leading-[0] not-italic relative shrink-0 text-[8px] text-[#443e3c] w-full">
+            <div className="content-stretch flex flex-col items-start leading-[0] not-italic relative shrink-0 text-[8px] sm:text-[10px] md:text-xs text-[#443e3c] w-full">
               <div className="flex flex-col justify-center relative shrink-0 w-full">
                 <p className="leading-[1.5] whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
               </div>
@@ -201,7 +201,7 @@ function Footer() {
           </div>
         </div>
       </div>
-      <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
+      <div className="bg-[#f8f6f4] h-8 sm:h-9 md:h-10 shrink-0 w-full" />
     </div>
   );
 }
@@ -328,45 +328,45 @@ export default function Home() {
       <div className="h-[78px] shrink-0 w-full" />
           
       {/* Hero Section */}
-      <div className="h-[243.75px] overflow-clip relative shrink-0 w-full max-w-[375px]">
-        <div className="absolute h-[243.75px] left-0 top-0 w-full">
+      <div className="aspect-[375/243.75] sm:aspect-[375/243.75] md:aspect-[375/243.75] overflow-clip relative shrink-0 w-full max-w-full">
+        <div className="absolute inset-0 left-0 top-0 w-full">
           <img alt="" className="block max-w-none size-full object-cover" src={imgRectangle2823} />
         </div>
-        <div className="absolute h-[392.578px] left-[-82.62px] top-[-29px] w-[467.285px]">
+        <div className="absolute h-[161.4%] left-[-22%] top-[-11.9%] w-[124.6%]">
           <div className="absolute inset-[-22.39%_-18.81%]">
             <img alt="" className="block max-w-none size-full" src={imgEllipse5500} />
           </div>
         </div>
-        <div className="absolute flex h-[212.668px] items-center justify-center left-[-35.16px] top-[54.23px] w-[427.441px]">
+        <div className="absolute flex h-[87.2%] items-center justify-center left-[-9.4%] top-[22.2%] w-[114%]">
           <div className="flex-none rotate-[180deg] scale-y-[-100%]">
-            <div className="h-[212.668px] relative w-[427.441px]">
+            <div className="h-full relative w-full">
               <img alt="" className="block max-w-none size-full" src={imgVector833} />
             </div>
           </div>
         </div>
-        <div className="absolute h-[181.574px] left-[-79.1px] top-[149.71px] w-[427.502px]">
+        <div className="absolute h-[74.5%] left-[-21.1%] top-[61.4%] w-[114%]">
           <img alt="" className="block max-w-none size-full" src={imgVector832} />
         </div>
-        <div className="absolute flex items-center justify-center left-1/2 size-[304.117px] top-[calc(50%+98.74px)] translate-x-[-50%] translate-y-[-50%]">
+        <div className="absolute flex items-center justify-center left-1/2 w-[81.1%] aspect-square top-[calc(50%+40.5%)] translate-x-[-50%] translate-y-[-50%]">
           <div className="flex-none rotate-[131.046deg]">
-            <div className="relative size-[215.556px]">
+            <div className="relative size-full">
               <div className="absolute inset-[-23.11%_-20.39%_-17.67%_-20.39%]">
                 <img alt="" className="block max-w-none size-full" src={imgEllipse5499} />
               </div>
             </div>
           </div>
         </div>
-        <div className="absolute flex items-center justify-center left-[calc(50%+146.99px)] size-[197.888px] top-[-51.56px] translate-x-[-50%]">
+        <div className="absolute flex items-center justify-center left-[calc(50%+39.2%)] w-[52.8%] aspect-square top-[-21.1%] translate-x-[-50%]">
           <div className="flex-none rotate-[131.046deg]">
-            <div className="relative size-[140.262px]">
+            <div className="relative size-full">
               <div className="absolute inset-[-6.27%_-18.8%_-14.62%_-2.09%]">
                 <img alt="" className="block max-w-none size-full" src={imgEllipse5498} />
               </div>
             </div>
           </div>
         </div>
-        <div className="absolute flex flex-col items-center left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] w-[343px]">
-          <div className="h-[52.441px] relative shrink-0 w-[148.242px]">
+        <div className="absolute flex flex-col items-center left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] w-[91.5%] max-w-[343px]">
+          <div className="h-[21.5%] relative shrink-0 w-[43.2%] aspect-[148.242/52.441]">
             <div className="absolute bottom-0 left-0 right-[82.19%] top-[1.48%]">
               <img alt="GCS Logo" className="block max-w-none size-full" src={img10} />
             </div>
@@ -387,8 +387,8 @@ export default function Home() {
         </div>
 
       {/* Content Section */}
-      <div className="flex items-center justify-center px-[16px] py-[44px] relative shrink-0 w-full">
-        <div className="flex flex-col items-center relative shrink-0 w-full max-w-[343px]">
+      <div className="flex items-center justify-center px-4 sm:px-6 md:px-8 py-8 sm:py-11 md:py-12 relative shrink-0 w-full">
+        <div className="flex flex-col items-center relative shrink-0 w-full max-w-[343px] sm:max-w-[600px] md:max-w-[800px]">
           <div className="h-0 relative shrink-0 w-full">
             <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
               <img alt="" className="block max-w-none size-full" src={imgLine321} />
@@ -396,27 +396,27 @@ export default function Home() {
         </div>
 
           {/* Archive Section */}
-          <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
-            <div className="flex flex-col gap-[16px] items-start relative shrink-0 w-full">
-              <div className="flex flex-col items-start px-[16px] py-0 relative shrink-0 w-full">
-                <Link href="/archive" className="flex items-center opacity-80 pl-0 pr-[2px] py-0 relative shrink-0 w-full">
+          <div className="flex flex-col gap-12 sm:gap-16 md:gap-20 items-center pb-0 pt-6 sm:pt-8 md:pt-10 px-0 relative shrink-0 w-full">
+            <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 items-start relative shrink-0 w-full">
+              <div className="flex flex-col items-start px-4 sm:px-6 md:px-8 py-0 relative shrink-0 w-full">
+                <Link href="/archive" className="flex items-center opacity-80 pl-0 pr-0.5 py-0 relative shrink-0 w-full">
                   <div className="flex flex-col items-start mr-[-2px] relative shrink-0">
-                    <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-[24px] text-[#1a1918]">
+                    <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-xl sm:text-2xl md:text-3xl text-[#1a1918]">
                       Archive
                     </p>
                   </div>
-                  <LsiconRightFilled className="mr-[-2px] relative shrink-0 size-[32px]" />
+                  <LsiconRightFilled className="mr-[-2px] relative shrink-0 size-6 sm:size-7 md:size-8" />
                 </Link>
               </div>
-              <div className="flex flex-col gap-[20px] items-center relative shrink-0 w-full">
+              <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 items-center relative shrink-0 w-full">
                 {isLoading ? (
                   <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center h-32 w-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
                   </div>
                 ) : projects.length > 0 ? (
                   <>
-                    <div className="flex items-center px-[12px] py-0 relative shrink-0 w-full">
-                      <Link href={`/archive/projects/${projects[currentProjectIndex]?.id}`} className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 w-full">
+                    <div className="flex items-center px-3 sm:px-4 md:px-6 py-0 relative shrink-0 w-full">
+                      <Link href={`/archive/projects/${projects[currentProjectIndex]?.id}`} className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded sm:rounded-md md:rounded-lg shrink-0 w-full">
                         <div className="aspect-[1080/1350] flex-[1_0_0] min-h-px min-w-px relative shadow-[0px_4.4px_11px_0px_rgba(0,0,0,0.2)] shrink-0">
                           {projects[currentProjectIndex]?.images?.[0] ? (
                             <img
@@ -433,10 +433,10 @@ export default function Home() {
                         </div>
                       </Link>
                     </div>
-                    <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[16px] text-[#1a1918]">
+                    <p className="font-light leading-[1.5] not-italic relative shrink-0 text-sm sm:text-base md:text-lg text-[#1a1918] text-center px-4">
                       GCS의 프로젝트를 만나보세요
                     </p>
-                    <div className="flex gap-[12px] items-center justify-center relative shrink-0 w-full">
+                    <div className="flex gap-3 sm:gap-4 md:gap-5 items-center justify-center relative shrink-0 w-full">
                       {projects.map((_, index) => (
                         <button
                           key={index}
@@ -467,42 +467,42 @@ export default function Home() {
           </div>
 
           {/* Shop Section */}
-          <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
-            <div className="flex flex-col gap-[16px] items-start relative shrink-0 w-full">
-              <div className="flex flex-col items-start px-[16px] py-0 relative shrink-0 w-full">
-                <Link href="/shop" className="flex items-center opacity-80 pl-0 pr-[2px] py-0 relative shrink-0 w-full">
+          <div className="flex flex-col gap-12 sm:gap-16 md:gap-20 items-center pb-0 pt-6 sm:pt-8 md:pt-10 px-0 relative shrink-0 w-full">
+            <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 items-start relative shrink-0 w-full">
+              <div className="flex flex-col items-start px-4 sm:px-6 md:px-8 py-0 relative shrink-0 w-full">
+                <Link href="/shop" className="flex items-center opacity-80 pl-0 pr-0.5 py-0 relative shrink-0 w-full">
                   <div className="flex flex-col items-start mr-[-2px] relative shrink-0">
-                    <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-[24px] text-[#1a1918]">
+                    <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-xl sm:text-2xl md:text-3xl text-[#1a1918]">
                       Shop
                     </p>
                   </div>
-                  <LsiconRightFilled className="mr-[-2px] relative shrink-0 size-[32px]" />
+                  <LsiconRightFilled className="mr-[-2px] relative shrink-0 size-6 sm:size-7 md:size-8" />
                       </Link>
                 <div className="flex flex-col items-start relative shrink-0 w-full">
                   <div className="flex flex-col items-start relative shrink-0">
-                    <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[12px] text-[#1a1918]">
+                    <p className="font-light leading-[1.5] not-italic relative shrink-0 text-xs sm:text-sm md:text-base text-[#1a1918]">
                       GCS 계획공간 학생들의 작품을 만나보세요
                     </p>
                   </div>
                   </div>
                 </div>
-              <div className="flex flex-col gap-[32px] items-start relative shrink-0 w-full">
+              <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 items-start relative shrink-0 w-full">
               {isLoading ? (
-                  <div className="grid grid-cols-3 gap-[3.427px] w-full">
+                  <div className="grid grid-cols-3 gap-1 sm:gap-2 md:gap-3 w-full">
                   {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-gray-100 rounded-lg h-[136.635px] animate-pulse"></div>
+                      <div key={i} className="bg-gray-100 rounded-lg aspect-[109.308/136.635] sm:aspect-[109.308/136.635] md:aspect-[109.308/136.635] animate-pulse"></div>
                   ))}
                 </div>
               ) : bestProducts.length > 0 ? (
                 <>
-                    <div className="flex gap-[3.427px] items-center px-[4.112px] py-0 relative shrink-0 w-full overflow-x-auto">
+                    <div className="flex gap-1 sm:gap-2 md:gap-3 items-center px-1 sm:px-2 md:px-3 py-0 relative shrink-0 w-full overflow-x-auto scrollbar-hide">
                       {bestProducts.map((product, index) => (
                         <Link
                           key={product.id}
                           href={`/shop/${product.id}`}
-                          className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 flex-shrink-0"
+                          className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded sm:rounded-md md:rounded-lg shrink-0 flex-shrink-0"
                         >
-                          <div className="h-[136.635px] relative shadow-[0px_1.508px_3.769px_0px_rgba(0,0,0,0.2)] shrink-0 w-[109.308px]">
+                          <div className="h-[136.635px] sm:h-[160px] md:h-[180px] relative shadow-[0px_1.508px_3.769px_0px_rgba(0,0,0,0.2)] shrink-0 w-[109.308px] sm:w-[128px] md:w-[144px] aspect-[109.308/136.635]">
                             {product.images?.[0] ? (
                               <img
                                 alt={product.name}
@@ -519,12 +519,12 @@ export default function Home() {
                       </Link>
                     ))}
                   </div>
-                    <div className="flex gap-[12px] items-center justify-center relative shrink-0 w-full">
+                    <div className="flex gap-3 sm:gap-4 md:gap-5 items-center justify-center relative shrink-0 w-full">
                       {bestProducts.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => goToShopSlide(index)}
-                          className={`relative shrink-0 size-[6px] ${index === currentShopIndex ? 'opacity-100' : 'opacity-50'}`}
+                          className={`relative shrink-0 size-1.5 sm:size-2 md:size-2.5 ${index === currentShopIndex ? 'opacity-100' : 'opacity-50'}`}
                         >
                           <img
                             alt=""
