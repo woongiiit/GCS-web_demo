@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 
-// Figma ?��?지 ?�셋 URL
+// Figma image asset URLs
 const img15 = "https://www.figma.com/api/mcp/asset/2d3d1652-8692-4526-bc0e-0d12ef32aced";
 const img = "https://www.figma.com/api/mcp/asset/e98384d0-da13-4bb4-8f17-eed376fa94fb";
 const img1 = "https://www.figma.com/api/mcp/asset/46b0d905-4963-47d5-85c1-c3fb0d7b0d4d";
@@ -34,7 +34,7 @@ const imgLine321 = "https://www.figma.com/api/mcp/asset/246ee4de-fbea-417b-b60e-
 const imgVector1 = "https://www.figma.com/api/mcp/asset/d08fc08c-0b59-45a6-a170-19404df8702c";
 const imgVector2 = "https://www.figma.com/api/mcp/asset/1ff3edf4-6378-492d-87ba-4ccdcfa7d648";
 
-// ?�이�?컴포?�트
+// Component
 function LsiconRightFilled({ className }: { className?: string }) {
   return (
     <div className={className}>
@@ -80,7 +80,7 @@ function IconexLightBurger({ className }: { className?: string }) {
   );
 }
 
-// NavBar 컴포?�트
+// Component
 function NavBar() {
   return (
     <div>
@@ -110,7 +110,7 @@ function NavBar() {
   );
 }
 
-// Footer 컴포?�트
+// Component
 function Footer() {
   return (
     <div className="bg-[#f8f6f4]">
@@ -223,7 +223,7 @@ export default function Home() {
     fetchHomeData()
   }, [])
 
-  // ?�동 ?�라?�드 기능 - ?�로?�트
+  // Auto slide functionality - projects
   useEffect(() => {
     if (projects.length > 1) {
       slideIntervalRef.current = setInterval(() => {
@@ -240,7 +240,7 @@ export default function Home() {
     }
   }, [projects.length])
 
-  // ?�동 ?�라?�드 기능 - ?�품
+  // Auto slide functionality - products
   useEffect(() => {
     if (bestProducts.length > 1) {
       shopSlideIntervalRef.current = setInterval(() => {
@@ -257,7 +257,7 @@ export default function Home() {
     }
   }, [bestProducts.length])
 
-  // 컴포?�트 ?�마?�트 ??cleanup
+  // Component unmount cleanup
   useEffect(() => {
     return () => {
       if (slideIntervalRef.current) {
@@ -269,7 +269,7 @@ export default function Home() {
     }
   }, [])
 
-  // ?�동 ?�라?�드 ?�수 - ?�로?�트
+  // Manual slide function - projects
   const goToProjectSlide = (index: number) => {
     setCurrentProjectIndex(index)
     if (slideIntervalRef.current) {
@@ -282,7 +282,7 @@ export default function Home() {
     }, 5000)
   }
 
-  // ?�동 ?�라?�드 ?�수 - ?�품
+  // Manual slide function - products
   const goToShopSlide = (index: number) => {
     setCurrentShopIndex(index)
     if (shopSlideIntervalRef.current) {
