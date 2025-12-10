@@ -409,12 +409,12 @@ export default function Home() {
                 </Link>
               </div>
               <div className="flex flex-col gap-[20px] items-center relative shrink-0 w-full">
-              {isLoading ? (
+                {isLoading ? (
                   <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center h-32 w-full">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
-                </div>
-              ) : projects.length > 0 ? (
-                <>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
+                  </div>
+                ) : projects.length > 0 ? (
+                  <>
                     <div className="flex items-center px-[12px] py-0 relative shrink-0 w-full">
                       <Link href={`/archive/projects/${projects[currentProjectIndex]?.id}`} className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 w-full">
                         <div className="aspect-[1080/1350] flex-[1_0_0] min-h-px min-w-px relative shadow-[0px_4.4px_11px_0px_rgba(0,0,0,0.2)] shrink-0">
@@ -429,10 +429,10 @@ export default function Home() {
                             />
                           ) : (
                             <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={img15} />
-                              )}
-                            </div>
-                          </Link>
+                          )}
                         </div>
+                      </Link>
+                    </div>
                     <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[16px] text-[#1a1918]">
                       GCS의 프로젝트를 만나보세요
                     </p>
@@ -451,20 +451,20 @@ export default function Home() {
                         </button>
                       ))}
                     </div>
-                </>
-              ) : (
+                  </>
+                ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
-                  등록된 프로젝트가 없습니다.
-                </div>
-              )}
+                    등록된 프로젝트가 없습니다.
+                  </div>
+                )}
+              </div>
             </div>
-                </div>
             <div className="h-0 relative shrink-0 w-full">
               <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
                 <img alt="" className="block max-w-none size-full" src={imgLine321} />
-                          </div>
-                          </div>
-                        </div>
+              </div>
+            </div>
+          </div>
 
           {/* Shop Section */}
           <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
