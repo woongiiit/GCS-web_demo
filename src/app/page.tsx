@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 
-// Figma ?��?지 ?�셋 URL
+// Figma ?��?지 ?�셋 URL
 const img15 = "https://www.figma.com/api/mcp/asset/2d3d1652-8692-4526-bc0e-0d12ef32aced";
 const img = "https://www.figma.com/api/mcp/asset/e98384d0-da13-4bb4-8f17-eed376fa94fb";
 const img1 = "https://www.figma.com/api/mcp/asset/46b0d905-4963-47d5-85c1-c3fb0d7b0d4d";
@@ -34,7 +34,7 @@ const imgLine321 = "https://www.figma.com/api/mcp/asset/246ee4de-fbea-417b-b60e-
 const imgVector1 = "https://www.figma.com/api/mcp/asset/d08fc08c-0b59-45a6-a170-19404df8702c";
 const imgVector2 = "https://www.figma.com/api/mcp/asset/1ff3edf4-6378-492d-87ba-4ccdcfa7d648";
 
-// ?�이�?컴포?�트
+// ?�이�?컴포?�트
 function LsiconRightFilled({ className }: { className?: string }) {
   return (
     <div className={className}>
@@ -80,7 +80,7 @@ function IconexLightBurger({ className }: { className?: string }) {
   );
 }
 
-// NavBar 컴포?�트
+// NavBar 컴포?�트
 function NavBar() {
   return (
     <div>
@@ -110,7 +110,7 @@ function NavBar() {
   );
 }
 
-// Footer 컴포?�트
+// Footer 컴포?�트
 function Footer() {
   return (
     <div className="bg-[#f8f6f4]">
@@ -119,58 +119,58 @@ function Footer() {
         <div className="content-stretch flex flex-col gap-[45px] items-start relative shrink-0 w-[263px]">
           <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
             <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
-              <p className="leading-[1.5] whitespace-pre-wrap">고객지??/p>
+              <p className="leading-[1.5] whitespace-pre-wrap">고객지원</p>
             </div>
             <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�화</span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�화</span>
                   <span>: 010-5238-0236</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
                 <p className="leading-[1.5] text-[13px]">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�메??/span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�메??/span>
                   <span>: gcsweb01234@gmail.com</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
                   <span className="font-bold not-italic tracking-[-0.26px]">주소</span>
-                  <span>: ?�울?�별??강북�??�샘�?174 136??304??/span>
+                  <span>: ?�울?�별??강북�??�샘�?174 136??304??/span>
                 </p>
               </div>
             </div>
           </div>
           <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
             <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
-              <p className="leading-[1.5] whitespace-pre-wrap">?�업???�보</p>
+              <p className="leading-[1.5] whitespace-pre-wrap">?�업???�보</p>
             </div>
             <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
               <div className="content-stretch flex gap-[40px] items-center relative shrink-0 whitespace-nowrap">
                 <div className="flex flex-col justify-center relative shrink-0">
                   <p className="leading-[1.5] text-[13px]">
-                    <span className="font-bold not-italic tracking-[-0.26px]">?�??/span>
-                    <span>: ?�성?�</span>
+                    <span className="font-bold not-italic tracking-[-0.26px]">?�??/span>
+                    <span>: ?�성?�</span>
                   </p>
                 </div>
                 <div className="flex flex-col justify-center relative shrink-0">
                   <p className="leading-[1.5] text-[13px]">
-                    <span className="font-bold not-italic tracking-[-0.26px]">?�사�?/span>
-                    <span>: ?�북???�튜?�오</span>
+                    <span className="font-bold not-italic tracking-[-0.26px]">?�사�?/span>
+                    <span>: ?�북???�튜?�오</span>
                   </p>
                 </div>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�업?�등록번??/span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�업?�등록번??/span>
                   <span>: 693-01-03164</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�신?�매?�신고번??/span>
-                  <span>: ??025-?�울중구-0000??/span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">?�신?�매?�신고번??/span>
+                  <span>: ??025-?�울중구-0000??/span>
                 </p>
               </div>
             </div>
@@ -198,7 +198,7 @@ function Footer() {
                 <p className="leading-[1.5] whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
               </div>
               <div className="flex flex-col justify-center relative shrink-0 w-full">
-                <p className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap">?�용?��?</p>
+                <p className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap">?�용?��?</p>
               </div>
             </div>
           </div>
@@ -223,7 +223,7 @@ export default function Home() {
     fetchHomeData()
   }, [])
 
-  // ?�동 ?�라?�드 기능 - ?�로?�트
+  // ?�동 ?�라?�드 기능 - ?�로?�트
   useEffect(() => {
     if (projects.length > 1) {
       slideIntervalRef.current = setInterval(() => {
@@ -240,7 +240,7 @@ export default function Home() {
     }
   }, [projects.length])
 
-  // ?�동 ?�라?�드 기능 - ?�품
+  // ?�동 ?�라?�드 기능 - ?�품
   useEffect(() => {
     if (bestProducts.length > 1) {
       shopSlideIntervalRef.current = setInterval(() => {
@@ -257,7 +257,7 @@ export default function Home() {
     }
   }, [bestProducts.length])
 
-  // 컴포?�트 ?�마?�트 ??cleanup
+  // 컴포?�트 ?�마?�트 ??cleanup
   useEffect(() => {
     return () => {
       if (slideIntervalRef.current) {
@@ -269,7 +269,7 @@ export default function Home() {
     }
   }, [])
 
-  // ?�동 ?�라?�드 ?�수 - ?�로?�트
+  // ?�동 ?�라?�드 ?�수 - ?�로?�트
   const goToProjectSlide = (index: number) => {
     setCurrentProjectIndex(index)
     if (slideIntervalRef.current) {
@@ -282,7 +282,7 @@ export default function Home() {
     }, 5000)
   }
 
-  // ?�동 ?�라?�드 ?�수 - ?�품
+  // ?�동 ?�라?�드 ?�수 - ?�품
   const goToShopSlide = (index: number) => {
     setCurrentShopIndex(index)
     if (shopSlideIntervalRef.current) {
@@ -321,7 +321,7 @@ export default function Home() {
         setBestProducts(productsData.data.slice(0, 3))
       }
     } catch (error) {
-      console.error('???�이??조회 ?�류:', error)
+      console.error('???�이??조회 ?�류:', error)
     } finally {
       setIsLoading(false)
     }
@@ -439,7 +439,7 @@ export default function Home() {
                       </Link>
                     </div>
                     <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[16px] text-[#1a1918]">
-                      GCS???�로?�트�?만나보세??
+                      GCS???�로?�트�?만나보세??
                     </p>
                     <div className="flex gap-[12px] items-center justify-center relative shrink-0 w-full">
                       {projects.map((_, index) => (
@@ -459,7 +459,7 @@ export default function Home() {
                   </>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
-                    ?�록???�로?�트가 ?�습?�다.
+                    ?�록???�로?�트가 ?�습?�다.
                   </div>
                 )}
               </div>
@@ -486,7 +486,7 @@ export default function Home() {
                 <div className="flex flex-col items-start relative shrink-0 w-full">
                   <div className="flex flex-col items-start relative shrink-0">
                     <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[12px] text-[#1a1918]">
-                      GCS ?�계?�공 ?�생?�의 ?�작 ?�품???�개?�니??
+                      GCS ?�계?�공 ?�생?�의 ?�작 ?�품???�개?�니??
                     </p>
                   </div>
                 </div>
@@ -542,7 +542,7 @@ export default function Home() {
                   </>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
-                    ?�록???�품???�습?�다.
+                    ?�록???�품???�습?�다.
                   </div>
                 )}
               </div>
