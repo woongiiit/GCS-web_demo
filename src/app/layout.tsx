@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import Navigation from '@/components/Navigation'
 import ChatBot from '@/components/ChatBot'
 import { AuthProvider } from '@/contexts/AuthContext'
 import './globals.css'
@@ -22,8 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <div className="min-h-screen bg-white">
-            <Navigation />
-            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 pt-20">
+            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
               {children}
             </main>
             <ChatBot />
