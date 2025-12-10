@@ -224,7 +224,7 @@ export default function Home() {
   useEffect(() => {
     if (projects.length > 1) {
       slideIntervalRef.current = setInterval(() => {
-        setCurrentProjectIndex((prevIndex) => 
+        setCurrentProjectIndex((prevIndex) =>
           prevIndex === projects.length - 1 ? 0 : prevIndex + 1
         )
       }, 5000)
@@ -241,7 +241,7 @@ export default function Home() {
   useEffect(() => {
     if (bestProducts.length > 1) {
       shopSlideIntervalRef.current = setInterval(() => {
-        setCurrentShopIndex((prevIndex) => 
+        setCurrentShopIndex((prevIndex) =>
           prevIndex === bestProducts.length - 1 ? 0 : prevIndex + 1
         )
       }, 5000)
@@ -273,7 +273,7 @@ export default function Home() {
       clearInterval(slideIntervalRef.current)
     }
     slideIntervalRef.current = setInterval(() => {
-      setCurrentProjectIndex((prevIndex) => 
+      setCurrentProjectIndex((prevIndex) =>
         prevIndex === projects.length - 1 ? 0 : prevIndex + 1
       )
     }, 5000)
@@ -286,7 +286,7 @@ export default function Home() {
       clearInterval(shopSlideIntervalRef.current)
     }
     shopSlideIntervalRef.current = setInterval(() => {
-      setCurrentShopIndex((prevIndex) => 
+      setCurrentShopIndex((prevIndex) =>
         prevIndex === bestProducts.length - 1 ? 0 : prevIndex + 1
       )
     }, 5000)
@@ -328,7 +328,7 @@ export default function Home() {
       <div className="flex flex-col items-start relative shrink-0 w-full">
         <NavBar />
       </div>
-      
+
       {/* Hero Section */}
       <div className="h-[243.75px] overflow-clip relative shrink-0 w-full max-w-[375px]">
         <div className="absolute h-[243.75px] left-0 top-0 w-full">
@@ -396,7 +396,7 @@ export default function Home() {
               <img alt="" className="block max-w-none size-full" src={imgLine321} />
             </div>
           </div>
-          
+
           {/* Archive Section */}
           <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
             <div className="flex flex-col gap-[16px] items-start relative shrink-0 w-full">
@@ -421,9 +421,9 @@ export default function Home() {
                       <Link href={`/archive/projects/${projects[currentProjectIndex]?.id}`} className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 w-full">
                         <div className="aspect-[1080/1350] flex-[1_0_0] min-h-px min-w-px relative shadow-[0px_4.4px_11px_0px_rgba(0,0,0,0.2)] shrink-0">
                           {projects[currentProjectIndex]?.images?.[0] ? (
-                            <img 
-                              alt={projects[currentProjectIndex].title} 
-                              className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" 
+                            <img
+                              alt={projects[currentProjectIndex].title}
+                              className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
                               src={projects[currentProjectIndex].images[0]}
                               onError={(e) => {
                                 e.currentTarget.src = img15
@@ -445,10 +445,10 @@ export default function Home() {
                           onClick={() => goToProjectSlide(index)}
                           className={`relative shrink-0 size-[6px] ${index === currentProjectIndex ? 'opacity-100' : 'opacity-50'}`}
                         >
-                          <img 
-                            alt="" 
-                            className="block max-w-none size-full" 
-                            src={index === currentProjectIndex ? imgVector2 : imgVector1} 
+                          <img
+                            alt=""
+                            className="block max-w-none size-full"
+                            src={index === currentProjectIndex ? imgVector2 : imgVector1}
                           />
                         </button>
                       ))}
@@ -499,16 +499,16 @@ export default function Home() {
                   <>
                     <div className="flex gap-[3.427px] items-center px-[4.112px] py-0 relative shrink-0 w-full overflow-x-auto">
                       {bestProducts.map((product, index) => (
-                        <Link 
-                          key={product.id} 
+                        <Link
+                          key={product.id}
                           href={`/shop/${product.id}`}
                           className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 flex-shrink-0"
                         >
                           <div className="h-[136.635px] relative shadow-[0px_1.508px_3.769px_0px_rgba(0,0,0,0.2)] shrink-0 w-[109.308px]">
                             {product.images?.[0] ? (
-                              <img 
-                                alt={product.name} 
-                                className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" 
+                              <img
+                                alt={product.name}
+                                className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
                                 src={product.images[0]}
                                 onError={(e) => {
                                   e.currentTarget.src = img15
@@ -528,10 +528,10 @@ export default function Home() {
                           onClick={() => goToShopSlide(index)}
                           className={`relative shrink-0 size-[6px] ${index === currentShopIndex ? 'opacity-100' : 'opacity-50'}`}
                         >
-                          <img 
-                            alt="" 
-                            className="block max-w-none size-full" 
-                            src={index === currentShopIndex ? imgVector2 : imgVector1} 
+                          <img
+                            alt=""
+                            className="block max-w-none size-full"
+                            src={index === currentShopIndex ? imgVector2 : imgVector1}
                           />
                         </button>
                       ))}
@@ -552,8 +552,9 @@ export default function Home() {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   )
 }
+
