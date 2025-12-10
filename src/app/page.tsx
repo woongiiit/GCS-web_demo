@@ -121,53 +121,53 @@ function Footer() {
             <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�화</span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">전화</span>
                   <span>: 010-5238-0236</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
                 <p className="leading-[1.5] text-[13px]">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�메??/span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">이메일</span>
                   <span>: gcsweb01234@gmail.com</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
                   <span className="font-bold not-italic tracking-[-0.26px]">주소</span>
-                  <span>: ?�울?�별??강북�??�샘�?174 136??304??/span>
+                  <span>: 서울특별시 강북구 수유동 174-136 304호</span>
                 </p>
               </div>
             </div>
           </div>
           <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
             <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
-              <p className="leading-[1.5] whitespace-pre-wrap">?�업???�보</p>
+              <p className="leading-[1.5] whitespace-pre-wrap">회사정보</p>
             </div>
             <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
               <div className="content-stretch flex gap-[40px] items-center relative shrink-0 whitespace-nowrap">
                 <div className="flex flex-col justify-center relative shrink-0">
                   <p className="leading-[1.5] text-[13px]">
-                    <span className="font-bold not-italic tracking-[-0.26px]">?�??/span>
-                    <span>: ?�성?�</span>
+                    <span className="font-bold not-italic tracking-[-0.26px]">대표</span>
+                    <span>: 최성일</span>
                   </p>
                 </div>
                 <div className="flex flex-col justify-center relative shrink-0">
                   <p className="leading-[1.5] text-[13px]">
-                    <span className="font-bold not-italic tracking-[-0.26px]">?�사�?/span>
-                    <span>: ?�북???�튜?�오</span>
+                    <span className="font-bold not-italic tracking-[-0.26px]">사업자</span>
+                    <span>: 강북구 튜토리오</span>
                   </p>
                 </div>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�업?�등록번??/span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">사업자등록번호</span>
                   <span>: 693-01-03164</span>
                 </p>
               </div>
               <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
                 <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
-                  <span className="font-bold not-italic tracking-[-0.26px]">?�신?�매?�신고번??/span>
-                  <span>: ??025-?�울중구-0000??/span>
+                  <span className="font-bold not-italic tracking-[-0.26px]">통신판매업신고번호</span>
+                  <span>: 제2025-서울중구-0000호</span>
                 </p>
               </div>
             </div>
@@ -195,7 +195,7 @@ function Footer() {
                 <p className="leading-[1.5] whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
               </div>
               <div className="flex flex-col justify-center relative shrink-0 w-full">
-                <p className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap">?�용?��?</p>
+                <p className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap">이용약관</p>
               </div>
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function Home() {
   useEffect(() => {
     if (projects.length > 1) {
       slideIntervalRef.current = setInterval(() => {
-        setCurrentProjectIndex((prevIndex) =>
+        setCurrentProjectIndex((prevIndex) => 
           prevIndex === projects.length - 1 ? 0 : prevIndex + 1
         )
       }, 5000)
@@ -273,7 +273,7 @@ export default function Home() {
       clearInterval(slideIntervalRef.current)
     }
     slideIntervalRef.current = setInterval(() => {
-      setCurrentProjectIndex((prevIndex) =>
+      setCurrentProjectIndex((prevIndex) => 
         prevIndex === projects.length - 1 ? 0 : prevIndex + 1
       )
     }, 5000)
@@ -318,7 +318,7 @@ export default function Home() {
         setBestProducts(productsData.data.slice(0, 3))
       }
     } catch (error) {
-      console.error('???�이??조회 ?�류:', error)
+      console.error('홈 데이터 조회 오류:', error)
     } finally {
       setIsLoading(false)
     }
@@ -327,8 +327,8 @@ export default function Home() {
     <div className="bg-[#f8f6f4] min-h-screen flex flex-col items-start relative w-full">
       <div className="flex flex-col items-start relative shrink-0 w-full">
         <NavBar />
-      </div>
-
+          </div>
+          
       {/* Hero Section */}
       <div className="h-[243.75px] overflow-clip relative shrink-0 w-full max-w-[375px]">
         <div className="absolute h-[243.75px] left-0 top-0 w-full">
@@ -384,9 +384,9 @@ export default function Home() {
             <div className="absolute bottom-0 left-[36.07%] right-[32.86%] top-[1.48%]">
               <img alt="GCS Logo" className="block max-w-none size-full" src={img14} />
             </div>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Content Section */}
       <div className="flex items-center justify-center px-[16px] py-[44px] relative shrink-0 w-full">
@@ -395,7 +395,7 @@ export default function Home() {
             <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
               <img alt="" className="block max-w-none size-full" src={imgLine321} />
             </div>
-          </div>
+        </div>
 
           {/* Archive Section */}
           <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
@@ -411,12 +411,12 @@ export default function Home() {
                 </Link>
               </div>
               <div className="flex flex-col gap-[20px] items-center relative shrink-0 w-full">
-                {isLoading ? (
+              {isLoading ? (
                   <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center h-32 w-full">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
-                  </div>
-                ) : projects.length > 0 ? (
-                  <>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f57520]"></div>
+                </div>
+              ) : projects.length > 0 ? (
+                <>
                     <div className="flex items-center px-[12px] py-0 relative shrink-0 w-full">
                       <Link href={`/archive/projects/${projects[currentProjectIndex]?.id}`} className="border border-[#717171] border-solid flex items-center justify-center overflow-clip relative rounded-[4px] shrink-0 w-full">
                         <div className="aspect-[1080/1350] flex-[1_0_0] min-h-px min-w-px relative shadow-[0px_4.4px_11px_0px_rgba(0,0,0,0.2)] shrink-0">
@@ -431,12 +431,12 @@ export default function Home() {
                             />
                           ) : (
                             <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={img15} />
-                          )}
+                              )}
+                            </div>
+                          </Link>
                         </div>
-                      </Link>
-                    </div>
                     <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[16px] text-[#1a1918]">
-                      GCS???�로?�트�?만나보세??
+                      GCS의 프로젝트를 만나보세요
                     </p>
                     <div className="flex gap-[12px] items-center justify-center relative shrink-0 w-full">
                       {projects.map((_, index) => (
@@ -453,20 +453,20 @@ export default function Home() {
                         </button>
                       ))}
                     </div>
-                  </>
-                ) : (
+                </>
+              ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
-                    ?�록???�로?�트가 ?�습?�다.
-                  </div>
-                )}
-              </div>
+                  등록된 프로젝트가 없습니다.
+                </div>
+              )}
             </div>
+                </div>
             <div className="h-0 relative shrink-0 w-full">
               <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
                 <img alt="" className="block max-w-none size-full" src={imgLine321} />
-              </div>
-            </div>
-          </div>
+                          </div>
+                          </div>
+                        </div>
 
           {/* Shop Section */}
           <div className="flex flex-col gap-[60px] items-center pb-0 pt-[32px] px-0 relative shrink-0 w-full">
@@ -479,24 +479,24 @@ export default function Home() {
                     </p>
                   </div>
                   <LsiconRightFilled className="mr-[-2px] relative shrink-0 size-[32px]" />
-                </Link>
+                      </Link>
                 <div className="flex flex-col items-start relative shrink-0 w-full">
                   <div className="flex flex-col items-start relative shrink-0">
                     <p className="font-light leading-[1.5] not-italic relative shrink-0 text-[12px] text-[#1a1918]">
-                      GCS ?�계?�공 ?�생?�의 ?�작 ?�품???�개?�니??
+                      GCS 계획공간 학생들의 작품을 만나보세요
                     </p>
                   </div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-[32px] items-start relative shrink-0 w-full">
-                {isLoading ? (
-                  <div className="grid grid-cols-3 gap-[3.427px] w-full">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-gray-100 rounded-lg h-[136.635px] animate-pulse"></div>
-                    ))}
                   </div>
-                ) : bestProducts.length > 0 ? (
-                  <>
+                </div>
+              <div className="flex flex-col gap-[32px] items-start relative shrink-0 w-full">
+              {isLoading ? (
+                  <div className="grid grid-cols-3 gap-[3.427px] w-full">
+                  {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-gray-100 rounded-lg h-[136.635px] animate-pulse"></div>
+                  ))}
+                </div>
+              ) : bestProducts.length > 0 ? (
+                <>
                     <div className="flex gap-[3.427px] items-center px-[4.112px] py-0 relative shrink-0 w-full overflow-x-auto">
                       {bestProducts.map((product, index) => (
                         <Link
@@ -517,10 +517,10 @@ export default function Home() {
                             ) : (
                               <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={img15} />
                             )}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                     <div className="flex gap-[12px] items-center justify-center relative shrink-0 w-full">
                       {bestProducts.map((_, index) => (
                         <button
@@ -534,16 +534,16 @@ export default function Home() {
                             src={index === currentShopIndex ? imgVector2 : imgVector1}
                           />
                         </button>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
-                    ?�록???�품???�습?�다.
+                    ))}
                   </div>
-                )}
-              </div>
-            </div>
+                </>
+              ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm w-full">
+                  등록된 상품이 없습니다.
+                </div>
+              )}
+          </div>
+        </div>
             <div className="h-0 relative shrink-0 w-full">
               <div className="absolute bottom-0 left-0 right-0 top-[-1px]">
                 <img alt="" className="block max-w-none size-full" src={imgLine321} />
@@ -554,6 +554,6 @@ export default function Home() {
       </div>
 
       <Footer />
-    </div>
+      </div>
   )
 }
