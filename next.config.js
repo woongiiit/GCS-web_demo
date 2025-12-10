@@ -18,7 +18,7 @@ const nextConfig = {
   },
   compress: true,
   // Prisma Client를 standalone 빌드에 포함시키기 위한 설정
-  serverExternalPackages: ['@prisma/client'],
+  serverComponentsExternalPackages: ['@prisma/client'],
 }
 
 module.exports = nextConfig
