@@ -5,19 +5,18 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 // 이미지 상수 (Figma에서 추출한 이미지 URL)
-const imgVector827 = "https://www.figma.com/api/mcp/asset/de868fe1-7b8a-49a2-856e-bc696c9f76ee"
-const imgVector828 = "https://www.figma.com/api/mcp/asset/cfb03548-f5bf-43a9-a13e-a2abdd8eab4d"
-const imgEllipse5406 = "https://www.figma.com/api/mcp/asset/3d8b3f2e-14c2-44d4-bd61-041adba072a2"
-const imgEllipse5405 = "https://www.figma.com/api/mcp/asset/4d32a91f-24b6-4aa0-af06-be52d772d565"
-const imgEllipse5404 = "https://www.figma.com/api/mcp/asset/6cf55429-82a9-42aa-9ba1-d6371963b5ac"
-const imgVector = "https://www.figma.com/api/mcp/asset/dc6e5d1b-f68c-42f2-95f6-2cf52dd80be5"
-const imgWeuiBackFilled = "https://www.figma.com/api/mcp/asset/aa6dd487-2a59-41b6-a0db-b52df5521270"
-// GCS Logo 이미지 (NavBar와 동일)
-const img5 = "https://www.figma.com/api/mcp/asset/0083f04b-c6c4-4f79-955f-16d8539ba33e"
-const img6 = "https://www.figma.com/api/mcp/asset/1988d300-64b1-4f7d-83d0-7298e4cbb843"
-const img7 = "https://www.figma.com/api/mcp/asset/05dd2805-4ef3-4ff1-ba31-67a4571ca807"
-const img8 = "https://www.figma.com/api/mcp/asset/27891397-84ba-4270-ba80-ace71723ecd7"
-const img9 = "https://www.figma.com/api/mcp/asset/3c7f601f-bae1-4dea-93a0-5c9e33362501"
+const imgVector827 = "https://www.figma.com/api/mcp/asset/91456c85-adba-4cf2-bf7b-941e3707e867"
+const imgVector828 = "https://www.figma.com/api/mcp/asset/09407644-d5b1-4aa9-aaf3-d21d9936256f"
+const imgEllipse5406 = "https://www.figma.com/api/mcp/asset/2dcf951c-13a6-40ce-b6ec-5c8ef3c5235a"
+const imgEllipse5405 = "https://www.figma.com/api/mcp/asset/d492cf9a-4323-4068-a90e-e8ff92e9ead5"
+const imgEllipse5404 = "https://www.figma.com/api/mcp/asset/aab4adf0-76a9-4cd9-a481-31508c6e75b6"
+const imgVector = "https://www.figma.com/api/mcp/asset/16e75770-565c-40ea-bfbc-5432ca2879b1"
+const imgWeuiBackFilled = "https://www.figma.com/api/mcp/asset/d57d654d-7fbc-4576-afa6-ab89eb0bd58e"
+const imgLogo1 = "https://www.figma.com/api/mcp/asset/6820c6f1-8688-4f97-abad-df066a5917b5"
+const imgLogo2 = "https://www.figma.com/api/mcp/asset/71e80be6-f3d3-406a-a89d-40f642752fae"
+const imgLogo3 = "https://www.figma.com/api/mcp/asset/470f7015-44bc-47c7-843f-6c2be4b6f287"
+const imgLogo4 = "https://www.figma.com/api/mcp/asset/ab261d18-8acd-4844-a25f-965602b50248"
+const imgLogo5 = "https://www.figma.com/api/mcp/asset/7d51254c-1f2b-4918-b4dc-73cfcbe90a46"
 
 type Step = 'email' | 'verify' | 'reset' | 'success'
 
@@ -236,22 +235,30 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* 로고 */}
-        <div className="absolute left-1/2 top-[89px] -translate-x-1/2 h-[18.9px] w-[53.62px] z-10">
-          <Link href="/" className="h-[18.9px] w-[53.62px] relative block">
+        <div className="absolute h-[29.608px] left-[calc(50%-0.5px)] shadow-[0px_4px_4px_0px_rgba(197,54,9,0.3)] top-[89px] translate-x-[-50%] w-[84px] z-10">
+          <Link href="/" className="block h-full w-full relative">
             <div className="absolute inset-[1.48%_82.19%_0_0]">
-              <img className="block max-w-none size-full" alt="GCS Logo" src={img5} />
+              <div className="absolute inset-0" style={{ "--fill-0": "rgba(255, 255, 255, 1)" } as React.CSSProperties}>
+                <img className="block max-w-none size-full" alt="GCS Logo" src={imgLogo1} />
+              </div>
             </div>
             <div className="absolute inset-[0_0_0_68.67%]">
-              <img className="block max-w-none size-full" alt="GCS Logo" src={img6} />
+              <div className="absolute inset-0" style={{ "--fill-0": "rgba(255, 255, 255, 1)" } as React.CSSProperties}>
+                <img className="block max-w-none size-full" alt="GCS Logo" src={imgLogo2} />
+              </div>
             </div>
             <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
-              <img className="block max-w-none size-full" alt="GCS Logo" src={img7} />
+              <img className="block max-w-none size-full" alt="GCS Logo" src={imgLogo3} />
             </div>
             <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
-              <img className="block max-w-none size-full" alt="GCS Logo" src={img8} />
+              <div className="absolute inset-0" style={{ "--fill-0": "rgba(255, 255, 255, 1)" } as React.CSSProperties}>
+                <img className="block max-w-none size-full" alt="GCS Logo" src={imgLogo4} />
+              </div>
             </div>
             <div className="absolute inset-[1.48%_32.86%_0_36.07%]">
-              <img className="block max-w-none size-full" alt="GCS Logo" src={img9} />
+              <div className="absolute inset-0" style={{ "--fill-0": "rgba(255, 255, 255, 1)" } as React.CSSProperties}>
+                <img className="block max-w-none size-full" alt="GCS Logo" src={imgLogo5} />
+              </div>
             </div>
           </Link>
         </div>
