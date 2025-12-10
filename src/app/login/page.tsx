@@ -14,6 +14,12 @@ const imgEllipse5405 = "https://www.figma.com/api/mcp/asset/13ece281-66c4-4a0a-9
 const imgEllipse5404 = "https://www.figma.com/api/mcp/asset/2d5e842e-6710-499b-936f-17f2c6cbf053"
 const imgVector = "https://www.figma.com/api/mcp/asset/20c0ddc6-bbc3-4007-b24d-5c39d795be6f"
 const imgLine316 = "https://www.figma.com/api/mcp/asset/a7e03601-7d5c-413d-a6f7-d6e245b1af56"
+// GCS Logo 이미지
+const img5 = "https://www.figma.com/api/mcp/asset/0083f04b-c6c4-4f79-955f-16d8539ba33e"
+const img6 = "https://www.figma.com/api/mcp/asset/1988d300-64b1-4f7d-83d0-7298e4cbb843"
+const img7 = "https://www.figma.com/api/mcp/asset/05dd2805-4ef3-4ff1-ba31-67a4571ca807"
+const img8 = "https://www.figma.com/api/mcp/asset/27891397-84ba-4270-ba80-ace71723ecd7"
+const img9 = "https://www.figma.com/api/mcp/asset/3c7f601f-bae1-4dea-93a0-5c9e33362501"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -205,9 +211,23 @@ export default function LoginPage() {
         </div>
 
         {/* 로고 */}
-        <div className="absolute left-1/2 top-[89px] -translate-x-1/2 h-[29.61px] w-[84px] z-10 shadow-[0px_4px_4px_0px_rgba(197,54,9,0.3)]">
-          <Link href="/" className="text-lg font-bold text-white">
-            GCS<span className="text-white">:</span>Web
+        <div className="absolute left-1/2 top-[89px] -translate-x-1/2 h-[18.9px] w-[53.62px] z-10">
+          <Link href="/" className="h-[18.9px] w-[53.62px] relative block">
+            <div className="absolute inset-[1.48%_82.19%_0_0]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img5} />
+            </div>
+            <div className="absolute inset-[0_0_0_68.67%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img6} />
+            </div>
+            <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img7} />
+            </div>
+            <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img8} />
+            </div>
+            <div className="absolute inset-[1.48%_32.86%_0_36.07%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img9} />
+            </div>
           </Link>
         </div>
 

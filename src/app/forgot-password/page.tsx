@@ -12,11 +12,12 @@ const imgEllipse5405 = "https://www.figma.com/api/mcp/asset/4d32a91f-24b6-4aa0-a
 const imgEllipse5404 = "https://www.figma.com/api/mcp/asset/6cf55429-82a9-42aa-9ba1-d6371963b5ac"
 const imgVector = "https://www.figma.com/api/mcp/asset/dc6e5d1b-f68c-42f2-95f6-2cf52dd80be5"
 const imgWeuiBackFilled = "https://www.figma.com/api/mcp/asset/aa6dd487-2a59-41b6-a0db-b52df5521270"
-const imgLogo1 = "https://www.figma.com/api/mcp/asset/f9f4d1c5-405e-4c9b-81d3-247dd227b5af"
-const imgLogo2 = "https://www.figma.com/api/mcp/asset/baaba4c4-1904-45b4-81f6-fcf7a3569bd4"
-const imgLogo3 = "https://www.figma.com/api/mcp/asset/b5270e1e-8975-40ae-bdb0-9d430733c1e0"
-const imgLogo4 = "https://www.figma.com/api/mcp/asset/cc317737-4ba7-4aaa-bcb5-694d80bfbe4e"
-const imgLogo5 = "https://www.figma.com/api/mcp/asset/5befd4ff-6c5f-4953-8670-34ea24651429"
+// GCS Logo 이미지 (NavBar와 동일)
+const img5 = "https://www.figma.com/api/mcp/asset/0083f04b-c6c4-4f79-955f-16d8539ba33e"
+const img6 = "https://www.figma.com/api/mcp/asset/1988d300-64b1-4f7d-83d0-7298e4cbb843"
+const img7 = "https://www.figma.com/api/mcp/asset/05dd2805-4ef3-4ff1-ba31-67a4571ca807"
+const img8 = "https://www.figma.com/api/mcp/asset/27891397-84ba-4270-ba80-ace71723ecd7"
+const img9 = "https://www.figma.com/api/mcp/asset/3c7f601f-bae1-4dea-93a0-5c9e33362501"
 
 type Step = 'email' | 'verify' | 'reset' | 'success'
 
@@ -235,9 +236,23 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* 로고 */}
-        <div className="absolute left-1/2 top-[89px] -translate-x-1/2 h-[29.61px] w-[84px] z-10 shadow-[0px_4px_4px_0px_rgba(197,54,9,0.3)]">
-          <Link href="/" className="text-lg font-bold text-white">
-            GCS<span className="text-white">:</span>Web
+        <div className="absolute left-1/2 top-[89px] -translate-x-1/2 h-[18.9px] w-[53.62px] z-10">
+          <Link href="/" className="h-[18.9px] w-[53.62px] relative block">
+            <div className="absolute inset-[1.48%_82.19%_0_0]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img5} />
+            </div>
+            <div className="absolute inset-[0_0_0_68.67%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img6} />
+            </div>
+            <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img7} />
+            </div>
+            <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img8} />
+            </div>
+            <div className="absolute inset-[1.48%_32.86%_0_36.07%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img9} />
+            </div>
           </Link>
         </div>
 
