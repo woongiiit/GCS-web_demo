@@ -34,7 +34,7 @@ const imgLine321 = "https://www.figma.com/api/mcp/asset/246ee4de-fbea-417b-b60e-
 const imgVector1 = "https://www.figma.com/api/mcp/asset/d08fc08c-0b59-45a6-a170-19404df8702c";
 const imgVector2 = "https://www.figma.com/api/mcp/asset/1ff3edf4-6378-492d-87ba-4ccdcfa7d648";
 
-// Component
+// Icon components
 function LsiconRightFilled({ className }: { className?: string }) {
   return (
     <div className={className}>
@@ -80,7 +80,7 @@ function IconexLightBurger({ className }: { className?: string }) {
   );
 }
 
-// Component
+// NavBar component
 function NavBar() {
   return (
     <div>
@@ -110,7 +110,7 @@ function NavBar() {
   );
 }
 
-// Component
+// Footer component
 function Footer() {
   return (
     <div className="bg-[#f8f6f4]">
