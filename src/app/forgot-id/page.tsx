@@ -233,7 +233,7 @@ export default function ForgotIdPage() {
                           <div className="flex items-center relative w-[24px]">
                             <div className="opacity-0 overflow-clip relative shrink-0 size-[24px]">
                               <div className="absolute inset-[8.33%]">
-                                <img alt="" className="block max-w-none size-full" src={img1} />
+                                <img alt="" className="block max-w-none size-full" src={imgVector} />
                               </div>
                             </div>
                           </div>
@@ -333,7 +333,7 @@ export default function ForgotIdPage() {
                           <div className="flex items-center relative w-[24px]">
                             <div className="opacity-0 overflow-clip relative shrink-0 size-[24px]">
                               <div className="absolute inset-[8.33%]">
-                                <img alt="" className="block max-w-none size-full" src={img1} />
+                                <img alt="" className="block max-w-none size-full" src={imgVector} />
                               </div>
                             </div>
                           </div>
