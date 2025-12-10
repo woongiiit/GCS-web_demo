@@ -10,15 +10,15 @@ const img1 = "https://www.figma.com/api/mcp/asset/46b0d905-4963-47d5-85c1-c3fb0d
 const img2 = "https://www.figma.com/api/mcp/asset/e29ae3e6-1e22-4532-a2bc-11ecb3f11e4e";
 const img3 = "https://www.figma.com/api/mcp/asset/60698448-4b9f-447c-8ba4-0ae328c0a351";
 const img4 = "https://www.figma.com/api/mcp/asset/ef08ede0-94ff-4359-b0ab-1569102f0134";
-const imgVector = "https://www.figma.com/api/mcp/asset/0a995d7f-de2e-4118-ae65-eb1ce18c5c52";
-const imgEllipse33 = "https://www.figma.com/api/mcp/asset/a64a5532-6b5e-496e-a097-2795fe5eaa7b";
-const imgRectangle2 = "https://www.figma.com/api/mcp/asset/bcac8693-6418-4ca0-8f72-cfd1d6efb8ff";
-const imgBurger = "https://www.figma.com/api/mcp/asset/072f7790-bf98-40f2-a30e-9810b119bae2";
-const img5 = "https://www.figma.com/api/mcp/asset/3e922fd1-d3b6-4c16-b656-29ce2c510927";
-const img6 = "https://www.figma.com/api/mcp/asset/49b44c54-d352-4fba-957d-e0eef2807346";
-const img7 = "https://www.figma.com/api/mcp/asset/2065aeff-5198-4db5-8a17-110b855c7746";
-const img8 = "https://www.figma.com/api/mcp/asset/8e1ac3cc-d216-4688-aa15-af7317fa0960";
-const img9 = "https://www.figma.com/api/mcp/asset/c1cb625d-09ce-41f3-a12d-492ed7e1a320";
+const imgVector = "https://www.figma.com/api/mcp/asset/f874b87f-17ca-45c9-9584-d124c812e8b8";
+const imgEllipse33 = "https://www.figma.com/api/mcp/asset/71ee0cee-5aae-4fc2-9356-321d26a5c25c";
+const imgRectangle2 = "https://www.figma.com/api/mcp/asset/c0532b6f-bb84-4340-99c6-65c9ea683ae2";
+const imgBurger = "https://www.figma.com/api/mcp/asset/f7cac7c9-8a41-47fa-8fb8-d57378ce54bf";
+const img5 = "https://www.figma.com/api/mcp/asset/86b371d0-eb9a-4417-98c7-e9dc63d227f2";
+const img6 = "https://www.figma.com/api/mcp/asset/e38a5e99-b77d-4609-98fa-a6df752991e0";
+const img7 = "https://www.figma.com/api/mcp/asset/83076736-afc6-4262-a1cb-5e3575198507";
+const img8 = "https://www.figma.com/api/mcp/asset/117dc381-a1a6-49d2-bfce-ecfd4bcfec3b";
+const img9 = "https://www.figma.com/api/mcp/asset/4b73f2b4-57ec-4c74-951b-ab86add5ec05";
 const imgRectangle2823 = "https://www.figma.com/api/mcp/asset/c563b6d3-bf4e-4d5e-baa3-53d9919aa020";
 const imgEllipse5500 = "https://www.figma.com/api/mcp/asset/4a7dadcd-6334-4360-ab52-416cdc1663dd";
 const imgVector833 = "https://www.figma.com/api/mcp/asset/3e0937a4-188d-4440-8afb-01c250a13233";
@@ -86,11 +86,11 @@ function NavBar() {
       <div className="bg-[#f8f6f4] h-[44px] overflow-clip relative shadow-[0px_4px_10px_0px_rgba(99,81,73,0.1)] shrink-0 w-full">
         <IconexLightBurger className="absolute left-[16px] size-[24px] top-[10px]" />
         <IconexLightUser className="absolute inset-[22.73%_4.27%_22.73%_89.33%]" />
-        <Link href="/" className="absolute h-[18.9px] left-[160.69px] top-[12.55px] w-[53.62px]">
-          <div className="absolute bottom-0 left-0 right-[82.19%] top-[1.48%]">
+        <div className="absolute h-[18.9px] left-[160.69px] top-[12.55px] w-[53.62px]">
+          <div className="absolute inset-[1.48%_82.19%_0_0]">
             <img className="block max-w-none size-full" alt="GCS Logo" src={img5} />
           </div>
-          <div className="absolute bottom-0 left-[68.67%] right-0 top-0">
+          <div className="absolute inset-[0_0_0_68.67%]">
             <img className="block max-w-none size-full" alt="GCS Logo" src={img6} />
           </div>
           <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
@@ -99,10 +99,10 @@ function NavBar() {
           <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
             <img className="block max-w-none size-full" alt="GCS Logo" src={img8} />
           </div>
-          <div className="absolute bottom-0 left-[36.07%] right-[32.86%] top-[1.48%]">
+          <div className="absolute inset-[1.48%_32.86%_0_36.07%]">
             <img className="block max-w-none size-full" alt="GCS Logo" src={img9} />
           </div>
-        </Link>
+        </div>
       </div>
     </div>
   );
