@@ -18,7 +18,21 @@ const nextConfig = {
   },
   compress: true,
   // Prisma Client를 standalone 빌드에 포함시키기 위한 설정
-  serverComponentsExternalPackages: ['@prisma/client'],
+  // Next.js 14.2.33에서는 webpack 설정으로 처리
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Prisma Client를 externals에서 제외하여 번들에 포함
+      if (Array.isArray(config.externals)) {
+        config.externals = config.externals.filter((external) => {
+          if (typeof external === 'string') {
+            return !external.includes('@prisma/client')
+          }
+          return true
+        })
+      }
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig
