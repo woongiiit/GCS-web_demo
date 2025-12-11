@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import AboutTermsModal from '@/components/AboutTermsModal'
 
 interface AboutContent {
   id: string
@@ -31,6 +32,7 @@ export default function AboutPage() {
   const [activeTab, setActiveTab] = useState<'gcsweb' | 'intro' | 'lectures' | 'professor'>('gcsweb')
   const [contents, setContents] = useState<Record<string, AboutContent>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   useEffect(() => {
     fetchContents()
@@ -74,70 +76,83 @@ export default function AboutPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#f8f6f4] overflow-auto" style={{ overflowY: 'scroll' }}>
-      <div className="relative min-h-screen bg-[#f8f6f4]">
-        {/* 배너 영역 - 그라데이션 배경 */}
-        <div className="relative h-[191px] overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-l from-[rgba(255,178,114,0.6)] to-[#fd6f22]"></div>
-          <div className="relative h-full flex flex-col items-start justify-end px-[19px] pb-[49px]">
-            <h1 className="text-[44px] font-bold text-white mb-0" style={{ fontFamily: 'Paperlogy, sans-serif' }}>
-              About GCS
-            </h1>
-            <p className="text-[15px] text-white">연계전공 GCS 및 사이트 소개</p>
-          </div>
-        </div>
-
-        {/* 서브 메뉴 띠 */}
-        <div className="bg-[#f8f6f4] border-b border-[#1a1918]">
-          <div className="max-w-full mx-auto px-5">
-            <div className="flex justify-between items-center h-[59px] py-3">
-              <button
-                onClick={() => setActiveTab('gcsweb')}
-                className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'gcsweb'
-                    ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
-                    : 'text-[#b7b3af]'
-                }`}
-              >
-                사이트 소개
-              </button>
-              <button
-                onClick={() => setActiveTab('intro')}
-                className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'intro'
-                    ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
-                    : 'text-[#b7b3af]'
-                }`}
-              >
-                전공 소개
-              </button>
-              <button
-                onClick={() => setActiveTab('lectures')}
-                className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'lectures'
-                    ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
-                    : 'text-[#b7b3af]'
-                }`}
-              >
-                커리큘럼
-              </button>
-              <button
-                onClick={() => setActiveTab('professor')}
-                className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'professor'
-                    ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
-                    : 'text-[#b7b3af]'
-                }`}
-              >
-                교수진 소개
-              </button>
+    <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
+      <div className="relative min-h-screen bg-white">
+        {/* 상단 검은색 영역 */}
+        <div className="bg-black pt-32 pb-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-0">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-white mb-4">About GCS</h1>
+              <p className="text-white text-sm mb-8">GCS 연계 전공을 소개하는 공간입니다.</p>
+            
+            {/* 홈 아이콘 */}
+              <Link href="/" className="inline-block">
+                <div className="w-6 h-6 mx-auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+              </div>
+            </Link>
             </div>
           </div>
         </div>
 
+        {/* 서브 메뉴 띠 - 흰색 배경 */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-6xl mx-auto px-2 sm:px-0">
+                <div className="flex justify-center gap-4 sm:gap-5 md:gap-6 lg:gap-8 py-4">
+                <button
+                  onClick={() => setActiveTab('gcsweb')}
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
+                    activeTab === 'gcsweb'
+                    ? 'border-black'
+                    : 'border-transparent hover:border-gray-300'
+                  }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
+                >
+                  GCS:Web
+                </button>
+                <button
+                  onClick={() => setActiveTab('intro')}
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
+                    activeTab === 'intro'
+                    ? 'border-black'
+                    : 'border-transparent hover:border-gray-300'
+                  }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
+                >
+                  전공 소개
+                </button>
+                <button
+                  onClick={() => setActiveTab('lectures')}
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
+                    activeTab === 'lectures'
+                    ? 'border-black'
+                    : 'border-transparent hover:border-gray-300'
+                  }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
+                >
+                  개설 과목
+                </button>
+                <button
+                  onClick={() => setActiveTab('professor')}
+                className={`pb-2 border-b-2 font-bold transition-colors text-black whitespace-nowrap ${
+                    activeTab === 'professor'
+                    ? 'border-black'
+                    : 'border-transparent hover:border-gray-300'
+                  }`}
+                  style={{ fontSize: 'clamp(0.625rem, 2vw, 1rem)' }}
+                >
+                  교수진
+                </button>
+              </div>
+            </div>
+        </div>
+
         {/* 컨텐츠 영역 */}
-        <div className="bg-[#f8f6f4] min-h-screen">
-          <div className="max-w-full mx-auto">
+        <div className="bg-black min-h-screen">
+          <div className="max-w-6xl mx-auto px-4 py-8 sm:px-0">
             <DynamicContent 
               activeTab={activeTab} 
               content={getCurrentContent()} 
@@ -145,64 +160,49 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* 하단 Footer */}
-        <div className="bg-[#f8f6f4]">
-          <div className="h-[34px] bg-[#f8f6f4]"></div>
-          <div className="bg-[#f8f6f4] px-[21px] py-[21px]">
-            <div className="flex flex-col gap-[45px] max-w-[263px]">
-              {/* 고객지원 */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">고객지원</p>
-                <div className="flex flex-col gap-3 text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">전화</span>: 010-5238-0236
-                  </p>
-                  <p>
-                    <span className="font-bold">이메일</span>: gcsweb01234@gmail.com
-                  </p>
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">주소</span>: 서울특별시 강북구 솔샘로 174 136동 304호
-                  </p>
-                </div>
-              </div>
+        {/* 하단 배너 */}
+        <div className="bg-white py-6 border-t border-gray-200">
+          <div className="px-4 flex justify-between items-start gap-4">
+            {/* 왼쪽: 로고 정보 */}
+            <div className="flex-shrink-0">
+              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
+              <h3 className="text-sm font-bold text-black">
+                GCS<span className="text-[#f57520]">:</span>Web
+              </h3>
+            </div>
+            
+            {/* 오른쪽: 회사 정보 */}
+            <div className="flex-1 text-right space-y-1 min-w-0">
+              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
+              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
+              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
+              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
               
-              {/* 사업자 정보 */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">사업자 정보</p>
-                <div className="flex flex-col gap-3 text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
-                  <div className="flex gap-10 whitespace-nowrap">
-                    <p>
-                      <span className="font-bold">대표</span>: 안성은
-                    </p>
-                    <p>
-                      <span className="font-bold">회사명</span>: 안북스 스튜디오
-                    </p>
-                  </div>
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">사업자등록번호</span>: 693-01-03164
-                  </p>
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">통신판매업신고번호</span>: 제 2025-서울강북-0961호
-                  </p>
-                </div>
-              </div>
-              
-              {/* 로고 및 저작권 */}
-              <div className="flex flex-col gap-2">
-                <div className="h-[21px] w-[59px] relative">
-                  {/* 로고는 나중에 이미지로 교체 가능 */}
-                  <p className="text-[10px] font-bold text-[#1a1918]">GCS:Web</p>
-                </div>
-                <div className="flex flex-col text-[8px] text-[#443e3c] leading-[1.5]">
-                  <p className="whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
-                  <p className="underline whitespace-pre-wrap">이용약관</p>
-                </div>
+              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
+                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
+                <span className="text-[10px] text-gray-400">|</span>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsTermsModalOpen(true)
+                  }}
+                  className="text-[10px] text-gray-600 underline cursor-pointer"
+                >
+                  이용약관
+                </button>
+                <span className="text-[10px] text-gray-400">|</span>
+                <span className="text-[10px] text-gray-500">site by 제작담</span>
               </div>
             </div>
           </div>
-          <div className="h-[34px] bg-[#f8f6f4]"></div>
         </div>
       </div>
+      
+      {/* 이용약관 모달 */}
+      <AboutTermsModal 
+        isOpen={isTermsModalOpen} 
+        onClose={() => setIsTermsModalOpen(false)} 
+      />
     </div>
   )
 }
@@ -212,8 +212,8 @@ function DynamicContent({ activeTab, content }: { activeTab: string, content?: A
   if (!content) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#85817e]">콘텐츠가 없습니다.</p>
-        <p className="text-[#85817e] text-sm mt-2">관리자 페이지에서 콘텐츠를 추가해주세요.</p>
+        <p className="text-gray-400">콘텐츠가 없습니다.</p>
+        <p className="text-gray-500 text-sm mt-2">관리자 페이지에서 콘텐츠를 추가해주세요.</p>
       </div>
     )
   }
@@ -312,32 +312,41 @@ function DynamicContent({ activeTab, content }: { activeTab: string, content?: A
 
 // GCS:Web 전용 콘텐츠 컴포넌트
 function GCSWebContent({ content }: { content: AboutContent }) {
-  // items에서 이미지들 필터링 (최대 4개)
-  const images = (content.items?.filter(item => item.imageUrl) || []).slice(0, 4)
+  // items에서 이미지들 필터링
+  const images = content.items?.filter(item => item.imageUrl) || []
   
   return (
-    <div className="flex flex-col items-center py-8 px-4">
-      {/* 이미지 갤러리 - 4개 가로 배치 */}
+    <div className="prose prose-lg max-w-none text-white">
+      {/* 메인 타이틀 */}
+      <div className="mb-12">
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          {content.title || 'GCS:Web'}
+        </h2>
+        <div className="w-24 h-1 bg-[#f57520]"></div>
+      </div>
+
+      {/* 이미지 갤러리 */}
       {images.length > 0 && (
-        <div className="mb-8 flex gap-3 justify-center flex-wrap">
-          {images.map((image, index) => (
-            <div key={image.id || index} className="w-[110px] h-[110px] rounded-[4px] overflow-hidden relative">
-              <img 
-                src={image.imageUrl}
-                alt={image.title || `Image ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
+        <div className="mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {images.map((image, index) => (
+              <div key={image.id || index} className="bg-gray-800 aspect-[4/3] rounded-lg flex items-center justify-center overflow-hidden">
+                <img 
+                  src={image.imageUrl}
+                  alt={image.title || `Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* 한글 소개글 */}
       {content.description && (
-        <div className="mb-11 px-4 max-w-[343px]">
+        <div className="mb-8">
           <div 
-            className="text-[#1a1918] text-[12px] leading-[1.5] font-medium"
-            style={{ fontFamily: 'Inter, Noto Sans KR, sans-serif' }}
+            className="text-gray-300 text-base leading-relaxed"
             dangerouslySetInnerHTML={{ __html: content.description }}
           />
         </div>
@@ -345,10 +354,9 @@ function GCSWebContent({ content }: { content: AboutContent }) {
 
       {/* 영어 소개글 */}
       {content.subtitle && (
-        <div className="px-4 max-w-[343px]">
+        <div className="mb-8">
           <div 
-            className="text-[#1a1918] text-[13px] leading-[1.5] tracking-[-0.26px]"
-            style={{ fontFamily: 'Pretendard, sans-serif' }}
+            className="text-gray-300 text-base leading-relaxed"
             dangerouslySetInnerHTML={{ __html: content.subtitle }}
           />
         </div>
@@ -359,55 +367,54 @@ function GCSWebContent({ content }: { content: AboutContent }) {
 
 // 전공 소개 전용 콘텐츠 컴포넌트
 function MajorIntroContent({ content }: { content: AboutContent }) {
-  // items에서 이미지들 필터링 (최대 2개)
-  const images = (content.items?.filter(item => item.imageUrl) || []).slice(0, 2)
+  // items에서 이미지들 필터링
+  const images = content.items?.filter(item => item.imageUrl) || []
   
   return (
-    <div className="flex flex-col items-center justify-center py-8 px-4">
-      <div className="w-full max-w-[343px] flex flex-col gap-6">
-        {/* 제목과 설명 */}
-        <div className="flex flex-col gap-[10px]">
-          <div className="flex flex-col">
-            <p className="text-[15px] font-bold text-[#443e3c] leading-[1.5] mb-0">
-              {content.title || '그래픽커뮤니케이션사이언스'}
-            </p>
-            <p className="text-[15px] font-bold text-[#443e3c] leading-[1.5]">
-              Graphic Communication Science (GCS)
-            </p>
-          </div>
-          
-          {/* 설명 */}
-          {(content.content || content.description) && (
-            <div className="text-[13px] leading-[1.5] tracking-[-0.26px] text-[#443e3c] whitespace-pre-wrap">
-              {content.content ? (
-                <div dangerouslySetInnerHTML={{ __html: content.content }} />
-              ) : (
-                <div dangerouslySetInnerHTML={{ __html: content.description || '' }} />
-              )}
-            </div>
-          )}
-        </div>
+    <div className="prose prose-lg max-w-none text-white">
+      {/* 메인 타이틀 */}
+      <div className="mb-12">
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          {content.title || getDefaultTitle('intro')}
+        </h2>
+        <div className="w-24 h-1 bg-[#f57520]"></div>
+      </div>
 
-        {/* 이미지 2개 - 좌우 교차 배치 */}
-        {images.length > 0 && (
-          <div className="flex flex-col gap-3">
+      {/* 소제목 - 이미지 위로 이동 */}
+      {content.subtitle && (
+        <div className="mb-8">
+          <p className="text-gray-300 text-lg leading-relaxed font-medium italic">
+            {content.subtitle}
+          </p>
+        </div>
+      )}
+
+      {/* 이미지 갤러리 - 상단에 가로로 표시 */}
+      {images.length > 0 && (
+        <div className="mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {images.map((image, index) => (
-              <div 
-                key={image.id || index} 
-                className={`flex ${index % 2 === 0 ? 'justify-start' : 'justify-end'}`}
-              >
-                <div className="w-[110px] h-[110px] rounded-[4px] overflow-hidden relative">
-                  <img 
-                    src={image.imageUrl}
-                    alt={image.title || `Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              <div key={image.id || index} className="bg-gray-800 aspect-[4/3] rounded-lg flex items-center justify-center overflow-hidden">
+                <img 
+                  src={image.imageUrl}
+                  alt={image.title || `Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* 메인 콘텐츠 */}
+      {content.content && (
+        <div className="mb-8">
+          <div 
+            className="text-gray-300 text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content.content }}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -418,53 +425,67 @@ function ProfessorsContent({ content }: { content: AboutContent }) {
   const professors = content.items?.filter(item => item.imageUrl || item.title) || []
   
   return (
-    <div className="flex flex-col items-start py-8 px-0">
-      {/* 타이틀 */}
-      <div className="px-4 mb-0">
-        <p className="text-[15px] font-bold text-[#1a1918] leading-[1.5]">교수진</p>
+    <div className="prose prose-lg max-w-none text-white">
+      {/* 메인 타이틀 */}
+      <div className="mb-12">
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          {content.title || '교수진'}
+        </h2>
+        <div className="w-24 h-1 bg-[#f57520]"></div>
       </div>
+
+      {/* 메인 설명 */}
+      {content.content && (
+        <div className="mb-12">
+          <div 
+            className="text-gray-300 text-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content.content }}
+          />
+        </div>
+      )}
 
       {/* 교수진 카드들 */}
       {professors.length > 0 && (
-        <div className="flex flex-col gap-[22px] px-5 py-4 w-full">
-          {professors.map((professor, index) => {
-            const isEven = index % 2 === 0
-            return (
-              <div 
-                key={professor.id || index} 
-                className={`flex flex-col ${isEven ? 'items-end' : 'items-start'}`}
-              >
-                <div className="bg-[#eeebe6] rounded-[8px] p-4 w-[300px]">
-                  <div className="flex gap-3 items-center">
-                    {/* 텍스트 영역 */}
-                    <div className="flex flex-col gap-[6px] w-[175px]">
-                      <p className="text-[17px] font-bold text-[#1a1918] leading-[1.5] h-[19px]">
-                        {professor.title || ''}
-                      </p>
-                      <div className="text-[10px] leading-[1.5] text-[#1a1918] whitespace-pre-wrap">
-                        {professor.htmlContent ? (
-                          <div dangerouslySetInnerHTML={{ __html: professor.htmlContent }} />
-                        ) : (
-                          <p>{professor.description || ''}</p>
-                        )}
-                      </div>
+        <div className="space-y-12">
+          {professors.map((professor, index) => (
+            <div key={professor.id || index} className="flex flex-col lg:flex-row gap-8 pb-8 border-b border-white">
+              {/* 모바일: 사진, 데스크톱観 설명 */}
+              <div className="flex-1 lg:order-1 order-2">
+                <h3 className="text-white font-semibold text-2xl mb-4">
+                  {professor.title}
+                </h3>
+                {professor.htmlContent && (
+                  <div 
+                    className="text-gray-300 space-y-3"
+                    dangerouslySetInnerHTML={{ __html: professor.htmlContent }}
+                  />
+                )}
+              </div>
+              
+              {/* 모바일: 설명, 데스크톱: 사진 */}
+              {professor.imageUrl && (
+                <div className="w-32 text-center lg:order-2 order-1 mx-auto">
+                  <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-700">
+                    <img 
+                      src={professor.imageUrl} 
+                      alt={professor.title || '교수 사진'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (nextElement) {
+                          nextElement.style.display = 'flex';
+                        }
+                      }}
+                    />
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm" style={{display: 'none'}}>
+                      {professor.title}
                     </div>
-                    
-                    {/* 이미지 영역 */}
-                    {professor.imageUrl && (
-                      <div className="w-[80px] h-[95px] rounded-[4px] overflow-hidden flex-shrink-0">
-                        <img 
-                          src={professor.imageUrl} 
-                          alt={professor.title || '교수 사진'} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -473,39 +494,108 @@ function ProfessorsContent({ content }: { content: AboutContent }) {
 
 // 개설 과목 전용 콘텐츠 컴포넌트
 function SubjectsContent({ content }: { content: AboutContent }) {
-  // 과목만 필터링 (type이 'subject'인 것들)
+  // 영역과 과목을 type 필드로 분리
+  const areas = content.items?.filter(item => item.type === 'area') || []
   const subjects = content.items?.filter(item => item.type === 'subject') || []
 
   return (
-    <div className="flex items-center justify-center py-11 px-0">
-      <div className="flex flex-col gap-6 items-end max-w-[343px]">
-        {subjects.map((subject, index) => (
-          <div key={subject.id || index} className="w-full">
-            {/* 상단 - 흰색 배경, 과목 코드와 과목명 */}
-            <div className="bg-white border-[0.5px] border-[#ffd2a9] border-solid rounded-t-[4px] px-3 py-1">
-              <div className="flex gap-3 items-center">
-                <p className="text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
-                  {subject.subtitle || ''}
-                </p>
-                <p className="text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
-                  {subject.title || ''}
-                </p>
-              </div>
-            </div>
-            
-            {/* 하단 - 회색 배경, 과목 설명 */}
-            <div className="bg-[#eeebe6] border-[0.5px] border-white border-solid rounded-b-[4px] p-[10px]">
-              <div className="text-[10px] leading-[1.5] text-[#1a1918] whitespace-pre-wrap">
-                {subject.htmlContent ? (
-                  <div dangerouslySetInnerHTML={{ __html: subject.htmlContent }} />
-                ) : (
-                  <p>{subject.description || ''}</p>
+    <div className="prose prose-lg max-w-none text-white">
+      {/* 메인 타이틀 */}
+      <div className="mb-12">
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          {content.title || 'GCS 개설과목'}
+        </h2>
+        <div className="w-24 h-1 bg-[#f57520]"></div>
+      </div>
+
+      {/* 메인 이미지 */}
+      {content.imageUrl && (
+        <div className="mb-12">
+          <img 
+            src={content.imageUrl} 
+            alt={content.imageAlt || content.title}
+            className="w-full h-auto rounded-lg"
+          />
+        </div>
+      )}
+
+      {/* 영역 섹션 - CSS Grid 동적 컬럼 구조 */}
+      {areas.length > 0 && (
+        <div className="mb-12">
+          <h3 className="text-lg font-bold text-white mb-6">영역</h3>
+          <div className={`grid gap-8 ${
+            areas.length === 1 ? 'grid-cols-1' :
+            areas.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+            areas.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
+            areas.length === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' :
+            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+          }`}>
+            {areas.map((area, index) => (
+              <div key={area.id || index} className="flex flex-col">
+                {/* 영역 제목 - 한글과 영문을 한 줄에 */}
+                <div className="mb-3">
+                  <h4 className="text-lg font-bold text-white">
+                    {area.title}
+                    {area.subtitle && (
+                      <span className="text-lg font-bold text-white ml-2">{area.subtitle}</span>
+                    )}
+                  </h4>
+                </div>
+                
+                {/* 구분선 - 흰색 */}
+                <div className="w-full h-0.5 bg-white mb-4"></div>
+                
+                {/* 영역 설명 - 콤마로 구분된 학문들을 개행하여 표시 */}
+                {area.description && (
+                  <div className="flex-1">
+                    <div className="text-gray-300 text-sm leading-relaxed">
+                      {area.description?.split(',').map((subject, subjectIndex) => (
+                        <div key={subjectIndex}>
+                          {subject.trim()}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* 과목 섹션 - 박스 형태로 렌더링 */}
+      {subjects.length > 0 && (
+        <div className="mt-16">
+          <h3 className="text-lg font-bold text-white mb-8">과목</h3>
+          <div className="space-y-4">
+            {subjects.map((subject, index) => (
+              <div key={subject.id || index} className="border border-white w-full">
+                {/* 상단 영역 - 흰색 배경, 과목 코드와 과목명 */}
+                <div className="bg-white px-4 py-2">
+                  <div className="flex items-center space-x-4">
+                    <h4 className="text-base text-black">
+                      {subject.subtitle} {/* 과목 코드 */}
+                    </h4>
+                    <span className="text-base text-black">
+                      {subject.title} {/* 과목명 */}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* 하단 영역 - 검은색 배경, 과목 설명 */}
+                {subject.htmlContent && (
+                  <div className="bg-black p-4">
+                    <div
+                      className="text-white text-sm leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: subject.htmlContent }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
