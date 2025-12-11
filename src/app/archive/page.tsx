@@ -106,8 +106,8 @@ function ArchiveContent() {
 
   // 필터링된 데이터
   const getFilteredData = () => {
-    let data = activeTab === 'project' ? projects : news
-    let filtered = { ...data }
+    const data = activeTab === 'project' ? projects : news
+    const filtered = { ...data }
 
     // 연도 필터
     if (selectedYear !== '연도' && selectedYear !== '전체') {
