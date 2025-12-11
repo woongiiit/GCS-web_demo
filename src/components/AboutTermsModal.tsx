@@ -16,63 +16,48 @@ export default function AboutTermsModal({ isOpen, onClose }: AboutTermsModalProp
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="relative w-full h-full overflow-hidden">
-        {/* 배경 디자인 요소들 */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute left-[-47.67px] top-[-22.16px] w-[522.88px] h-[294.65px] flex items-center justify-center rotate-[339.444deg]">
-            <img alt="" className="block max-w-none size-full" src={imgVector827} />
-          </div>
-          <div className="absolute left-[-27.92px] top-[-23.12px] w-[567.01px] h-[447.70px] flex items-center justify-center rotate-[333.242deg]">
-            <img alt="" className="block max-w-none size-full" src={imgVector828} />
-          </div>
-          <div className="absolute left-[106px] top-[-101px] w-[173.07px] h-[292.81px] flex items-center justify-center rotate-[5.928deg]">
-            <img alt="" className="block max-w-none size-full" src={imgEllipse5406} />
-          </div>
-          <div className="absolute left-[192px] top-[-20px] w-[263.09px] h-[265.69px] flex items-center justify-center rotate-[43.746deg]">
-            <img alt="" className="block max-w-none size-full" src={imgEllipse5405} />
-          </div>
-          <div className="absolute left-[5px] top-[68px] w-[145px] h-[145px]">
-            <img alt="" className="block max-w-none size-full" src={imgEllipse5404} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* 오버레이 */}
+      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+
+      {/* 모달 컨텐츠 - 중앙 배치 */}
+      <div className="relative w-full max-w-[375px] bg-[#f8f6f4] rounded-[12px] shadow-[0px_4px_10px_0px_rgba(238,74,8,0.4)] max-h-[90vh] overflow-y-auto">
+        {/* 헤더 */}
+        <div className="sticky top-0 bg-[#f8f6f4] z-10 border-b border-gray-200 pb-4 pt-4 px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1"></div>
+            <div className="flex-1 flex justify-center">
+              <p className="font-bold leading-[1.5] text-[22px] text-[#443e3c] text-center">
+                이용약관
+              </p>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <button
+                onClick={onClose}
+                className="w-[24px] h-[24px] flex items-center justify-center hover:opacity-70 transition-opacity"
+                aria-label="닫기"
+              >
+                <svg 
+                  width="24" 
+                  height="24" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className="text-[#443e3c]"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* 오버레이 */}
-        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
-
-        {/* 모달 컨텐츠 */}
-        <div className="absolute left-0 top-[181px] w-full max-w-[375px] bg-[#f8f6f4] rounded-tl-[12px] rounded-tr-[12px] shadow-[0px_-4px_10px_0px_rgba(238,74,8,0.4)] pt-[96px] pb-[48px] px-[16px] max-h-[calc(100vh-181px)] overflow-y-auto">
-          {/* 헤더 */}
-          <div className="h-[33px] relative mb-10">
-            <div className="absolute left-0 top-0 w-full">
-              <div className="h-[33px] relative">
-                <button
-                  onClick={onClose}
-                  className="absolute left-[48px] top-[4.5px] w-[24px] h-[24px] flex items-center justify-center"
-                  aria-label="닫기"
-                >
-                  <div className="flex-none scale-y-[-100%]">
-                    <div className="relative size-[24px]">
-                      <div className="absolute contents left-[9px] top-[5px]">
-                        <div className="absolute flex h-[14px] items-center justify-center left-[9px] top-[5px] w-[6px]">
-                          <div className="flex-none rotate-[270deg]">
-                            <div className="h-[6px] relative w-[14px]">
-                              <img alt="" className="block max-w-none size-full" src={imgVector} />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-                <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[158px]">
-                  <p className="font-bold leading-[1.5] text-[22px] text-[#443e3c] text-center">
-                    이용약관
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* 약관 내용 */}
+        <div className="px-[16px] pb-[48px] pt-4">
 
           {/* 약관 내용 */}
           <div className="flex flex-col gap-[40px] items-start text-[#5f5a58]">
