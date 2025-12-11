@@ -78,6 +78,9 @@ export default function AboutPage() {
   return (
     <div className="fixed inset-0 bg-[#f8f6f4] overflow-auto" style={{ overflowY: 'scroll' }}>
       <div className="relative min-h-screen bg-[#f8f6f4]">
+        {/* NavBar 높이만큼 상단 여백 추가 (34px + 44px = 78px) */}
+        <div className="h-[78px]"></div>
+        
         {/* 배너 영역 - 그라데이션 배경 */}
         <div className="relative h-[191px] overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-l from-[rgba(255,178,114,0.6)] to-[#fd6f22]"></div>
