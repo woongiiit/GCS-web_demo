@@ -167,7 +167,7 @@ function ArchiveContent() {
                     : 'text-[#b7b3af]'
                 }`}
               >
-                교수진 소개
+                News
               </button>
             </div>
           </div>
