@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
+import AboutTermsModal from '@/components/AboutTermsModal'
 
 function ArchiveContent() {
   const searchParams = useSearchParams()
@@ -14,6 +15,11 @@ function ArchiveContent() {
   const [projects, setProjects] = useState<any>({})
   const [news, setNews] = useState<any>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedYear, setSelectedYear] = useState<string>('연도')
+  const [selectedTag, setSelectedTag] = useState<string>('태그')
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false)
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   // URL 쿼리 파라미터에서 초기 탭 설정
   useEffect(() => {
@@ -30,7 +36,6 @@ function ArchiveContent() {
     setActiveTab(tab)
     const tabParam = tab === 'project' ? 'projects' : 'news'
     router.push(`/archive?tab=${tabParam}`, { scroll: false })
-    // 탭 변경 시 데이터 새로고침
     fetchArchiveData()
   }
 
@@ -42,7 +47,6 @@ function ArchiveContent() {
   const fetchArchiveData = async () => {
     setIsLoading(true)
     try {
-      // 병렬로 데이터 조회하여 성능 최적화 (캐시 방지 옵션 추가)
       const [projectsRes, newsRes] = await Promise.all([
         fetch('/api/archive/projects', {
           cache: 'no-store',
@@ -77,240 +81,357 @@ function ArchiveContent() {
     }
   }
 
+  // 연도 목록 추출
+  const getYearList = () => {
+    const years = new Set<string>()
+    if (activeTab === 'project') {
+      Object.keys(projects).forEach(year => years.add(year))
+    } else {
+      Object.keys(news).forEach(year => years.add(year))
+    }
+    return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a))
+  }
+
+  // 태그 목록 추출 (프로젝트의 경우)
+  const getTagList = () => {
+    if (activeTab !== 'project') return []
+    const tags = new Set<string>()
+    Object.values(projects).forEach((yearProjects: any) => {
+      yearProjects.forEach((project: any) => {
+        if (project.tag) tags.add(project.tag)
+      })
+    })
+    return Array.from(tags)
+  }
+
+  // 필터링된 데이터
+  const getFilteredData = () => {
+    let data = activeTab === 'project' ? projects : news
+    let filtered = { ...data }
+
+    // 연도 필터
+    if (selectedYear !== '연도' && selectedYear !== '전체') {
+      Object.keys(filtered).forEach(year => {
+        if (year !== selectedYear) delete filtered[year]
+      })
+    }
+
+    // 태그 필터 (프로젝트만)
+    if (activeTab === 'project' && selectedTag !== '태그' && selectedTag !== '전체') {
+      Object.keys(filtered).forEach(year => {
+        filtered[year] = filtered[year].filter((item: any) => item.tag === selectedTag)
+      })
+    }
+
+    return filtered
+  }
+
+  const filteredData = getFilteredData()
+
   return (
-    <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
-      <div className="relative min-h-screen bg-white">
-        {/* 상단 검은색 영역 */}
-        <div className="bg-black pt-32 pb-8">
-          <div className="max-w-6xl mx-auto px-4 sm:px-0">
-          {/* 페이지 제목 */}
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-white mb-4">Archive</h1>
-              <p className="text-white text-sm mb-8">GCS의 모든 활동과 기록을 모아둔 아카이브입니다.</p>
-            
-            {/* 홈 아이콘 */}
-              <Link href="/" className="inline-block">
-              <div className="w-6 h-6 mx-auto">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-              </div>
-            </Link>
-            </div>
+    <div className="fixed inset-0 bg-[#f8f6f4] overflow-auto" style={{ overflowY: 'scroll' }}>
+      <div className="relative min-h-screen bg-[#f8f6f4]">
+        {/* NavBar 높이만큼 상단 여백 */}
+        <div className="h-[78px]"></div>
+
+        {/* 배너 영역 - 그라데이션 배경 */}
+        <div className="relative h-[191px] overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-l from-[rgba(255,178,114,0.6)] to-[#fd6f22]"></div>
+          <div className="relative h-full flex flex-col items-start justify-end px-[19px] pb-[49px]">
+            <h1 className="text-[44px] font-bold text-white mb-0" style={{ fontFamily: 'Paperlogy, sans-serif' }}>
+              Archive
+            </h1>
+            <p className="text-[15px] text-white">GCS의 모든 활동과 기록</p>
           </div>
         </div>
 
-        {/* 탭 메뉴 - 흰색 배경 영역 */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            <div className="flex justify-between items-center py-4">
-              {/* 탭 버튼들 */}
-              <div className="flex justify-center space-x-8 flex-1">
+        {/* 서브 메뉴 띠 */}
+        <div className="bg-[#f8f6f4] border-b border-[#1a1918]">
+          <div className="max-w-full mx-auto px-5">
+            <div className="flex justify-between items-center h-[59px] py-3">
               <button
-                  onClick={() => handleTabChange('project')}
-                className={`pb-2 border-b-2 font-medium transition-colors ${
+                onClick={() => handleTabChange('project')}
+                className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
                   activeTab === 'project'
-                    ? 'text-black border-black'
-                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                    ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
+                    : 'text-[#b7b3af]'
                 }`}
               >
                 Project
               </button>
               <button
-                  onClick={() => handleTabChange('news')}
-                className={`pb-2 border-b-2 font-medium transition-colors ${
+                onClick={() => handleTabChange('news')}
+                className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
                   activeTab === 'news'
-                    ? 'text-black border-black'
-                    : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+                    ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
+                    : 'text-[#b7b3af]'
                 }`}
               >
-                News
+                교수진 소개
               </button>
-              </div>
-              
-              {/* 글 작성 버튼 (학생회원, 운영자만) */}
-              {permissions.canWritePost(role) && (
-                <Link 
-                  href={`/archive/write?type=${activeTab}`}
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-                >
-                  글 작성
-                </Link>
-              )}
-            </div>
             </div>
           </div>
+        </div>
 
-        <div className="max-w-6xl mx-auto px-4 py-6 sm:px-0">
+        {/* 드롭다운 필터 */}
+        {activeTab === 'project' && (
+          <div className="flex gap-[20px] items-center px-[16px] py-[20px]">
+            {/* 연도 드롭다운 */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setIsYearDropdownOpen(!isYearDropdownOpen)
+                  setIsTagDropdownOpen(false)
+                }}
+                className="bg-white flex gap-[8px] items-center pl-3 pr-0 py-1 rounded-[8px] shadow-[0px_4px_4px_0px_rgba(34,32,31,0.14)] w-[126px]"
+              >
+                <span className="flex-1 text-left text-[13px] leading-[1.5] text-[#1a1918] tracking-[-0.26px]">
+                  {selectedYear}
+                </span>
+                <div className="w-[24px] h-[24px] flex items-center justify-center">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transform transition-transform ${isYearDropdownOpen ? 'rotate-180' : ''}`}>
+                    <path d="M5 7L1 3H9L5 7Z" fill="#1a1918" />
+                  </svg>
+                </div>
+              </button>
+              {isYearDropdownOpen && (
+                <div className="absolute top-full mt-1 bg-white rounded-[8px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.05)] w-[126px] z-10">
+                  <button
+                    onClick={() => {
+                      setSelectedYear('전체')
+                      setIsYearDropdownOpen(false)
+                    }}
+                    className="w-full text-left px-3 py-1 text-[13px] text-[#1a1918] hover:bg-gray-50 rounded-t-[8px]"
+                  >
+                    전체
+                  </button>
+                  <div className="h-px bg-[#dcd6cc]"></div>
+                  {getYearList().map((year) => (
+                    <div key={year}>
+                      <button
+                        onClick={() => {
+                          setSelectedYear(year)
+                          setIsYearDropdownOpen(false)
+                        }}
+                        className="w-full text-left px-3 py-1 text-[13px] text-[#1a1918] hover:bg-gray-50"
+                      >
+                        {year}
+                      </button>
+                      {year !== getYearList()[getYearList().length - 1] && (
+                        <div className="h-px bg-[#dcd6cc]"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          {/* 컨텐츠 영역 */}
-          <div className="bg-white min-h-screen px-4 py-8">
+            {/* 태그 드롭다운 */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setIsTagDropdownOpen(!isTagDropdownOpen)
+                  setIsYearDropdownOpen(false)
+                }}
+                className="bg-white flex gap-[8px] items-center pl-3 pr-0 py-1 rounded-[8px] shadow-[0px_4px_4px_0px_rgba(34,32,31,0.14)] w-[126px]"
+              >
+                <span className="flex-1 text-left text-[13px] leading-[1.5] text-[#1a1918] tracking-[-0.26px]">
+                  {selectedTag}
+                </span>
+                <div className="w-[24px] h-[24px] flex items-center justify-center">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`transform transition-transform ${isTagDropdownOpen ? 'rotate-180' : ''}`}>
+                    <path d="M5 7L1 3H9L5 7Z" fill="#1a1918" />
+                  </svg>
+                </div>
+              </button>
+              {isTagDropdownOpen && (
+                <div className="absolute top-full mt-1 bg-white rounded-[8px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.05)] w-[126px] z-10">
+                  <button
+                    onClick={() => {
+                      setSelectedTag('전체')
+                      setIsTagDropdownOpen(false)
+                    }}
+                    className="w-full text-left px-3 py-1 text-[13px] text-[#1a1918] hover:bg-gray-50 rounded-t-[8px]"
+                  >
+                    전체
+                  </button>
+                  {getTagList().map((tag, index) => (
+                    <div key={tag}>
+                      {index > 0 && <div className="h-px bg-[#dcd6cc]"></div>}
+                      <button
+                        onClick={() => {
+                          setSelectedTag(tag)
+                          setIsTagDropdownOpen(false)
+                        }}
+                        className="w-full text-left px-3 py-1 text-[13px] text-[#1a1918] hover:bg-gray-50"
+                      >
+                        {tag}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 컨텐츠 영역 */}
+        <div className="bg-[#f8f6f4] min-h-screen">
+          <div className="flex flex-col gap-[40px] items-center px-0 py-[40px]">
             {isLoading ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-                <p className="text-gray-600">데이터를 불러오는 중...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a1918] mx-auto mb-4"></div>
+                <p className="text-[#85817e]">데이터를 불러오는 중...</p>
               </div>
             ) : activeTab === 'project' ? (
-              <div>
-                {Object.keys(projects).length > 0 ? (
-                  Object.keys(projects).sort((a, b) => parseInt(b) - parseInt(a)).map((year) => (
-                    <div key={year} className="mb-16">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          {/* 연도 구분선 */}
-                          <div className="flex flex-col items-start">
-                            {/* 위쪽 검은색 구분선 */}
-                            <div className="w-48 h-px bg-black mb-2"></div>
-                            
-                            {/* 연도 텍스트 */}
-                            <h2 className="text-2xl font-bold text-black">{year}</h2>
-                            
-                            {/* 아래쪽 주황색 구분선 */}
-                            <div className="w-24 h-px bg-[#f57520] mt-2"></div>
-                          </div>
+              <>
+                {Object.keys(filteredData).length > 0 ? (
+                  Object.keys(filteredData).sort((a, b) => parseInt(b) - parseInt(a)).map((year) => {
+                    const yearProjects = filteredData[year]
+                    if (!yearProjects || yearProjects.length === 0) return null
+                    
+                    return (
+                      <div key={year} className="flex flex-col gap-[8px] items-center w-full">
+                        <div className="flex items-center w-[271px]">
+                          <p className="font-bold text-[22px] leading-[1.5] text-[#1a1918]">
+                            {year} {yearProjects[0]?.tag || ''}
+                          </p>
                         </div>
-                        <Link href={`/archive/projects/year/${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                          More
-                        </Link>
-                      </div>
-                      
-                      <div className="space-y-4 mt-6">
-                        {projects[year].slice(0, 4).map((project: any) => (
-                          <Link key={project.id} href={`/archive/projects/${project.id}`}>
-                            <div className="bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg p-4 cursor-pointer border-l-4 border-[#f57520]">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <h3 className="text-[#f57520] font-bold text-base mb-1">
-                                    {project.title}
-                                  </h3>
-                                  {project.teamMembers && project.teamMembers.length > 0 && (
-                                    <p className="text-gray-500 text-xs mb-2">
-                                      {project.teamMembers.join(', ')}
-                                    </p>
-                                  )}
-                                  <p className="text-gray-600 text-sm line-clamp-2">
-                                    {project.description}
-                                  </p>
-                                </div>
-                                {project.images && project.images[0] && (
-                                  <div className="ml-4 flex-shrink-0">
-                                    <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
-                                      <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" onError={(e) => {
+                        <div className="flex gap-[24px] items-end justify-center flex-wrap px-4">
+                          {yearProjects.slice(0, 3).map((project: any, index: number) => {
+                            const isMiddle = index === 1
+                            return (
+                              <Link key={project.id} href={`/archive/projects/${project.id}`} className="flex flex-col gap-[21px] items-start">
+                                <div 
+                                  className={`relative shadow-[0px_4px_10px_0px_rgba(0,0,0,0.2)] ${
+                                    isMiddle 
+                                      ? 'h-[338.25px] w-[270.6px]' 
+                                      : 'aspect-[1080/1350] w-[246px]'
+                                  } rounded-[4px] overflow-hidden`}
+                                >
+                                  {project.images && project.images[0] ? (
+                                    <img 
+                                      src={project.images[0]} 
+                                      alt={project.title} 
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
                                         e.currentTarget.src = '/images/placeholder-project.jpg'
-                                      }} />
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-[#eeebe6] flex items-center justify-center">
+                                      <span className="text-[#85817e] text-sm">이미지 없음</span>
                                     </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">등록된 프로젝트가 없습니다.</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                {Object.keys(news).length > 0 ? (
-                  Object.keys(news).sort((a, b) => parseInt(b) - parseInt(a)).map((year) => (
-                    <div key={year} className="mb-16">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          {/* 연도 구분선 */}
-                          <div className="flex flex-col items-start">
-                            {/* 위쪽 검은색 구분선 */}
-                            <div className="w-48 h-px bg-black mb-2"></div>
-                            
-                            {/* 연도 텍스트 */}
-                            <h2 className="text-2xl font-bold text-black">{year}</h2>
-                            
-                            {/* 아래쪽 주황색 구분선 */}
-                            <div className="w-24 h-px bg-[#f57520] mt-2"></div>
-                          </div>
-                        </div>
-                        <Link href={`/archive/news/year/${year}`} className="text-black font-bold underline hover:text-[#f57520] transition-colors">
-                          More
-                        </Link>
-                      </div>
-                      
-                      <div className="space-y-4 mt-6">
-                        {news[year].slice(0, 4).map((item: any) => (
-                          <Link key={item.id} href={`/archive/news/${item.id}`}>
-                            <div className="bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg p-4 cursor-pointer border-l-4 border-[#f57520]">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <h3 className="text-[#f57520] font-bold text-base mb-1">
-                                    {item.title}
-                                  </h3>
-                                  <p className="text-gray-600 text-sm line-clamp-2">
-                                    {item.summary || item.content.substring(0, 150)}
+                                  )}
+                                  {!isMiddle && (
+                                    <div className="absolute inset-0 bg-[rgba(0,0,0,0.2)]"></div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col items-start w-[134px]">
+                                  <p className="font-bold text-[17px] leading-[1.5] text-[#1a1918]">
+                                    {project.title}
                                   </p>
-                                  <p className="text-gray-400 text-xs mt-2">
-                                    {new Date(item.createdAt).toLocaleDateString('ko-KR')}
+                                  <p className="font-normal text-[13px] leading-[1.5] text-[#1a1918] tracking-[-0.26px]">
+                                    {project.teamMembers && project.teamMembers.length > 0 
+                                      ? project.teamMembers.join(', ') 
+                                      : '작가명 없음'}
                                   </p>
                                 </div>
-                                {item.images && item.images[0] && (
-                                  <div className="ml-4 flex-shrink-0">
-                                    <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
-                                      <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" onError={(e) => {
-                                        e.currentTarget.src = '/images/placeholder-news.jpg'
-                                      }} />
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                        {yearProjects.length > 3 && (
+                          <div className="h-px w-[326px] bg-[#eeebe6] mt-[40px]"></div>
+                        )}
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-gray-500">등록된 뉴스가 없습니다.</p>
+                    <p className="text-[#85817e]">등록된 프로젝트가 없습니다.</p>
                   </div>
                 )}
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-[#85817e]">News 탭은 준비 중입니다.</p>
               </div>
             )}
           </div>
-
         </div>
 
-        {/* 하단 배너 */}
-        <div className="bg-white py-6 border-t border-gray-200">
-          <div className="px-4 flex justify-between items-start gap-4">
-            {/* 왼쪽: 로고 정보 */}
-            <div className="flex-shrink-0">
-              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
-              <h3 className="text-sm font-bold text-black">
-                GCS<span className="text-[#f57520]">:</span>Web
-              </h3>
-            </div>
-            
-            {/* 오른쪽: 회사 정보 */}
-            <div className="flex-1 text-right space-y-1 min-w-0">
-              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
-              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
-              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
-              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
+        {/* 하단 Footer */}
+        <div className="bg-[#f8f6f4]">
+          <div className="h-[34px] bg-[#f8f6f4]"></div>
+          <div className="bg-[#f8f6f4] px-[21px] py-[21px]">
+            <div className="flex flex-col gap-[45px] max-w-[263px]">
+              {/* 고객지원 */}
+              <div className="flex flex-col gap-2">
+                <p className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">고객지원</p>
+                <div className="flex flex-col gap-3 text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
+                  <p className="whitespace-pre-wrap">
+                    <span className="font-bold">전화</span>: 010-5238-0236
+                  </p>
+                  <p>
+                    <span className="font-bold">이메일</span>: gcsweb01234@gmail.com
+                  </p>
+                  <p className="whitespace-pre-wrap">
+                    <span className="font-bold">주소</span>: 서울특별시 강북구 솔샘로 174 136동 304호
+                  </p>
+                </div>
+              </div>
               
-              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
-                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
-                <span className="text-[10px] text-gray-400">|</span>
-                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
-                <span className="text-[10px] text-gray-400">|</span>
-                <span className="text-[10px] text-gray-500">site by 제작담</span>
+              {/* 사업자 정보 */}
+              <div className="flex flex-col gap-2">
+                <p className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">사업자 정보</p>
+                <div className="flex flex-col gap-3 text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
+                  <div className="flex gap-10 whitespace-nowrap">
+                    <p>
+                      <span className="font-bold">대표</span>: 안성은
+                    </p>
+                    <p>
+                      <span className="font-bold">회사명</span>: 안북스 스튜디오
+                    </p>
+                  </div>
+                  <p className="whitespace-pre-wrap">
+                    <span className="font-bold">사업자등록번호</span>: 693-01-03164
+                  </p>
+                  <p className="whitespace-pre-wrap">
+                    <span className="font-bold">통신판매업신고번호</span>: 제 2025-서울강북-0961호
+                  </p>
+                </div>
+              </div>
+              
+              {/* 로고 및 저작권 */}
+              <div className="flex flex-col gap-2">
+                <div className="h-[21px] w-[59px] relative">
+                  <p className="text-[10px] font-bold text-[#1a1918]">GCS:Web</p>
+                </div>
+                <div className="flex flex-col text-[8px] text-[#443e3c] leading-[1.5]">
+                  <p className="whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setIsTermsModalOpen(true)
+                    }}
+                    className="underline whitespace-pre-wrap text-left"
+                  >
+                    이용약관
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+          <div className="h-[34px] bg-[#f8f6f4]"></div>
         </div>
       </div>
+      
+      {/* 이용약관 모달 */}
+      <AboutTermsModal 
+        isOpen={isTermsModalOpen} 
+        onClose={() => setIsTermsModalOpen(false)} 
+      />
     </div>
   )
 }
