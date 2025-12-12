@@ -15,6 +15,8 @@ export default function ShopPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
+  const [fundFilter, setFundFilter] = useState<'전체' | '진행 중' | '진행 예정' | '진행 완료'>('전체')
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   // Fund 상품이 현재 진행 중인지 확인
   const isFundInNow = (product: any) => {
@@ -109,15 +111,23 @@ export default function ShopPage() {
     
     const fundInNow: any[] = []
     const fundInPast: any[] = []
+    const fundScheduled: any[] = []
     
     products.forEach((product) => {
       if (product.type === 'FUND' && product.fundingDeadline) {
         const deadline = new Date(product.fundingDeadline)
         deadline.setHours(0, 0, 0, 0)
+        const startDate = product.fundingStartDate ? new Date(product.fundingStartDate) : null
+        if (startDate) startDate.setHours(0, 0, 0, 0)
         
-        if (deadline >= now) {
+        if (startDate && startDate > now) {
+          // 시작일이 미래면 진행 예정
+          fundScheduled.push(product)
+        } else if (deadline >= now) {
+          // 마감일이 미래면 진행 중
           fundInNow.push(product)
         } else {
+          // 마감일이 지났으면 진행 완료
           fundInPast.push(product)
         }
       } else if (product.type === 'FUND' && !product.fundingDeadline) {
@@ -126,30 +136,35 @@ export default function ShopPage() {
       }
     })
     
-    return { fundInNow, fundInPast }
+    return { fundInNow, fundInPast, fundScheduled }
+  }
+
+  // D-Day 계산
+  const calculateDDay = (deadline: string | null | undefined): string | null => {
+    if (!deadline) return null
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const deadlineDate = new Date(deadline)
+    deadlineDate.setHours(0, 0, 0, 0)
+    const diff = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    if (diff < 0) return null
+    return `D-${diff}`
   }
 
   return (
     <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
       <div className="relative min-h-screen bg-white">
-        {/* 상단 검은색 영역 */}
-        <div className="bg-black pt-32 pb-8">
-          <div className="max-w-6xl mx-auto px-4 sm:px-0">
-          {/* 페이지 제목 */}
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-white mb-4">Shop</h1>
-              <p className="text-white text-sm mb-8">학생들이 직접 제작한 굿즈를 판매하고 공유하는 공간입니다.</p>
-            
-            {/* 홈 아이콘 */}
-              <Link href="/" className="inline-block">
-              <div className="w-6 h-6 mx-auto">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-              </div>
-            </Link>
-            </div>
+        {/* 상단 배너 영역 - 이미지 배경 + 주황색 오버레이 */}
+        <div className="relative h-[300px] overflow-hidden">
+          {/* 배경 이미지 */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
+            {/* 배경 이미지가 있다면 여기에 추가 */}
+          </div>
+          {/* 주황색 오버레이 */}
+          <div className="absolute inset-0 bg-gradient-to-l from-[rgba(255,178,114,0.6)] to-[#fd6f22]"></div>
+          <div className="relative h-full flex flex-col items-start justify-center px-4 sm:px-8">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">Shop</h1>
+            <p className="text-white text-sm sm:text-base">GCS 연계전공생들이 제작한 상품을 만나보세요</p>
           </div>
         </div>
 
@@ -323,13 +338,64 @@ export default function ShopPage() {
             {/* Fund 탭일 때 섹션 분리 */}
             {activeTab === 'FUND' ? (
               <>
+                {/* 필터 드롭다운 */}
+                <div className="mb-6 relative">
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className="flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50 transition-colors min-w-[120px]"
+                  >
+                    <span>{fundFilter}</span>
+                    <svg 
+                      className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isFilterOpen && (
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      {['전체', '진행 중', '진행 예정', '진행 완료'].map((filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => {
+                            setFundFilter(filter as any)
+                            setIsFilterOpen(false)
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                            fundFilter === filter ? 'bg-blue-500 text-white hover:bg-blue-600' : 'text-gray-700'
+                          } ${filter !== '전체' && filter !== '진행 완료' ? 'border-b border-gray-200' : ''}`}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {(() => {
-                  const { fundInNow, fundInPast } = separateFundProducts(typeProducts)
+                  const { fundInNow, fundInPast, fundScheduled } = separateFundProducts(typeProducts)
                   
-                  // 상품 카드 렌더링 함수
+                  // 필터에 따라 상품 필터링
+                  let filteredProducts: any[] = []
+                  if (fundFilter === '전체') {
+                    filteredProducts = [...fundInNow, ...fundScheduled, ...fundInPast]
+                  } else if (fundFilter === '진행 중') {
+                    filteredProducts = fundInNow
+                  } else if (fundFilter === '진행 예정') {
+                    filteredProducts = fundScheduled
+                  } else if (fundFilter === '진행 완료') {
+                    filteredProducts = fundInPast
+                  }
+                  
+                  // 상품 카드 렌더링 함수 (Figma 디자인에 맞춤)
                   const renderProductCard = (product: any) => {
                     const typeMeta = getTypeMeta(product.type)
                     const fundingProgress = calculateFundingProgress(product)
+                    const dDay = calculateDDay(product.fundingDeadline)
+                    const description = product.shortDescription || product.description || ''
+                    const brand = product.brand || ''
+                    
                     return (
                       <Link 
                         key={product.id} 
@@ -338,8 +404,8 @@ export default function ShopPage() {
                       >
                         <div className="w-full aspect-square bg-gray-100 overflow-hidden relative">
                           {typeMeta && (
-                            <span className="absolute top-3 left-3 bg-black/80 text-white text-[11px] uppercase tracking-wide px-3 py-1 rounded-full">
-                              {typeMeta.name}
+                            <span className="absolute top-2 left-2 bg-[#fd6f22] text-white text-[10px] font-medium px-2 py-1 rounded-full">
+                              Fund
                             </span>
                           )}
                           {product.images && product.images[0] ? (
@@ -351,110 +417,77 @@ export default function ShopPage() {
                               <div className="w-3/4 h-3/4 bg-gray-300"></div>
                             </div>
                           )}
+                          <button className="absolute bottom-2 right-2 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors">
+                            <svg className="w-4 h-4 text-[#fd6f22]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                          </button>
                         </div>
-                        <div className="p-3 space-y-3">
+                        <div className="p-4 space-y-2">
                           <div>
-                            <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
-                            <p className="text-gray-600 text-xs line-clamp-2">{product.shortDescription || product.description}</p>
+                            <h3 className="font-bold text-base mb-1 line-clamp-1">{product.name}</h3>
+                            {brand && <p className="text-gray-500 text-sm mb-1">{brand}</p>}
+                            {description && <p className="text-gray-600 text-sm line-clamp-2 mb-2">{description}</p>}
+                            {dDay && (
+                              <span className="inline-block bg-[#fd6f22] text-white text-xs font-medium px-2 py-1 rounded">
+                                {dDay}
+                              </span>
+                            )}
                           </div>
                           {typeof fundingProgress === 'number' && (
-                            <div>
-                              <div className="flex items-center justify-between text-[11px] text-gray-500 uppercase">
-                                <span>Funding progress</span>
-                                <span className="font-semibold text-black">{fundingProgress}%</span>
+                            <div className="mt-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 bg-gray-200 rounded-full flex-1" style={{ minWidth: '100px' }}>
+                                    <div
+                                      className="h-full bg-[#fd6f22] rounded-full transition-all"
+                                      style={{ width: `${Math.min(fundingProgress, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <span className="text-lg font-bold text-black ml-2">{fundingProgress}%</span>
                               </div>
-                              <div className="mt-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-black transition-all"
-                                  style={{ width: `${Math.min(fundingProgress, 100)}%` }}
-                                />
-                              </div>
-                              <div className="mt-2 text-[11px] text-gray-500 flex justify-between">
-                                <span>Raised {formatCurrency(product.fundingCurrentAmount ?? 0)}원</span>
-                                <span>Goal {formatCurrency(product.fundingGoalAmount ?? 0)}원</span>
-                              </div>
+                              <p className="text-xs text-gray-500 mt-1">목표금액 {formatCurrency(product.fundingGoalAmount ?? 0)}원</p>
                             </div>
                           )}
-                          <div className="flex items-center justify-between text-xs text-gray-600">
-                            <span className="text-black font-bold text-base">{product.price.toLocaleString()}원</span>
-                            <span className="flex items-center gap-1">
-                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
-                              </svg>
-                              <span>{product.likeCount ?? 0}</span>
-                            </span>
-                          </div>
                         </div>
                       </Link>
                     )
                   }
                   
                   return (
-                    <>
-                      {/* Fund in now 섹션 */}
-                      <div className="mb-12">
-                        <div className="mb-8">
-                          <h2 className="text-2xl font-bold text-black mb-2">Fund in now</h2>
-                          <p className="text-gray-600">현재 진행 중인 펀딩 상품입니다.</p>
-                        </div>
-                        {isLoading ? (
-                          <div className="grid grid-cols-2 gap-4 mb-8">
-                            {[1, 2, 3, 4].map((i) => (
-                              <div key={i} className="bg-white rounded-lg overflow-hidden">
-                                <div className="w-full aspect-square bg-gray-100 animate-pulse"></div>
-                                <div className="p-3">
-                                  <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                                  <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-                                </div>
+                    <div className="mb-12">
+                      {isLoading ? (
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                          {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="bg-white rounded-lg overflow-hidden">
+                              <div className="w-full aspect-square bg-gray-100 animate-pulse"></div>
+                              <div className="p-4">
+                                <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                                <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
                               </div>
-                            ))}
-                          </div>
-                        ) : fundInNow.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-4 mb-8">
-                            {fundInNow.map(renderProductCard)}
-                          </div>
-                        ) : (
-                          <div className="text-center py-12 text-gray-500">
-                            현재 진행 중인 펀딩 상품이 없습니다.
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Fund in past 섹션 */}
-                      <div className="mb-12">
-                        <div className="mb-8">
-                          <h2 className="text-2xl font-bold text-black mb-2">Fund in past</h2>
-                          <p className="text-gray-600">마감된 펀딩 상품입니다.</p>
+                            </div>
+                          ))}
                         </div>
-                        {isLoading ? (
-                          <div className="grid grid-cols-2 gap-4 mb-8">
-                            {[1, 2, 3, 4].map((i) => (
-                              <div key={i} className="bg-white rounded-lg overflow-hidden">
-                                <div className="w-full aspect-square bg-gray-100 animate-pulse"></div>
-                                <div className="p-3">
-                                  <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                                  <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : fundInPast.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-4 mb-8">
-                            {fundInPast.map(renderProductCard)}
-                          </div>
-                        ) : (
-                          <div className="text-center py-12 text-gray-500">
-                            마감된 펀딩 상품이 없습니다.
-                          </div>
-                        )}
-                      </div>
-                    </>
+                      ) : filteredProducts.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                          {filteredProducts.map(renderProductCard)}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 text-gray-500">
+                          {fundFilter === '전체' ? '등록된 상품이 없습니다.' : 
+                           fundFilter === '진행 중' ? '현재 진행 중인 펀딩 상품이 없습니다.' :
+                           fundFilter === '진행 예정' ? '진행 예정인 펀딩 상품이 없습니다.' :
+                           '진행 완료된 펀딩 상품이 없습니다.'}
+                        </div>
+                      )}
+                    </div>
                   )
                 })()}
               </>
             ) : (
               <>
-                {/* PARTNER_UP 탭일 때 기존 구조 유지 */}
+                {/* PARTNER_UP 탭일 때 */}
                 <div className="mb-8">
                   <h2 className="text-2xl font-bold text-black mb-2">{activeTypeMeta.name}</h2>
                   <p className="text-gray-600">{activeTypeMeta.description}</p>
@@ -466,7 +499,7 @@ export default function ShopPage() {
                     {[1, 2, 3, 4].map((i) => (
                       <div key={i} className="bg-white rounded-lg overflow-hidden">
                         <div className="w-full aspect-square bg-gray-100 animate-pulse"></div>
-                        <div className="p-3">
+                        <div className="p-4">
                           <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
                           <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
                         </div>
@@ -477,7 +510,8 @@ export default function ShopPage() {
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     {typeProducts.map((product) => {
                       const typeMeta = getTypeMeta(product.type)
-                      const fundingProgress = calculateFundingProgress(product)
+                      const description = product.shortDescription || product.description || ''
+                      const brand = product.brand || ''
                       return (
                         <Link 
                           key={product.id} 
@@ -485,11 +519,6 @@ export default function ShopPage() {
                           className="bg-white rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                         >
                           <div className="w-full aspect-square bg-gray-100 overflow-hidden relative">
-                            {typeMeta && (
-                              <span className="absolute top-3 left-3 bg-black/80 text-white text-[11px] uppercase tracking-wide px-3 py-1 rounded-full">
-                                {typeMeta.name}
-                              </span>
-                            )}
                             {product.images && product.images[0] ? (
                               <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" onError={(e) => {
                                 e.currentTarget.src = '/images/placeholder-product.jpg'
@@ -499,38 +528,17 @@ export default function ShopPage() {
                                 <div className="w-3/4 h-3/4 bg-gray-300"></div>
                               </div>
                             )}
+                            <button className="absolute bottom-2 right-2 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors">
+                              <svg className="w-4 h-4 text-[#fd6f22]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                              </svg>
+                            </button>
                           </div>
-                          <div className="p-3 space-y-3">
+                          <div className="p-4 space-y-2">
                             <div>
-                              <h3 className="font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
-                              <p className="text-gray-600 text-xs line-clamp-2">{product.shortDescription || product.description}</p>
-                            </div>
-                            {typeof fundingProgress === 'number' && (
-                              <div>
-                                <div className="flex items-center justify-between text-[11px] text-gray-500 uppercase">
-                                  <span>Funding progress</span>
-                                  <span className="font-semibold text-black">{fundingProgress}%</span>
-                                </div>
-                                <div className="mt-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-black transition-all"
-                                    style={{ width: `${Math.min(fundingProgress, 100)}%` }}
-                                  />
-                                </div>
-                                <div className="mt-2 text-[11px] text-gray-500 flex justify-between">
-                                  <span>Raised {formatCurrency(product.fundingCurrentAmount ?? 0)}원</span>
-                                  <span>Goal {formatCurrency(product.fundingGoalAmount ?? 0)}원</span>
-                                </div>
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between text-xs text-gray-600">
-                              <span className="text-black font-bold text-base">{product.price.toLocaleString()}원</span>
-                              <span className="flex items-center gap-1">
-                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.656l-6.828-6.829a4 4 0 010-5.656z" />
-                                </svg>
-                                <span>{product.likeCount ?? 0}</span>
-                              </span>
+                              <h3 className="font-bold text-base mb-1 line-clamp-1">{product.name}</h3>
+                              {brand && <p className="text-gray-500 text-sm mb-1">{brand}</p>}
+                              {description && <p className="text-gray-600 text-sm line-clamp-2">{description}</p>}
                             </div>
                           </div>
                         </Link>
@@ -549,38 +557,52 @@ export default function ShopPage() {
           </div>
         </div>
 
-        {/* 하단 배너 */}
-        <div className="bg-white py-6 border-t border-gray-200">
-          <div className="px-4 flex justify-between items-start gap-4">
-            {/* 왼쪽: 로고 정보 */}
-            <div className="flex-shrink-0">
-              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
-              <h3 className="text-sm font-bold text-black">
-                GCS<span className="text-[#f57520]">:</span>Web
-              </h3>
-          </div>
-
-            {/* 오른쪽: 회사 정보 */}
-            <div className="flex-1 text-right space-y-1 min-w-0">
-              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
-              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
-              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
-              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
+        {/* 하단 푸터 - 고객지원 및 사업자 정보 */}
+        <div className="bg-white py-8 border-t border-gray-200">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              {/* 고객지원 */}
+              <div>
+                <h3 className="text-sm font-bold text-black mb-4">고객지원</h3>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>전화: 010-5238-0236</p>
+                  <p>이메일: gcsweb01234@gmail.com</p>
+                  <p>주소: 서울특별시 강북구 솔샘로 174 136동 304호</p>
+                </div>
+              </div>
               
-              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
-                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
-                <span className="text-[10px] text-gray-400">|</span>
+              {/* 사업자 정보 */}
+              <div>
+                <h3 className="text-sm font-bold text-black mb-4">사업자 정보</h3>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>대표: 안성은</p>
+                  <p>회사명: 안북스 스튜디오</p>
+                  <p>사업자등록번호: 693-01-03164</p>
+                  <p>통신판매업신고번호: 제 2025-서울강북-0961호</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* 최하단 저작권 정보 */}
+            <div className="border-t border-gray-200 pt-6 flex flex-col sm:flex-row justify-between items-center">
+              <div className="flex items-center mb-4 sm:mb-0">
+                <h3 className="text-sm font-bold text-black">
+                  GCS<span className="text-[#f57520]">:</span>Web
+                </h3>
+                <span className="text-xs text-gray-500 ml-2">© 2025 GCSWeb. all rights reserved.</span>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <a href="#" className="text-xs text-gray-600 underline">개인정보처리방침</a>
+                <span className="text-xs text-gray-400">|</span>
                 <button 
                   onClick={(e) => {
                     e.preventDefault()
                     setIsTermsModalOpen(true)
                   }}
-                  className="text-[10px] text-gray-600 underline"
+                  className="text-xs text-gray-600 underline"
                 >
                   이용약관
                 </button>
-                <span className="text-[10px] text-gray-400">|</span>
-                <span className="text-[10px] text-gray-500">site by 제작담</span>
               </div>
             </div>
           </div>

@@ -474,21 +474,68 @@ export default function ProductDetailPage() {
     )
   }
 
+  // D-Day 계산
+  const calculateDDay = (deadline: string | null | undefined): string | null => {
+    if (!deadline) return null
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const deadlineDate = new Date(deadline)
+    deadlineDate.setHours(0, 0, 0, 0)
+    const diff = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    if (diff < 0) return null
+    return `D-${diff}`
+  }
+
+  // 날짜 포맷팅
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}.${month}.${day}`
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      {/* 상단 검은색 헤더 */}
-      <div className="bg-black text-white pt-32 pb-8">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">Shop</h1>
-            <p className="text-sm mb-8">학생들이 직접 제작한 굿즈를 판매하고 공유하는 공간입니다.</p>
-            
-            {/* 홈 아이콘 */}
-            <Link href="/" className="inline-block">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-              </svg>
-            </Link>
+      {/* 상단 배너 영역 - 이미지 배경 + 주황색 오버레이 */}
+      <div className="relative h-[300px] overflow-hidden">
+        {/* 배경 이미지 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
+          {/* 배경 이미지가 있다면 여기에 추가 */}
+        </div>
+        {/* 주황색 오버레이 */}
+        <div className="absolute inset-0 bg-gradient-to-l from-[rgba(255,178,114,0.6)] to-[#fd6f22]"></div>
+        <div className="relative h-full flex flex-col items-start justify-center px-4 sm:px-8">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">Shop</h1>
+          <p className="text-white text-sm sm:text-base">GCS 연계전공생들이 제작한 상품을 만나보세요</p>
+        </div>
+      </div>
+
+      {/* 탭 메뉴 - 흰색 배경 영역 */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-0">
+          <div className="flex justify-center space-x-8 py-4">
+            <button
+              onClick={() => router.push('/shop?type=fund')}
+              className={`pb-2 border-b-2 font-medium transition-colors ${
+                product?.type === 'FUND'
+                  ? 'text-black border-black'
+                  : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+              }`}
+            >
+              Fund
+            </button>
+            <button
+              onClick={() => router.push('/shop?type=partner-up')}
+              className={`pb-2 border-b-2 font-medium transition-colors ${
+                product?.type === 'PARTNER_UP'
+                  ? 'text-black border-black'
+                  : 'text-gray-400 border-transparent hover:text-black hover:border-gray-300'
+              }`}
+            >
+              Partner up
+            </button>
           </div>
         </div>
       </div>
@@ -599,48 +646,56 @@ export default function ProductDetailPage() {
 
           {/* 오른쪽: 제품 정보 */}
           <div className="flex flex-col">
-            {productTypeMeta && (
-              <span className="self-start mb-3 bg-black text-white text-xs uppercase tracking-wider px-3 py-1 rounded-full">
-                {productTypeMeta.name}
+            {productTypeMeta && product.type === 'FUND' && (
+              <span className="self-start mb-3 bg-[#fd6f22] text-white text-xs font-medium px-3 py-1 rounded-full">
+                Fund
               </span>
             )}
-            <p className="text-sm text-gray-600 mb-2">{product.brand || 'GCS'}</p>
-            <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">{product.name}</h2>
             <p className="text-sm text-gray-700 mb-6 whitespace-pre-line">{product.shortDescription || product.description}</p>
-            <p className="text-2xl font-bold mb-4">{product.price.toLocaleString()}원</p>
-            <div className="flex items-center gap-3 text-sm text-gray-600 mb-6">
-              <span className="text-base text-gray-700">
-                {likeCount.toLocaleString()}명이 좋아합니다.
-              </span>
-            </div>
+            <p className="text-2xl font-bold text-[#fd6f22] mb-6">{product.price.toLocaleString()}원</p>
 
-            {typeof fundingProgress === 'number' && (
+            {typeof fundingProgress === 'number' && isFundProduct && (
               <div className="mb-8">
-                <div className="flex items-center justify-between text-xs text-gray-500 uppercase mb-2">
-                  <span>Funding Progress</span>
-                  <span className="font-semibold text-black">{fundingProgress}%</span>
+                <div className="flex items-center gap-2 mb-2">
+                  {product.fundingDeadline && (
+                    <span className="bg-[#fd6f22] text-white text-xs font-medium px-2 py-1 rounded">
+                      {calculateDDay(product.fundingDeadline)}
+                    </span>
+                  )}
+                  <span className="text-sm text-gray-600">목표금액 {formatCurrency(product.fundingGoalAmount ?? 0)}원</span>
                 </div>
-                <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-black transition-all"
-                    style={{ width: `${Math.min(fundingProgress, 100)}%` }}
-                  />
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-600">
-                  <div className="bg-gray-100 rounded-lg px-3 py-2">
-                    <p className="text-[11px] uppercase text-gray-500">Raised</p>
-                    <p className="text-sm font-semibold text-black">{formatCurrency(product.fundingCurrentAmount ?? 0)}</p>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="h-2 bg-gray-200 rounded-full flex-1" style={{ minWidth: '100px' }}>
+                    <div
+                      className="h-full bg-[#fd6f22] rounded-full transition-all"
+                      style={{ width: `${Math.min(fundingProgress, 100)}%` }}
+                    />
                   </div>
-                  <div className="bg-gray-100 rounded-lg px-3 py-2">
-                    <p className="text-[11px] uppercase text-gray-500">Goal</p>
-                    <p className="text-sm font-semibold text-black">{formatCurrency(product.fundingGoalAmount ?? 0)}</p>
+                  <span className="text-lg font-bold text-black ml-2">{fundingProgress}%</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <p className="text-sm font-bold text-black mb-1">펀딩 기간</p>
+                    <p className="text-sm text-gray-600">
+                      {product.fundingStartDate ? formatDate(product.fundingStartDate) : '-'}–{formatDate(product.fundingDeadline)}
+                    </p>
+                    {product.fundingDeadline && calculateDDay(product.fundingDeadline) && (
+                      <span className="inline-block mt-1 bg-[#fd6f22] text-white text-xs font-medium px-2 py-1 rounded">
+                        {calculateDDay(product.fundingDeadline)}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-black mb-1">배송 시작일</p>
+                    <p className="text-sm text-gray-600">{formatDate(product.deliveryStartDate) || '-'}</p>
+                    {product.deliveryStartDate && (
+                      <span className="inline-block mt-1 bg-[#fd6f22] text-white text-xs font-medium px-2 py-1 rounded">
+                        예정
+                      </span>
+                    )}
                   </div>
                 </div>
-                {product.fundingDeadline && (
-                  <p className="mt-3 text-xs text-gray-500">
-                    펀딩 마감일: {new Date(product.fundingDeadline).toLocaleDateString()}
-                  </p>
-                )}
                 {isAdmin && isFundProduct && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex items-center justify-between mb-2">
@@ -1158,30 +1213,44 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-      {/* 하단 배너 */}
-      <div className="bg-white py-6 border-t border-gray-200">
-        <div className="px-4 flex justify-between items-start gap-4">
-          {/* 왼쪽: 로고 정보 */}
-          <div className="flex-shrink-0">
-            <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
-            <h3 className="text-sm font-bold text-black">
-              GCS<span className="text-[#f57520]">:</span>Web
-            </h3>
+      {/* 하단 푸터 - 고객지원 및 사업자 정보 */}
+      <div className="bg-white py-8 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            {/* 고객지원 */}
+            <div>
+              <h3 className="text-sm font-bold text-black mb-4">고객지원</h3>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>전화: 010-5238-0236</p>
+                <p>이메일: gcsweb01234@gmail.com</p>
+                <p>주소: 서울특별시 강북구 솔샘로 174 136동 304호</p>
+              </div>
+            </div>
+            
+            {/* 사업자 정보 */}
+            <div>
+              <h3 className="text-sm font-bold text-black mb-4">사업자 정보</h3>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>대표: 안성은</p>
+                <p>회사명: 안북스 스튜디오</p>
+                <p>사업자등록번호: 693-01-03164</p>
+                <p>통신판매업신고번호: 제 2025-서울강북-0961호</p>
+              </div>
+            </div>
           </div>
           
-          {/* 오른쪽: 회사 정보 */}
-          <div className="flex-1 text-right space-y-1 min-w-0">
-            <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
-            <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
-            <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
-            <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
-            
-            <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
-              <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
-              <span className="text-[10px] text-gray-400">|</span>
-              <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
-              <span className="text-[10px] text-gray-400">|</span>
-              <span className="text-[10px] text-gray-500">site by 제작담</span>
+          {/* 최하단 저작권 정보 */}
+          <div className="border-t border-gray-200 pt-6 flex flex-col sm:flex-row justify-between items-center">
+            <div className="flex items-center mb-4 sm:mb-0">
+              <h3 className="text-sm font-bold text-black">
+                GCS<span className="text-[#f57520]">:</span>Web
+              </h3>
+              <span className="text-xs text-gray-500 ml-2">© 2025 GCSWeb. all rights reserved.</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <a href="#" className="text-xs text-gray-600 underline">개인정보처리방침</a>
+              <span className="text-xs text-gray-400">|</span>
+              <a href="#" className="text-xs text-gray-600 underline">이용약관</a>
             </div>
           </div>
         </div>
