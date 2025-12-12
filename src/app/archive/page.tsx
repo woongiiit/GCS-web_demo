@@ -147,7 +147,7 @@ function ArchiveContent() {
         {/* 서브 메뉴 띠 */}
         <div className="bg-[#f8f6f4]">
           <div className="max-w-full mx-auto px-5">
-            <div className="flex gap-8 sm:gap-[21px] items-center justify-center h-[59px] py-3">
+            <div className="flex gap-12 sm:gap-[21px] items-center justify-center h-[59px] py-3">
               <button
                 onClick={() => handleTabChange('project')}
                 className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
