@@ -163,20 +163,20 @@ export default function NavBar() {
                 {/* 햄버거 메뉴 아이콘 */}
                 <button
                   onClick={toggleMobileMenu}
-                  className="text-gray-600 hover:text-black transition-colors"
+                  className="flex-shrink-0 w-[24px] h-[24px] flex items-center justify-center text-gray-600 hover:text-black transition-colors"
                 >
                   <IconexLightBurger className="size-[24px]" />
                 </button>
                 
                 {/* 로고 */}
-                <Link href="/" className="text-lg font-bold text-black" onClick={toggleMobileMenu}>
+                <Link href="/" className="flex-shrink-0 text-lg font-bold text-black" onClick={toggleMobileMenu}>
                   GCS<span className="text-[#f57520]">:</span>Web
                 </Link>
                 
                 {/* 사용자 아이콘 */}
                 <Link
                   href={user ? myPageHref : '/login'}
-                  className="text-gray-600 hover:text-black transition-colors"
+                  className="flex-shrink-0 w-[24px] h-[24px] flex items-center justify-center text-gray-600 hover:text-black transition-colors"
                   onClick={toggleMobileMenu}
                 >
                   <IconexLightUser className="size-[24px]" />
