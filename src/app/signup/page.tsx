@@ -280,8 +280,8 @@ export default function SignupPage() {
   const canSignup = nickname && phone && emailVerified && passwordValidation.isValid && passwordMatch === true && (userType === 'GENERAL' || (studentId && major))
 
   return (
-    <div className="fixed inset-0 bg-white overflow-auto">
-      <div className="relative min-h-screen w-full overflow-hidden">
+    <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
+      <div className="relative min-h-screen w-full">
         {/* 배경 디자인 요소들 */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute left-[-47.67px] top-[-22.16px] w-[522.88px] h-[294.65px] flex items-center justify-center rotate-[339.444deg]">
