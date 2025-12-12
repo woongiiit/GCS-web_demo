@@ -1,8 +1,8 @@
 # prisma
 /prisma/migrations/*
 !/prisma/migrations/migration_lock.toml
-!/prisma/migrations/20251111094500_remove_categories_add_product_type/
-!/prisma/migrations/20251111094500_remove_categories_add_product_type/migration.sql
+!/prisma/migrations/20251212161656_add_profile_image_url/
+!/prisma/migrations/20251212161656_add_profile_image_url/migration.sql
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
