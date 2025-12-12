@@ -194,17 +194,20 @@ function CommunityContent() {
             </div>
           ) : (
             <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-black">Lounge</h2>
-                {permissions.canWritePost(role) && (
+              <div className="mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-black mb-2">Lounge</h2>
+                <p className="text-gray-600 text-sm sm:text-base">GCS 구성원만을 위한 소통공간</p>
+              </div>
+              {permissions.canWritePost(role) && (
+                <div className="flex justify-end mb-6">
                   <Link 
                     href="/community/write?category=lounge"
                     className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                   >
                     글 작성
                   </Link>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* 게시글 목록 */}
               <div className="space-y-4 mb-8">
@@ -224,30 +227,33 @@ function CommunityContent() {
                           router.push('/login')
                         }
                       }}
-                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
+                      className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer"
                     >
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 sm:gap-6">
                           {/* 대표 이미지 */}
-                          {post.images && post.images.length > 0 && (
-                            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                          {post.images && post.images.length > 0 ? (
+                            <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-gray-100">
                               <img
                                 src={post.images[0]}
                                 alt={post.title}
                                 className="w-full h-full object-cover"
                               />
                             </div>
+                          ) : (
+                            <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-gray-200"></div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
-                            <div className="text-sm text-gray-600 mb-3 line-clamp-2">
-                              {stripHtmlTags(post.content).substring(0, 100)}...
-                            </div>
-                            <div className="flex items-center space-x-4 text-xs text-gray-400">
+                            <h3 className="text-base sm:text-lg font-bold text-black mb-2 line-clamp-2">{post.title}</h3>
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                              {stripHtmlTags(post.content).substring(0, 100)}
+                              {stripHtmlTags(post.content).length > 100 && '...'}
+                            </p>
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
                               <span>{post.author.name}</span>
-                              <span>조회 {post.views}</span>
-                              <span>좋아요 {post.likeCount || 0}</span>
-                              <span>댓글 {post.commentCount}</span>
-                              <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                              <span>{formatDate(post.createdAt)}</span>
                             </div>
                           </div>
                         </div>
@@ -258,8 +264,8 @@ function CommunityContent() {
                     작성된 게시글이 없습니다.
                   </div>
                 )}
-                  </div>
-                </div>
+              </div>
+            </div>
           )}
 
                   </div>
