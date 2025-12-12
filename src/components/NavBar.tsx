@@ -160,20 +160,7 @@ export default function NavBar() {
               <div className="h-[34px]"></div>
               {/* Nav Bar Content */}
               <div className="h-[44px] bg-[#f8f6f4] shadow-[0px_4px_10px_0px_rgba(99,81,73,0.1)] flex items-center justify-between px-4 relative">
-                {/* 햄버거 메뉴 아이콘 */}
-                <button
-                  onClick={toggleMobileMenu}
-                  className="flex-shrink-0 w-[24px] h-[24px] flex items-center justify-center text-gray-600 hover:text-black transition-colors"
-                >
-                  <IconexLightBurger className="size-[24px]" />
-                </button>
-                
-                {/* 로고 */}
-                <Link href="/" className="flex-shrink-0 text-lg font-bold text-black" onClick={toggleMobileMenu}>
-                  GCS<span className="text-[#f57520]">:</span>Web
-                </Link>
-                
-                {/* 사용자 아이콘 */}
+                {/* 사용자 아이콘 - 왼쪽 */}
                 <Link
                   href={user ? myPageHref : '/login'}
                   className="flex-shrink-0 w-[24px] h-[24px] flex items-center justify-center text-gray-600 hover:text-black transition-colors"
@@ -181,6 +168,33 @@ export default function NavBar() {
                 >
                   <IconexLightUser className="size-[24px]" />
                 </Link>
+                
+                {/* 로고 - 중앙 */}
+                <Link href="/" className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-black" onClick={toggleMobileMenu}>
+                  GCS<span className="text-[#f57520]">:</span>Web
+                </Link>
+                
+                {/* 닫기 버튼 (X 아이콘) - 오른쪽 */}
+                <button
+                  onClick={toggleMobileMenu}
+                  className="flex-shrink-0 w-[24px] h-[24px] flex items-center justify-center text-gray-600 hover:text-black transition-colors"
+                  aria-label="메뉴 닫기"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-[#1a1918]"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
               </div>
             </div>
 
