@@ -23,6 +23,15 @@ function CommunityContent() {
     return temp.textContent || temp.innerText || ''
   }
 
+  // 날짜를 YYYY.MM.DD 형식으로 변환
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}.${month}.${day}`
+  }
+
   // URL 쿼리 파라미터에서 초기 탭 설정
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -68,24 +77,17 @@ function CommunityContent() {
   return (
     <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
       <div className="relative min-h-screen bg-white">
-        {/* 상단 검은색 영역 */}
-        <div className="bg-black pt-32 pb-8">
-          <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            {/* 페이지 제목 */}
-          <div className="text-center">
-              <h1 className="text-4xl font-bold text-white mb-4">Community</h1>
-              <p className="text-white text-sm mb-8">GCS 전공생과 교수님, 졸업생 모두가 함께 소통하는 커뮤니티입니다.</p>
-            
-            {/* 홈 아이콘 */}
-              <Link href="/" className="inline-block">
-              <div className="w-6 h-6 mx-auto">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-              </div>
-            </Link>
-            </div>
+        {/* 상단 배너 영역 - 이미지 배경 + 주황색 오버레이 */}
+        <div className="relative h-[300px] overflow-hidden">
+          {/* 배경 이미지 (나중에 실제 이미지로 교체 가능) */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
+            {/* 배경 이미지가 있다면 여기에 추가 */}
+          </div>
+          {/* 주황색 오버레이 */}
+          <div className="absolute inset-0 bg-gradient-to-l from-[rgba(255,178,114,0.6)] to-[#fd6f22]"></div>
+          <div className="relative h-full flex flex-col items-center justify-center px-4">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">Community</h1>
+            <p className="text-white text-sm sm:text-base">GCS의 소식과 대화가 모이는 곳</p>
           </div>
         </div>
 
@@ -122,17 +124,20 @@ function CommunityContent() {
           <div className="max-w-6xl mx-auto px-4 py-6 sm:px-0">
           {activeTab === 'board' ? (
             <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-black">Board</h2>
-                {permissions.canWritePost(role) && (
+              <div className="mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-black mb-2">Board</h2>
+                <p className="text-gray-600 text-sm sm:text-base">GCS의 최신 소식과 산업 트렌드를 한눈에</p>
+              </div>
+              {permissions.canWritePost(role) && (
+                <div className="flex justify-end mb-6">
                   <Link 
                     href="/community/write?category=board"
                     className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                   >
                     글 작성
                   </Link>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* 게시글 목록 */}
               <div className="space-y-4 mb-8">
@@ -152,30 +157,29 @@ function CommunityContent() {
                           router.push('/login')
                         }
                       }}
-                      className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer"
+                      className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer"
                     >
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 sm:gap-6">
                           {/* 대표 이미지 */}
-                          {post.images && post.images.length > 0 && (
-                            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                          {post.images && post.images.length > 0 ? (
+                            <div className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100">
                               <img
                                 src={post.images[0]}
                                 alt={post.title}
                                 className="w-full h-full object-cover"
                               />
                             </div>
+                          ) : (
+                            <div className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg bg-gray-200"></div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold text-black mb-2">{post.title}</h3>
-                            <div className="text-sm text-gray-600 mb-3 line-clamp-2">
-                              {stripHtmlTags(post.content).substring(0, 100)}...
-                            </div>
-                            <div className="flex items-center space-x-4 text-xs text-gray-400">
-                              <span>{post.author.name}</span>
-                              <span>조회 {post.views}</span>
-                              <span>좋아요 {post.likeCount || 0}</span>
-                              <span>댓글 {post.commentCount}</span>
-                              <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                            <h3 className="text-base sm:text-lg font-semibold text-black mb-2 line-clamp-2">{post.title}</h3>
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                              {stripHtmlTags(post.content).substring(0, 100)}
+                              {stripHtmlTags(post.content).length > 100 && '...'}
+                            </p>
+                            <div className="text-sm text-gray-500">
+                              {formatDate(post.createdAt)}
                             </div>
                           </div>
                         </div>
