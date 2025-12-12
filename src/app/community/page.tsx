@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
+import AboutTermsModal from '@/components/AboutTermsModal'
 
 function CommunityContent() {
   const searchParams = useSearchParams()
@@ -13,6 +14,7 @@ function CommunityContent() {
   const [activeTab, setActiveTab] = useState<'board' | 'lounge'>('board')
   const [posts, setPosts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   // HTML 태그를 제거하고 텍스트만 추출하는 함수
   const stripHtmlTags = (html: string): string => {
