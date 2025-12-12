@@ -640,8 +640,9 @@ function ArchiveWriteContent() {
                   />
                 </div>
 
+                {/* 버튼들 */}
                 {/* 주요 항목 체크박스 */}
-                <div className="flex items-center">
+                <div className="flex items-center mb-6">
                   <input
                     id="isFeatured"
                     name="isFeatured"
@@ -651,14 +652,13 @@ function ArchiveWriteContent() {
                       setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded cursor-pointer"
+                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded cursor-pointer relative z-10"
                   />
-                  <label htmlFor="isFeatured" className="ml-2 block text-sm text-gray-700 cursor-pointer">
+                  <label htmlFor="isFeatured" className="ml-2 block text-sm text-gray-700 cursor-pointer relative z-10">
                     주요 항목으로 설정
                   </label>
                 </div>
 
-                {/* 버튼들 */}
                 <div className="flex space-x-4 pt-6">
                   <button
                     type="button"
