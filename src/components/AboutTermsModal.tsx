@@ -16,12 +16,12 @@ export default function AboutTermsModal({ isOpen, onClose }: AboutTermsModalProp
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ paddingTop: 'calc(78px + 1rem)' }}>
       {/* 오버레이 */}
       <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
 
       {/* 모달 컨텐츠 - 중앙 배치 */}
-      <div className="relative w-full max-w-[375px] bg-[#f8f6f4] rounded-[12px] shadow-[0px_4px_10px_0px_rgba(238,74,8,0.4)] max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-[375px] bg-[#f8f6f4] rounded-[12px] shadow-[0px_4px_10px_0px_rgba(238,74,8,0.4)] max-h-[calc(90vh-78px-2rem)] overflow-y-auto">
         {/* 헤더 */}
         <div className="sticky top-0 bg-[#f8f6f4] z-10 border-b border-gray-200 pb-4 pt-4 px-4">
           <div className="flex items-center justify-between">

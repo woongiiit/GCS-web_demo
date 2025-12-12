@@ -280,7 +280,15 @@ function CommunityContent() {
               <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
                 <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
                 <span className="text-[10px] text-gray-400">|</span>
-                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsTermsModalOpen(true)
+                  }}
+                  className="text-[10px] text-gray-600 underline"
+                >
+                  이용약관
+                </button>
                 <span className="text-[10px] text-gray-400">|</span>
                 <span className="text-[10px] text-gray-500">site by 제작담</span>
           </div>
@@ -288,6 +296,12 @@ function CommunityContent() {
       </div>
     </div>
       </div>
+      {isTermsModalOpen && (
+        <AboutTermsModal 
+          isOpen={isTermsModalOpen} 
+          onClose={() => setIsTermsModalOpen(false)} 
+        />
+      )}
     </div>
   )
 }

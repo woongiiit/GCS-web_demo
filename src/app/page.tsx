@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
+import AboutTermsModal from '@/components/AboutTermsModal'
 
 // Figma image asset URLs
 const img15 = "https://www.figma.com/api/mcp/asset/2d3d1652-8692-4526-bc0e-0d12ef32aced";
@@ -108,7 +109,7 @@ function NavBar() {
   );
 }
 
-function Footer() {
+function Footer({ onTermsClick }: { onTermsClick?: () => void }) {
   return (
     <div className="bg-[#f8f6f4]">
       <div className="bg-[#f8f6f4] h-8 sm:h-9 md:h-10 shrink-0 w-full" />
@@ -195,7 +196,12 @@ function Footer() {
                 <p className="leading-[1.5] whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
               </div>
               <div className="flex flex-col justify-center relative shrink-0 w-full">
-                <p className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap">이용약관</p>
+                <button
+                  onClick={onTermsClick}
+                  className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap text-left"
+                >
+                  이용약관
+                </button>
               </div>
             </div>
           </div>
@@ -213,6 +219,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
   const [currentShopIndex, setCurrentShopIndex] = useState(0)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
   const slideIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const shopSlideIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -555,7 +562,13 @@ export default function Home() {
         </div>
       </div>
 
-      <Footer />
+      <Footer onTermsClick={() => setIsTermsModalOpen(true)} />
       </div>
+      {isTermsModalOpen && (
+        <AboutTermsModal 
+          isOpen={isTermsModalOpen} 
+          onClose={() => setIsTermsModalOpen(false)} 
+        />
+      )}
   )
 }

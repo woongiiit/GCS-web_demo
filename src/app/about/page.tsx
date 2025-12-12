@@ -96,48 +96,48 @@ export default function AboutPage() {
         <div className="bg-[#f8f6f4] border-b border-[#1a1918]">
           <div className="max-w-full mx-auto px-5">
             <div className="flex justify-between items-center h-[59px] py-3">
-              <button
-                onClick={() => setActiveTab('gcsweb')}
+                <button
+                  onClick={() => setActiveTab('gcsweb')}
                 className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'gcsweb'
+                    activeTab === 'gcsweb'
                     ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
                     : 'text-[#b7b3af]'
-                }`}
-              >
+                  }`}
+                >
                 사이트 소개
-              </button>
-              <button
-                onClick={() => setActiveTab('intro')}
+                </button>
+                <button
+                  onClick={() => setActiveTab('intro')}
                 className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'intro'
+                    activeTab === 'intro'
                     ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
                     : 'text-[#b7b3af]'
-                }`}
-              >
-                전공 소개
-              </button>
-              <button
-                onClick={() => setActiveTab('lectures')}
+                  }`}
+                >
+                  전공 소개
+                </button>
+                <button
+                  onClick={() => setActiveTab('lectures')}
                 className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'lectures'
+                    activeTab === 'lectures'
                     ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
                     : 'text-[#b7b3af]'
-                }`}
-              >
+                  }`}
+                >
                 커리큘럼
-              </button>
-              <button
-                onClick={() => setActiveTab('professor')}
+                </button>
+                <button
+                  onClick={() => setActiveTab('professor')}
                 className={`h-[43px] px-1 font-bold text-[13px] leading-[1.5] tracking-[-0.26px] transition-colors whitespace-nowrap ${
-                  activeTab === 'professor'
+                    activeTab === 'professor'
                     ? 'text-[#1a1918] border-b-2 border-[#1a1918]'
                     : 'text-[#b7b3af]'
-                }`}
-              >
+                  }`}
+                >
                 교수진 소개
-              </button>
+                </button>
+              </div>
             </div>
-          </div>
         </div>
 
         {/* 컨텐츠 영역 */}
@@ -169,8 +169,8 @@ export default function AboutPage() {
                     <span className="font-bold">주소</span>: 서울특별시 강북구 솔샘로 174 136동 304호
                   </p>
                 </div>
-              </div>
-              
+            </div>
+            
               {/* 사업자 정보 */}
               <div className="flex flex-col gap-2">
                 <p className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">사업자 정보</p>
@@ -209,12 +209,12 @@ export default function AboutPage() {
                   >
                     이용약관
                   </button>
-                </div>
               </div>
             </div>
           </div>
-          <div className="h-[34px] bg-[#f8f6f4]"></div>
         </div>
+          <div className="h-[34px] bg-[#f8f6f4]"></div>
+      </div>
       </div>
       
       {/* 이용약관 모달 */}
@@ -339,15 +339,15 @@ function GCSWebContent({ content }: { content: AboutContent }) {
       {/* 이미지 갤러리 - 4개 가로 배치 */}
       {images.length > 0 && (
         <div className="mb-8 flex gap-3 justify-center flex-wrap">
-          {images.map((image, index) => (
+            {images.map((image, index) => (
             <div key={image.id || index} className="w-[110px] h-[110px] rounded-[4px] overflow-hidden relative">
-              <img 
-                src={image.imageUrl}
-                alt={image.title || `Image ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
+                <img 
+                  src={image.imageUrl}
+                  alt={image.title || `Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
         </div>
       )}
 
@@ -393,8 +393,8 @@ function MajorIntroContent({ content }: { content: AboutContent }) {
             <p className="text-[15px] font-bold text-[#443e3c] leading-[1.5]">
               Graphic Communication Science (GCS)
             </p>
-          </div>
-          
+      </div>
+
           {/* 설명 */}
           {(content.content || content.description) && (
             <div className="text-[13px] leading-[1.5] tracking-[-0.26px] text-[#443e3c] whitespace-pre-wrap">
@@ -403,12 +403,12 @@ function MajorIntroContent({ content }: { content: AboutContent }) {
               ) : (
                 <div dangerouslySetInnerHTML={{ __html: content.description || '' }} />
               )}
-            </div>
-          )}
+        </div>
+      )}
         </div>
 
         {/* 이미지 2개 - 좌우 교차 배치 */}
-        {images.length > 0 && (
+      {images.length > 0 && (
           <div className="flex flex-col gap-3">
             {images.map((image, index) => (
               <div 
@@ -416,16 +416,16 @@ function MajorIntroContent({ content }: { content: AboutContent }) {
                 className={`flex ${index % 2 === 0 ? 'justify-start' : 'justify-end'}`}
               >
                 <div className="w-[110px] h-[110px] rounded-[4px] overflow-hidden relative">
-                  <img 
-                    src={image.imageUrl}
-                    alt={image.title || `Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                <img 
+                  src={image.imageUrl}
+                  alt={image.title || `Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
                 </div>
               </div>
             ))}
-          </div>
-        )}
+        </div>
+      )}
       </div>
     </div>
   )
@@ -465,23 +465,23 @@ function ProfessorsContent({ content }: { content: AboutContent }) {
                           <div dangerouslySetInnerHTML={{ __html: professor.htmlContent }} />
                         ) : (
                           <p>{professor.description || ''}</p>
-                        )}
+                )}
                       </div>
-                    </div>
-                    
+              </div>
+              
                     {/* 이미지 영역 */}
-                    {professor.imageUrl && (
+              {professor.imageUrl && (
                       <div className="w-[80px] h-[95px] rounded-[4px] overflow-hidden flex-shrink-0">
-                        <img 
-                          src={professor.imageUrl} 
-                          alt={professor.title || '교수 사진'} 
-                          className="w-full h-full object-cover"
-                        />
+                    <img 
+                      src={professor.imageUrl} 
+                      alt={professor.title || '교수 사진'} 
+                      className="w-full h-full object-cover"
+                    />
                       </div>
                     )}
+                    </div>
                   </div>
                 </div>
-              </div>
             )
           })}
         </div>
@@ -510,8 +510,8 @@ function SubjectsContent({ content }: { content: AboutContent }) {
                   {subject.title || ''}
                 </p>
               </div>
-            </div>
-            
+      </div>
+
             {/* 하단 - 회색 배경, 과목 설명 */}
             <div className="bg-[#eeebe6] border-[0.5px] border-white border-solid rounded-b-[4px] p-[10px]">
               <div className="text-[10px] leading-[1.5] text-[#1a1918] whitespace-pre-wrap">
@@ -520,11 +520,11 @@ function SubjectsContent({ content }: { content: AboutContent }) {
                 ) : (
                   <p>{subject.description || ''}</p>
                 )}
+                    </div>
+                  </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
     </div>
   )
 }

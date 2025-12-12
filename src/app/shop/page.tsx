@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 import { PRODUCT_TYPES } from '@/lib/shop/product-types'
+import AboutTermsModal from '@/components/AboutTermsModal'
 
 export default function ShopPage() {
   const { role, isSeller } = usePermissions()
@@ -13,6 +14,7 @@ export default function ShopPage() {
   const [typeProducts, setTypeProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   // Fund 상품이 현재 진행 중인지 확인
   const isFundInNow = (product: any) => {
@@ -568,7 +570,15 @@ export default function ShopPage() {
               <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
                 <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
                 <span className="text-[10px] text-gray-400">|</span>
-                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsTermsModalOpen(true)
+                  }}
+                  className="text-[10px] text-gray-600 underline"
+                >
+                  이용약관
+                </button>
                 <span className="text-[10px] text-gray-400">|</span>
                 <span className="text-[10px] text-gray-500">site by 제작담</span>
               </div>
@@ -576,6 +586,12 @@ export default function ShopPage() {
           </div>
         </div>
       </div>
+      {isTermsModalOpen && (
+        <AboutTermsModal 
+          isOpen={isTermsModalOpen} 
+          onClose={() => setIsTermsModalOpen(false)} 
+        />
+      )}
     </div>
   )
 }
