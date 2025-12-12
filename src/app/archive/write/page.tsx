@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 import Link from 'next/link'
-import RichTextEditor from '@/components/TinyMCEEditor'
 
 function ArchiveWriteContent() {
   const searchParams = useSearchParams()
@@ -29,8 +28,10 @@ function ArchiveWriteContent() {
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]) // 선택된 사용자 정보 배열
   
-  // TinyMCE 에디터 관련 상태
-  const [editorContent, setEditorContent] = useState('')
+  // 본문 이미지 관련 상태
+  const [contentImages, setContentImages] = useState<File[]>([])
+  const [contentImagePreviews, setContentImagePreviews] = useState<string[]>([])
+  const [isContentDragOver, setIsContentDragOver] = useState(false)
   
   // 대표 이미지 관련 상태
   const [coverImages, setCoverImages] = useState<File[]>([])
@@ -112,7 +113,17 @@ function ArchiveWriteContent() {
           selectedMemberIds: memberIds,
           isFeatured: item.isFeatured || false
         })
-        setEditorContent(item.content || item.description)
+        
+        // 기존 본문에서 이미지 URL 추출
+        const content = item.content || item.description || ''
+        const imgRegex = /<img[^>]+src="([^"]+)"/g
+        const extractedImages: string[] = []
+        let match
+        while ((match = imgRegex.exec(content)) !== null) {
+          extractedImages.push(match[1])
+        }
+        setContentImagePreviews(extractedImages)
+        
         setCoverImagePreviews(item.images || [])
       } else {
         alert('글을 불러올 수 없습니다.')
@@ -292,10 +303,61 @@ function ArchiveWriteContent() {
     setCoverImagePreviews(prev => [...prev, ...newPreviews])
   }
 
-  // TinyMCE 에디터 핸들러
-  const handleEditorChange = (content: string) => {
-    setEditorContent(content)
-    setFormData(prev => ({ ...prev, content }))
+  // 본문 이미지 업로드
+  const handleContentImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    
+    const newImages = [...contentImages, ...imageFiles]
+    setContentImages(newImages)
+
+    // 미리보기 생성
+    const newPreviews = imageFiles.map(file => URL.createObjectURL(file))
+    setContentImagePreviews(prev => [...prev, ...newPreviews])
+
+    // 파일 입력 초기화
+    e.target.value = ''
+  }
+
+  const removeContentImage = (index: number) => {
+    const newImages = contentImages.filter((_, i) => i !== index)
+    const newPreviews = contentImagePreviews.filter((_, i) => i !== index)
+    setContentImages(newImages)
+    setContentImagePreviews(newPreviews)
+  }
+
+  // 본문 이미지 드래그 앤 드롭 핸들러
+  const handleContentDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsContentDragOver(true)
+  }
+
+  const handleContentDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsContentDragOver(false)
+  }
+
+  const handleContentDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsContentDragOver(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    
+    if (imageFiles.length === 0) {
+      alert('이미지 파일만 업로드할 수 있습니다.')
+      return
+    }
+
+    const newImages = [...contentImages, ...imageFiles]
+    setContentImages(newImages)
+
+    // 미리보기 생성
+    const newPreviews = imageFiles.map(file => URL.createObjectURL(file))
+    setContentImagePreviews(prev => [...prev, ...newPreviews])
   }
 
 
@@ -319,6 +381,33 @@ function ArchiveWriteContent() {
         })
         galleryImages.push(base64String)
       }
+
+      // 본문 이미지를 Base64로 인코딩하여 HTML img 태그로 변환
+      const contentImageTags: string[] = []
+      
+      // 기존 미리보기(URL)와 새로 업로드한 파일을 함께 처리
+      for (let i = 0; i < contentImagePreviews.length; i++) {
+        const preview = contentImagePreviews[i]
+        
+        // 이미 Base64나 URL인 경우 (수정 모드에서 로드된 이미지)
+        if (preview.startsWith('data:') || preview.startsWith('http')) {
+          contentImageTags.push(`<img src="${preview}" alt="본문 이미지 ${i + 1}" />`)
+        } else if (contentImages[i]) {
+          // 새로 업로드한 파일인 경우
+          const reader = new FileReader()
+          const base64String = await new Promise<string>((resolve, reject) => {
+            reader.onloadend = () => {
+              resolve(reader.result as string)
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(contentImages[i])
+          })
+          contentImageTags.push(`<img src="${base64String}" alt="본문 이미지 ${i + 1}" />`)
+        }
+      }
+      
+      // 본문 이미지들을 HTML로 조합
+      const contentHtml = contentImageTags.join('')
       
       const url = isEditMode 
         ? (formData.type === 'project' 
@@ -335,7 +424,7 @@ function ArchiveWriteContent() {
         credentials: 'include',
         body: JSON.stringify({
           title: formData.title,
-          content: editorContent, // 리치 텍스트 에디터 내용 사용
+          content: contentHtml, // 본문 이미지들을 HTML로 변환
           type: formData.type,
           year: formData.year,
           memberIds: formData.selectedMemberIds, // 선택된 사용자 ID 배열
@@ -626,18 +715,68 @@ function ArchiveWriteContent() {
                   )}
                 </div>
 
-                {/* 상세 설명 - TinyMCE 에디터 */}
+                {/* 본문 이미지 업로드 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    상세 설명 *
+                    본문 이미지 *
                   </label>
+                  <div
+                    onDragOver={handleContentDragOver}
+                    onDragLeave={handleContentDragLeave}
+                    onDrop={handleContentDrop}
+                    className={`w-full px-4 py-8 border-2 border-dashed rounded-lg transition-colors cursor-pointer relative ${
+                      isContentDragOver
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium text-blue-600 hover:text-blue-500">
+                            클릭하여 파일을 선택
+                          </span>
+                          {' '}또는 드래그 앤 드롭
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF (여러 장 업로드 가능)</p>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleContentImageUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
                   
-                  <RichTextEditor
-                    value={editorContent}
-                    onChange={handleEditorChange}
-                    placeholder="상세 설명을 입력하세요..."
-                    height={400}
-                  />
+                  {/* 본문 이미지 미리보기 */}
+                  {contentImagePreviews.length > 0 && (
+                    <div className="mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {contentImagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={preview}
+                              alt={`본문 이미지 ${index + 1}`}
+                              className="w-full h-auto object-contain rounded-lg border border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeContentImage(index)}
+                              className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 버튼들 */}
