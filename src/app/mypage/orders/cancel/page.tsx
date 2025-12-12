@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -54,13 +54,7 @@ function CancelOrdersContent() {
     }
   }, [user, isLoading, router])
 
-  useEffect(() => {
-    if (user) {
-      fetchOrders()
-    }
-  }, [user, activeTab])
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch('/api/mypage/orders', { cache: 'no-store' })
@@ -85,7 +79,13 @@ function CancelOrdersContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (user) {
+      fetchOrders()
+    }
+  }, [user, fetchOrders])
 
   const handleBack = () => {
     router.back()
@@ -190,9 +190,9 @@ function CancelOrdersContent() {
         </div>
       </div>
 
-        {/* Body */}
-        <div className="bg-[#f8f6f4] flex flex-col items-center px-0 py-[40px] flex-1 w-full">
-          <div className="flex flex-col gap-[40px] items-end w-full max-w-[322px]">
+      {/* Body */}
+      <div className="bg-[#f8f6f4] flex flex-col items-center px-0 py-[40px] flex-1 w-full">
+        <div className="flex flex-col gap-[40px] items-end w-full max-w-[322px]">
           {/* 주문취소 섹션 */}
           {cancelledOrders.length > 0 && (
             <div className="flex flex-col gap-[24px] items-center w-full">
