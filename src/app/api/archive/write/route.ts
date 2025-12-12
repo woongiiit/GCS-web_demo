@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, content, type, year, memberIds, images, isFeatured } = body
+    const { title, content, type, year, memberIds, images, isFeatured, tag } = body
 
     // 유효성 검사
     if (!title || !content || !type || !year) {
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
           description: content.substring(0, 200), // 첫 200자를 요약으로
           content,
           year: parseInt(year),
+          tag: tag || null,
           teamMembers,
           technologies: [],
           images: images || [],

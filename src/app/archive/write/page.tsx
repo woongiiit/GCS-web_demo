@@ -17,6 +17,7 @@ function ArchiveWriteContent() {
     content: '',
     type: 'project', // 'project' 또는 'news'
     year: new Date().getFullYear().toString(),
+    tag: '', // 프로젝트 태그
     selectedMemberIds: [] as string[], // 프로젝트의 경우 - 선택된 사용자 ID 배열
     isFeatured: false
   })
@@ -110,6 +111,7 @@ function ArchiveWriteContent() {
           content: item.content || item.description,
           type: formData.type,
           year: item.year.toString(),
+          tag: item.tag || '',
           selectedMemberIds: memberIds,
           isFeatured: item.isFeatured || false
         })
@@ -427,6 +429,7 @@ function ArchiveWriteContent() {
           content: contentHtml, // 본문 이미지들을 HTML로 변환
           type: formData.type,
           year: formData.year,
+          tag: formData.tag || null, // 프로젝트 태그
           memberIds: formData.selectedMemberIds, // 선택된 사용자 ID 배열
           images: galleryImages, // 대표 이미지들
           isFeatured: formData.isFeatured
@@ -573,6 +576,24 @@ function ArchiveWriteContent() {
                     <option value="2021">2021</option>
                   </select>
                 </div>
+
+                {/* 태그 (프로젝트인 경우만) */}
+                {formData.type === 'project' && (
+                  <div>
+                    <label htmlFor="tag" className="block text-sm font-medium text-gray-700 mb-2">
+                      태그
+                    </label>
+                    <input
+                      id="tag"
+                      name="tag"
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                      value={formData.tag}
+                      onChange={handleInputChange}
+                      placeholder="태그를 입력하세요 (예: 웹개발, 앱개발 등)"
+                    />
+                  </div>
+                )}
 
                 {/* 프로젝트 멤버 (프로젝트인 경우만) */}
                 {formData.type === 'project' && (

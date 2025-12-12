@@ -39,6 +39,7 @@ export async function GET(request: Request) {
         title: true,
         description: true,
         year: true,
+        tag: true,
         teamMembers: true,
         images: true,
         isFeatured: true,

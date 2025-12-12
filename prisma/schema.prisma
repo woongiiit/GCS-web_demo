@@ -402,6 +402,7 @@ model Project {
   content      String
   year         Int
   semester     String?
+  tag          String? // 프로젝트 태그 (필터링용)
   teamMembers  String[]
   technologies String[]
   githubUrl    String?
@@ -423,6 +424,7 @@ model Project {
   @@index([isFeatured, year, createdAt])
   @@index([year, isFeatured, createdAt])
   @@index([createdAt, isFeatured])
+  @@index([tag, year])
   @@map("projects")
 }
 

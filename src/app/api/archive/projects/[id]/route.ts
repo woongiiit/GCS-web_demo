@@ -90,7 +90,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { title, content, year, memberIds, images, isFeatured } = body
+    const { title, content, year, memberIds, images, isFeatured, tag } = body
 
     // 유효성 검사
     if (!title || !content) {
@@ -141,7 +141,9 @@ export async function PUT(
       data: {
         title,
         description: content,
+        content: content,
         year: parseInt(year),
+        tag: tag || null,
         teamMembers,
         images: images || [],
         isFeatured: isFeatured || false
