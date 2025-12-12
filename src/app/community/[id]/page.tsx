@@ -405,7 +405,6 @@ function CommunityDetailContent() {
               </div>
             </div>
           </div>
-          </div>
         </div>
 
         {/* 하단 푸터 - 고객지원 및 사업자 정보 */}
