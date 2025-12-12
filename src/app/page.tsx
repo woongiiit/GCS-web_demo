@@ -333,6 +333,7 @@ export default function Home() {
     }
   }
   return (
+    <>
     <div className="bg-[#f8f6f4] min-h-screen flex flex-col items-start relative w-full">
       <div className="h-[78px] shrink-0 w-full" />
           
@@ -570,5 +571,6 @@ export default function Home() {
           onClose={() => setIsTermsModalOpen(false)} 
         />
       )}
+    </>
   )
 }
