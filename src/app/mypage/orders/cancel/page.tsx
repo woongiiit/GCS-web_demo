@@ -157,30 +157,42 @@ function CancelOrdersContent() {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex flex-col gap-[36px] items-start shrink-0 w-full">
-        <div className="flex flex-col items-start w-full">
-          <div className="flex gap-[30px] items-center justify-center leading-[1.5] px-[20px] py-0 text-[13px] tracking-[-0.26px] w-full">
-            <button
-              onClick={() => setActiveTab('fund')}
-              className={`relative shrink-0 ${
-                activeTab === 'fund' ? 'font-bold text-[#5f5a58]' : 'font-normal text-[#b7b3af]'
+      <div className="flex flex-col h-[59px] items-start justify-end shrink-0 w-full">
+        <div className="bg-[#f8f6f4] flex h-[59px] items-center justify-between pb-[4px] pt-[12px] px-[20px] sticky top-0 w-full">
+          <button
+            onClick={() => setActiveTab('fund')}
+            className={`flex flex-1 h-[43px] items-center justify-center px-[4px] py-0 ${
+              activeTab === 'fund' ? 'border-b border-[#1a1918]' : ''
+            }`}
+          >
+            <p
+              className={`font-bold leading-[1.5] text-[13px] text-center tracking-[-0.26px] ${
+                activeTab === 'fund' ? 'text-[#1a1918]' : 'text-[#b7b3af]'
               }`}
             >
               Fund
-            </button>
-            <button
-              onClick={() => setActiveTab('partner_up')}
-              className={`relative shrink-0 ${
-                activeTab === 'partner_up' ? 'font-bold text-[#5f5a58]' : 'font-normal text-[#b7b3af]'
+            </p>
+          </button>
+          <button
+            onClick={() => setActiveTab('partner_up')}
+            className={`flex flex-1 h-[43px] items-center justify-center px-[4px] py-0 ${
+              activeTab === 'partner_up' ? 'border-b border-[#1a1918]' : ''
+            }`}
+          >
+            <p
+              className={`font-bold leading-[1.5] text-[13px] text-center tracking-[-0.26px] ${
+                activeTab === 'partner_up' ? 'text-[#1a1918]' : 'text-[#b7b3af]'
               }`}
             >
               Partner up
-            </button>
-          </div>
+            </p>
+          </button>
         </div>
+      </div>
 
         {/* Body */}
-        <div className="flex flex-col gap-[40px] items-end w-full">
+        <div className="bg-[#f8f6f4] flex flex-col items-center px-0 py-[40px] flex-1 w-full">
+          <div className="flex flex-col gap-[40px] items-end w-full max-w-[322px]">
           {/* 주문취소 섹션 */}
           {cancelledOrders.length > 0 && (
             <div className="flex flex-col gap-[24px] items-center w-full">
@@ -457,6 +469,7 @@ function CancelOrdersContent() {
               <p className="text-gray-500">취소/변경 내역이 없습니다.</p>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

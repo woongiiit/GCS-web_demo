@@ -24,6 +24,9 @@ model User {
   isSeller               Boolean  @default(false)
   participatedProjectIds String[] // 참여한 프로젝트의 ID 배열
 
+  // 프로필 이미지
+  profileImageUrl         String? // 프로필 사진 URL
+
   // 학생 인증 관련 필드
   verificationStatus      VerificationStatus @default(PENDING)
   verificationImageUrl    String? // 학생 인증 이미지 URL

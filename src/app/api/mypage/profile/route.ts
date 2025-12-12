@@ -23,6 +23,7 @@ export async function GET() {
         phone: true,
         role: true,
         isSeller: true,
+        profileImageUrl: true,
         verificationStatus: true,
         verificationImageUrl: true,
         verificationRequestedAt: true,
@@ -54,13 +55,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { phone, studentId, major } = body
+    const { phone, studentId, major, profileImageUrl } = body
 
     // 업데이트할 데이터 구성
     const updateData: any = {}
     if (phone !== undefined) updateData.phone = phone
     if (studentId !== undefined) updateData.studentId = studentId
     if (major !== undefined) updateData.major = major
+    if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl
 
     // 이름은 수정 불가능 (주석 처리)
     // if (name !== undefined) updateData.name = name
@@ -77,6 +79,7 @@ export async function PATCH(request: NextRequest) {
         phone: true,
         role: true,
         isSeller: true,
+        profileImageUrl: true,
         verificationStatus: true,
         createdAt: true,
         updatedAt: true
