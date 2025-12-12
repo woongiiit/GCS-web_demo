@@ -647,10 +647,13 @@ function ArchiveWriteContent() {
                     name="isFeatured"
                     type="checkbox"
                     checked={formData.isFeatured}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded cursor-pointer"
                   />
-                  <label htmlFor="isFeatured" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="isFeatured" className="ml-2 block text-sm text-gray-700 cursor-pointer">
                     주요 항목으로 설정
                   </label>
                 </div>
