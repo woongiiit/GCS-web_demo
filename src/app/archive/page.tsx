@@ -277,6 +277,17 @@ function ArchiveContent() {
         {/* 컨텐츠 영역 */}
         <div className="bg-[#f8f6f4] min-h-screen">
           <div className="flex flex-col gap-[40px] items-center px-0 py-[40px]">
+            {/* 글 등록 버튼 - 로그인한 사용자에게만 표시 */}
+            {role && (
+              <div className="flex justify-end w-full max-w-6xl px-4">
+                <Link 
+                  href={`/archive/write?type=${activeTab === 'project' ? 'project' : 'news'}`}
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  글 등록
+                </Link>
+              </div>
+            )}
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a1918] mx-auto mb-4"></div>
