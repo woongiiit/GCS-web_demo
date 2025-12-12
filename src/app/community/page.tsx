@@ -267,13 +267,12 @@ function CommunityContent() {
             </div>
           )}
 
-                  </div>
-                </div>
+          </div>
+        </div>
 
         {/* 하단 Footer */}
         <Footer />
       </div>
-    </div>
     </div>
   )
 }

@@ -151,6 +151,7 @@ export default function AboutPage() {
 
         {/* 하단 Footer */}
         <Footer />
+      </div>
     </div>
   )
 }
