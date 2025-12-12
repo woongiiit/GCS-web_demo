@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
 import { PRODUCT_TYPES } from '@/lib/shop/product-types'
-import AboutTermsModal from '@/components/AboutTermsModal'
+import Footer from '@/components/Footer'
 
 export default function ShopPage() {
   const { role, isSeller } = usePermissions()
@@ -14,7 +14,6 @@ export default function ShopPage() {
   const [typeProducts, setTypeProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
   const [fundFilter, setFundFilter] = useState<'전체' | '진행 중' | '진행 예정' | '진행 완료'>('전체')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
@@ -557,63 +556,9 @@ export default function ShopPage() {
           </div>
         </div>
 
-        {/* 하단 푸터 - 고객지원 및 사업자 정보 */}
-        <div className="bg-white py-8 border-t border-gray-200">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              {/* 고객지원 */}
-              <div>
-                <h3 className="text-sm font-bold text-black mb-4">고객지원</h3>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>전화: 010-5238-0236</p>
-                  <p>이메일: gcsweb01234@gmail.com</p>
-                  <p>주소: 서울특별시 강북구 솔샘로 174 136동 304호</p>
-                </div>
-              </div>
-              
-              {/* 사업자 정보 */}
-              <div>
-                <h3 className="text-sm font-bold text-black mb-4">사업자 정보</h3>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>대표: 안성은</p>
-                  <p>회사명: 안북스 스튜디오</p>
-                  <p>사업자등록번호: 693-01-03164</p>
-                  <p>통신판매업신고번호: 제 2025-서울강북-0961호</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* 최하단 저작권 정보 */}
-            <div className="border-t border-gray-200 pt-6 flex flex-col sm:flex-row justify-between items-center">
-              <div className="flex items-center mb-4 sm:mb-0">
-                <h3 className="text-sm font-bold text-black">
-                  GCS<span className="text-[#f57520]">:</span>Web
-                </h3>
-                <span className="text-xs text-gray-500 ml-2">© 2025 GCSWeb. all rights reserved.</span>
-              </div>
-              <div className="flex items-center space-x-1.5">
-                <a href="#" className="text-xs text-gray-600 underline">개인정보처리방침</a>
-                <span className="text-xs text-gray-400">|</span>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setIsTermsModalOpen(true)
-                  }}
-                  className="text-xs text-gray-600 underline"
-                >
-                  이용약관
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* 하단 Footer */}
+        <Footer />
       </div>
-      {isTermsModalOpen && (
-        <AboutTermsModal 
-          isOpen={isTermsModalOpen} 
-          onClose={() => setIsTermsModalOpen(false)} 
-        />
-      )}
     </div>
   )
 }

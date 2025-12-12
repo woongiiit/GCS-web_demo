@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import AboutTermsModal from '@/components/AboutTermsModal'
+import Footer from '@/components/Footer'
 
 interface AboutContent {
   id: string
@@ -32,7 +32,6 @@ export default function AboutPage() {
   const [activeTab, setActiveTab] = useState<'gcsweb' | 'intro' | 'lectures' | 'professor'>('gcsweb')
   const [contents, setContents] = useState<Record<string, AboutContent>>({})
   const [isLoading, setIsLoading] = useState(true)
-  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   useEffect(() => {
     fetchContents()
@@ -151,77 +150,7 @@ export default function AboutPage() {
         </div>
 
         {/* 하단 Footer */}
-        <div className="bg-[#f8f6f4]">
-          <div className="h-[34px] bg-[#f8f6f4]"></div>
-          <div className="bg-[#f8f6f4] px-[21px] py-[21px]">
-            <div className="flex flex-col gap-[45px] max-w-[263px]">
-              {/* 고객지원 */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">고객지원</p>
-                <div className="flex flex-col gap-3 text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">전화</span>: 010-5238-0236
-                  </p>
-                  <p>
-                    <span className="font-bold">이메일</span>: gcsweb01234@gmail.com
-                  </p>
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">주소</span>: 서울특별시 강북구 솔샘로 174 136동 304호
-                  </p>
-                </div>
-            </div>
-            
-              {/* 사업자 정보 */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[17px] font-bold text-[#443e3c] leading-[1.5]">사업자 정보</p>
-                <div className="flex flex-col gap-3 text-[13px] leading-[1.5] text-[#85817e] tracking-[-0.26px]">
-                  <div className="flex gap-10 whitespace-nowrap">
-                    <p>
-                      <span className="font-bold">대표</span>: 안성은
-                    </p>
-                    <p>
-                      <span className="font-bold">회사명</span>: 안북스 스튜디오
-                    </p>
-                  </div>
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">사업자등록번호</span>: 693-01-03164
-                  </p>
-                  <p className="whitespace-pre-wrap">
-                    <span className="font-bold">통신판매업신고번호</span>: 제 2025-서울강북-0961호
-                  </p>
-                </div>
-              </div>
-              
-              {/* 로고 및 저작권 */}
-              <div className="flex flex-col gap-2">
-                <div className="h-[21px] w-[59px] relative">
-                  {/* 로고는 나중에 이미지로 교체 가능 */}
-                  <p className="text-[10px] font-bold text-[#1a1918]">GCS:Web</p>
-                </div>
-                <div className="flex flex-col text-[8px] text-[#443e3c] leading-[1.5]">
-                  <p className="whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setIsTermsModalOpen(true)
-                    }}
-                    className="underline whitespace-pre-wrap text-left"
-                  >
-                    이용약관
-                  </button>
-              </div>
-            </div>
-          </div>
-        </div>
-          <div className="h-[34px] bg-[#f8f6f4]"></div>
-      </div>
-      </div>
-      
-      {/* 이용약관 모달 */}
-      <AboutTermsModal 
-        isOpen={isTermsModalOpen} 
-        onClose={() => setIsTermsModalOpen(false)} 
-      />
+        <Footer />
     </div>
   )
 }
