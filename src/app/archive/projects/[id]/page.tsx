@@ -5,6 +5,16 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { usePermissions } from '@/contexts/AuthContext'
 import { permissions } from '@/lib/permissions'
+import AboutTermsModal from '@/components/AboutTermsModal'
+
+// Figma image assets
+const imgWeuiBackFilled = "https://www.figma.com/api/mcp/asset/cb288776-7829-438f-a2c6-462a52539e69"
+const img6 = "https://www.figma.com/api/mcp/asset/fa11a7ba-2a0b-4d6e-b9f8-49adae8fdbb8"
+const img7 = "https://www.figma.com/api/mcp/asset/45481773-a678-47f0-9182-4e85d59305ff"
+const img8 = "https://www.figma.com/api/mcp/asset/9a14bd35-f556-4b70-9b4c-57ee735e634e"
+const img9 = "https://www.figma.com/api/mcp/asset/161d1f13-4619-4d49-897f-5004c9cb6019"
+const img10 = "https://www.figma.com/api/mcp/asset/0e880f89-a65b-4cfa-ba39-ba089de2a9de"
+const imgLine294 = "https://www.figma.com/api/mcp/asset/e83873cd-d872-47e0-ac83-947ab6f66bab"
 
 export default function ProjectDetailPage() {
   const params = useParams()
@@ -13,14 +23,10 @@ export default function ProjectDetailPage() {
   const projectId = params.id as string
   const [project, setProject] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isLiked, setIsLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(0)
-  const [isLikeLoading, setIsLikeLoading] = useState(false)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   useEffect(() => {
     fetchProjectDetail()
-    fetchLikeStatus()
   }, [projectId])
 
   const fetchProjectDetail = async () => {
@@ -37,96 +43,12 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const fetchLikeStatus = async () => {
-    try {
-      const response = await fetch(`/api/archive/projects/${projectId}/like`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setIsLiked(data.liked)
-        setLikeCount(data.likeCount)
-      }
-    } catch (error) {
-      console.error('좋아요 상태 조회 오류:', error)
-    }
-  }
-
-  const handleLike = async () => {
-    if (isLikeLoading) return
-    
-    setIsLikeLoading(true)
-    try {
-      const response = await fetch(`/api/archive/projects/${projectId}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      })
-      
-      const data = await response.json()
-      
-      if (data.success) {
-        setIsLiked(data.liked)
-        setLikeCount(prev => data.liked ? prev + 1 : prev - 1)
-      } else {
-        alert(data.error || '좋아요 처리에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('좋아요 처리 오류:', error)
-      alert('서버 오류가 발생했습니다.')
-    } finally {
-      setIsLikeLoading(false)
-    }
-  }
-
-  const nextImage = () => {
-    if (project?.images && project.images.length > 1) {
-      setCurrentImageIndex((prev) => 
-        prev === project.images.length - 1 ? 0 : prev + 1
-      )
-    }
-  }
-
-  const prevImage = () => {
-    if (project?.images && project.images.length > 1) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? project.images.length - 1 : prev - 1
-      )
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/archive/projects/${projectId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        alert('프로젝트가 성공적으로 삭제되었습니다.')
-        router.push('/archive?tab=projects')
-      } else {
-        alert(data.error || '프로젝트 삭제에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('프로젝트 삭제 오류:', error)
-      alert('서버 오류가 발생했습니다.')
-    }
-  }
-
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center">
+      <div className="fixed inset-0 bg-[#f8f6f4] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600">프로젝트 정보를 불러오는 중...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a1918] mx-auto mb-4"></div>
+          <p className="text-[#5f5a58]">프로젝트 정보를 불러오는 중...</p>
         </div>
       </div>
     )
@@ -134,10 +56,10 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center">
+      <div className="fixed inset-0 bg-[#f8f6f4] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">프로젝트를 찾을 수 없습니다.</p>
-          <Link href="/archive" className="text-[#f57520] hover:underline">
+          <p className="text-[#5f5a58] mb-4">프로젝트를 찾을 수 없습니다.</p>
+          <Link href="/archive" className="text-[#fd6f22] hover:underline">
             Archive로 돌아가기
           </Link>
         </div>
@@ -145,337 +67,360 @@ export default function ProjectDetailPage() {
     )
   }
 
+  // 팀 멤버 데이터 파싱 (content에서 추출하거나 별도 필드에서 가져오기)
+  const teamMembers = project.teamMembers || []
+  const interviewContent = project.content || ''
+  const projectImage = project.images && project.images.length > 0 ? project.images[0] : null
+
   return (
-    <div className="fixed inset-0 bg-white overflow-auto" style={{ overflowY: 'scroll' }}>
-      <div className="relative min-h-screen bg-white">
-        {/* 상단 검은색 영역 */}
-        <div className="bg-black pt-32 pb-8">
-          <div className="max-w-6xl mx-auto px-4 sm:px-0">
-            {/* 페이지 제목 */}
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-white mb-4">{project.title}</h1>
-              <p className="text-white text-sm mb-8">{project.year}년 프로젝트</p>
-            
-              {/* 홈 아이콘 */}
-              <Link href="/" className="inline-block">
-                <div className="w-6 h-6 mx-auto">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9,22 9,12 15,12 15,22"/>
-                  </svg>
-                </div>
-              </Link>
+    <div className="bg-[#f8f6f4] min-h-screen flex flex-col items-center relative w-full">
+      {/* NavBar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
+        <div className="bg-[#f8f6f4] content-stretch flex h-[44px] items-center justify-between overflow-clip px-[16px] py-[10px] relative shadow-[0px_4px_10px_0px_rgba(99,81,73,0.1)] shrink-0 w-full">
+          <Link href="/archive" className="h-[24px] relative shrink-0 w-[12px]">
+            <img className="block max-w-none size-full" alt="뒤로가기" src={imgWeuiBackFilled} />
+          </Link>
+          <Link href="/" className="h-[18.9px] relative shrink-0 w-[53.62px]">
+            <div className="absolute inset-[1.48%_82.19%_0_0]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img6} />
             </div>
-          </div>
+            <div className="absolute inset-[0_0_0_68.67%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img7} />
+            </div>
+            <div className="absolute inset-[32.59%_-3.66%_23.7%_-2.35%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img8} />
+            </div>
+            <div className="absolute inset-[1.48%_65.71%_0.06%_18.58%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img9} />
+            </div>
+            <div className="absolute inset-[1.48%_32.86%_0_36.07%]">
+              <img className="block max-w-none size-full" alt="GCS Logo" src={img10} />
+            </div>
+          </Link>
+          <div className="h-[24px] opacity-0 shrink-0 w-[12px]" />
         </div>
+      </div>
 
-        {/* 메인 컨텐츠 영역 */}
-        <div className="bg-white min-h-screen">
-          <div className="max-w-4xl mx-auto px-4 py-6 sm:px-0">
-            <div className="bg-white px-4 py-8">
-              
-              {/* 뒤로가기 버튼 */}
-              <div className="mb-6">
-                <Link href={`/archive/projects/year/${project.year}`} className="inline-flex items-center text-gray-600 hover:text-black transition-colors">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  {project.year}년 프로젝트로 돌아가기
-                </Link>
-              </div>
+      <div className="h-[78px] shrink-0 w-full" />
 
-              {/* 프로젝트 이미지 갤러리 */}
-              {project.images && project.images.length > 0 && (
-                <div className="mb-8">
-                  <div className="relative bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="aspect-video">
-                      <img 
-                        src={project.images[currentImageIndex]} 
-                        alt={`${project.title} - 이미지 ${currentImageIndex + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+UHJvamVjdCBJbWFnZTwvdGV4dD4KPC9zdmc+'
-                        }}
-                      />
-                    </div>
-                    
-                    {/* 이미지 네비게이션 */}
-                    {project.images.length > 1 && (
-                      <>
-                        <button
-                          onClick={prevImage}
-                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={nextImage}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                        
-                        {/* 이미지 인디케이터 */}
-                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                          {project.images.map((_: any, index: number) => (
-                            <button
-                              key={index}
-                              onClick={() => setCurrentImageIndex(index)}
-                              className={`w-2 h-2 rounded-full transition-colors ${
-                                index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* 프로젝트 정보 */}
-              <div className="space-y-6">
-                {/* 기본 정보 */}
-                <div>
-                  <h2 className="text-2xl font-bold text-black mb-4">프로젝트 정보</h2>
-                  <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-                    <div>
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-[#f57520] font-bold text-lg mb-2">{project.title}</h3>
-                        
-                        {/* 관리자/작성자 액션 버튼 */}
-                        {permissions.canEditPost(role, project.authorId, user?.id) && (
-                          <div className="flex space-x-2">
-                            <Link
-                              href={`/archive/write?type=project&edit=${project.id}`}
-                              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
-                            >
-                              수정
-                            </Link>
-                            <button
-                              onClick={handleDelete}
-                              className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors"
-                            >
-                              삭제
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-gray-600">{project.description}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <span className="font-medium text-gray-700">연도:</span>
-                        <span className="ml-2 text-gray-600">{project.year}년</span>
-                      </div>
-                      
-                      {project.semester && (
-                        <div>
-                          <span className="font-medium text-gray-700">학기:</span>
-                          <span className="ml-2 text-gray-600">{project.semester}</span>
-                        </div>
-                      )}
-                      
-                      {project.teamMembers && project.teamMembers.length > 0 && (
-                        <div className="md:col-span-2">
-                          <span className="font-medium text-gray-700">참여 멤버:</span>
-                          <span className="ml-2 text-gray-600">{project.teamMembers.join(', ')}</span>
-                        </div>
-                      )}
-                      
-                      {project.technologies && project.technologies.length > 0 && (
-                        <div className="md:col-span-2">
-                          <span className="font-medium text-gray-700">사용 기술:</span>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {project.technologies.map((tech: string, index: number) => (
-                              <span key={index} className="bg-[#f57520] text-white px-3 py-1 rounded-full text-sm">
-                                {tech}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {project.isFeatured && (
-                      <div className="pt-4 border-t border-gray-200">
-                        <span className="bg-[#f57520] text-white px-3 py-1 rounded-full text-sm font-medium">
-                          주요 프로젝트
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* 프로젝트 상세 내용 */}
-                {project.content && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-black mb-4">프로젝트 상세</h2>
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-                        {project.content.split('\n').map((paragraph: string, index: number) => {
-                          // 이미지 태그 파싱
-                          const imageMatch = paragraph.match(/^\[IMAGE:(.+)\]$/)
-                          if (imageMatch) {
-                            return (
-                              <div key={index} className="my-6">
-                                <img
-                                  src={imageMatch[1]}
-                                  alt="프로젝트 이미지"
-                                  className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
-                                  onError={(e) => {
-                                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+UHJvamVjdCBJbWFnZTwvdGV4dD4KPC9zdmc+'
-                                  }}
-                                />
-                              </div>
-                            )
-                          }
-                          
-                          // 빈 줄 처리
-                          if (paragraph.trim() === '') {
-                            return <br key={index} />
-                          }
-                          
-                          // 일반 텍스트
-                          return (
-                            <p key={index} className="mb-4">
-                              {paragraph}
-                            </p>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 링크 정보 */}
-                {(project.githubUrl || project.demoUrl) && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-black mb-4">관련 링크</h2>
-                    <div className="bg-gray-50 rounded-lg p-6 space-y-3">
-                      {project.githubUrl && (
-                        <div>
-                          <a 
-                            href={project.githubUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-[#f57520] hover:underline"
-                          >
-                            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                            </svg>
-                            GitHub 저장소
-                          </a>
-                        </div>
-                      )}
-                      
-                      {project.demoUrl && (
-                        <div>
-                          <a 
-                            href={project.demoUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-[#f57520] hover:underline"
-                          >
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            데모 사이트
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* 좋아요 버튼 */}
-                <div className="flex justify-center pt-8">
-                  <button 
-                    onClick={handleLike}
-                    disabled={isLikeLoading}
-                    className={`px-6 py-3 rounded-lg transition-colors flex items-center space-x-2 ${
-                      isLiked 
-                        ? 'bg-red-500 text-white hover:bg-red-600' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } ${isLikeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <svg 
-                      className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} 
-                      fill={isLiked ? 'currentColor' : 'none'} 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                      />
-                    </svg>
-                    <span>{isLikeLoading ? '처리중...' : `좋아요 ${likeCount}`}</span>
-                  </button>
-                </div>
-
-                {/* 작성자 정보 */}
-                <div>
-                  <h2 className="text-2xl font-bold text-black mb-4">작성자 정보</h2>
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-600">
-                          <span className="font-medium">작성자:</span> {project.author?.name || '알 수 없음'}
-                        </p>
-                        <p className="text-gray-600">
-                          <span className="font-medium">작성일:</span> {new Date(project.createdAt).toLocaleDateString('ko-KR')}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
-                          {project.author?.role === 'ADMIN' ? '운영자' : '학생'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Interview Banner */}
+      <div className="flex flex-col items-start relative shrink-0 w-full">
+        <div className="h-[243.75px] overflow-clip relative shrink-0 w-full" style={{ 
+          backgroundImage: "linear-gradient(90deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), linear-gradient(247.8662727902676deg, rgba(206, 206, 206, 1) 11.811%, rgba(250, 155, 103, 1) 103.1%)" 
+        }}>
+          <div className="absolute bg-gradient-to-l from-[rgba(255,178,114,0.6)] h-[243.75px] left-0 to-[#fd6f22] top-[-1px] w-full" />
         </div>
-
-        {/* 하단 배너 */}
-        <div className="bg-white py-6 border-t border-gray-200">
-          <div className="px-4 flex justify-between items-start gap-4">
-            {/* 왼쪽: 로고 정보 */}
-            <div className="flex-shrink-0">
-              <p className="text-[10px] text-gray-500 mb-0.5">DONGGUK UNIVERSITY</p>
-              <h3 className="text-sm font-bold text-black">
-                GCS<span className="text-[#f57520]">:</span>Web
-              </h3>
-            </div>
-            
-            {/* 오른쪽: 회사 정보 */}
-            <div className="flex-1 text-right space-y-1 min-w-0">
-              <p className="text-[10px] text-gray-600 leading-tight">주소: 서울 필동로 1길 30, 동국대학교</p>
-              <p className="text-[10px] text-gray-600 leading-tight">대표자: 김봉구 | 회사명: 제작담</p>
-              <p className="text-[10px] text-gray-600 leading-tight">사업자번호: 000-00-00000</p>
-              <p className="text-[10px] text-gray-600 leading-tight">통신판매업: 제0000-서울중구-0000호</p>
-              
-              <div className="flex items-center justify-end space-x-1.5 pt-1 whitespace-nowrap">
-                <a href="#" className="text-[10px] text-gray-600 underline">개인정보처리방침</a>
-                <span className="text-[10px] text-gray-400">|</span>
-                <a href="#" className="text-[10px] text-gray-600 underline">이용약관</a>
-                <span className="text-[10px] text-gray-400">|</span>
-                <span className="text-[10px] text-gray-500">site by 제작담</span>
+        <div className="flex flex-col gap-[35px] h-[233px] items-center justify-end pb-[20px] pt-0 px-0 relative shrink-0 w-full">
+          {projectImage && (
+            <div className="border border-[#717171] border-solid flex items-center justify-center relative rounded-[4px] shrink-0 w-[221px]">
+              <div className="h-[276px] relative rounded-[4px] shadow-[0px_4px_10px_0px_rgba(0,0,0,0.2)] shrink-0 w-[221px]">
+                <img 
+                  alt={project.title} 
+                  className="absolute max-w-none object-cover rounded-[4px] size-full" 
+                  src={projectImage}
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIxIiBoZWlnaHQ9IjI3NiIgdmlld0JveD0iMCAwIDIyMSAyNzYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMjEiIGhlaWdodD0iMjc2IiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjExMC41IiB5PSIxMzgiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9qZWN0IEltYWdlPC90ZXh0Pgo8L3N2Zz4='
+                  }}
+                />
               </div>
             </div>
+          )}
+          <div className="flex flex-col gap-[12px] items-start relative shrink-0 w-full px-[20px]">
+            <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[24px] text-[#1a1918] text-center w-full">
+              <p className="leading-[1.5] whitespace-pre-wrap">{project.title}</p>
+            </div>
+            {teamMembers.length > 0 && (
+              <div className="flex items-center justify-between px-[20px] py-0 relative shrink-0 w-full">
+                <div className="flex gap-[3.811px] items-center relative shrink-0">
+                  {teamMembers.slice(0, 3).map((member: any, index: number) => (
+                    <div key={index} className="relative shrink-0 size-[47px] rounded-full overflow-hidden bg-gray-200">
+                      {member.profileImage ? (
+                        <img alt={member.name || `멤버 ${index + 1}`} className="block max-w-none size-full object-cover" src={member.profileImage} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-xs">
+                          {member.name ? member.name.charAt(0) : '?'}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* 본문 내용 */}
+      <div className="bg-[#f8f6f4] flex flex-col gap-[20px] items-center px-0 py-[30px] relative shrink-0 w-full">
+        {/* 인터뷰 섹션 */}
+        {interviewContent && (
+          <div className="flex flex-col items-center justify-center px-[16px] py-[20px] relative shrink-0 w-full max-w-[375px]">
+            <div className="flex flex-col gap-[16px] items-center relative shrink-0 w-full">
+              <div className="flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+                <div className="flex flex-col items-start relative shrink-0 w-full">
+                  <div className="font-bold leading-[1.5] not-italic relative shrink-0 text-[17px] text-[#5f5a58]">
+                    <p className="mb-0">안녕하세요. {project.title}팀!</p>
+                    <p>간단하게 팀 소개 부탁드립니다.</p>
+                  </div>
+                </div>
+                <div className="h-0 relative shrink-0 w-full">
+                  <div className="absolute bottom-full left-0 right-0 top-0">
+                    <img className="block max-w-none size-full" alt="" src={imgLine294} />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col items-start relative shrink-0 w-full">
+                <div className="flex items-center justify-center relative shrink-0 w-full">
+                  <div className="flex-1 font-normal leading-[1.5] not-italic relative shrink-0 text-[15px] text-[#5f5a58] whitespace-pre-wrap">
+                    {interviewContent.split('\n').map((paragraph: string, index: number) => {
+                      if (paragraph.trim() === '') {
+                        return <br key={index} aria-hidden="true" />
+                      }
+                      return <p key={index} className="mb-0">{paragraph}</p>
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 프로젝트 이미지 */}
+        {project.images && project.images.length > 1 && (
+          <div className="flex items-center relative shrink-0 w-full max-w-[375px] px-4">
+            <div className="h-[389px] relative shrink-0 w-full max-w-[294px] mx-auto">
+              <img 
+                alt="프로젝트 이미지" 
+                className="absolute max-w-none object-cover size-full rounded-lg" 
+                src={project.images[1]}
+                onError={(e) => {
+                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjk0IiBoZWlnaHQ9IjM4OSIgdmlld0JveD0iMCAwIDI5NCAzODkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyOTQiIGhlaWdodD0iMzg5IiBmaWxsPSIjRjVGNTI1Ii8+Cjx0ZXh0IHg9IjE0NyIgeT0iMTk0LjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9qZWN0IEltYWdlPC90ZXh0Pgo8L3N2Zz4='
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 팀 멤버 섹션 */}
+        {teamMembers.length > 0 && (
+          <div className="flex flex-col items-center justify-center px-[16px] py-[20px] relative shrink-0 w-full max-w-[375px]">
+            <div className="flex flex-col gap-[16px] items-center relative shrink-0 w-full">
+              <div className="flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+                <div className="flex flex-col items-start relative shrink-0 w-full">
+                  <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-[17px] text-[#5f5a58]">
+                    {teamMembers.length} Members
+                  </p>
+                </div>
+                <div className="h-0 relative shrink-0 w-full">
+                  <div className="absolute bottom-full left-0 right-0 top-0">
+                    <img className="block max-w-none size-full" alt="" src={imgLine294} />
+                  </div>
+                </div>
+              </div>
+              <div className="h-[342px] relative shrink-0 w-full">
+                {teamMembers.map((member: any, index: number) => {
+                  const positions = [
+                    { left: '0', top: '0', width: '236px' },
+                    { left: '83px', top: '105px', width: '260px' },
+                    { left: '0', top: '232px', width: '260px' }
+                  ]
+                  const position = positions[index] || { left: '0', top: `${index * 105}px`, width: '260px' }
+                  
+                  return (
+                    <div 
+                      key={index}
+                      className="absolute bg-[#eeebe6] border border-[rgba(255,178,114,0.6)] border-solid flex flex-col items-start p-[12px] rounded-[8px]"
+                      style={{ left: position.left, top: position.top, width: position.width }}
+                    >
+                      <div className="flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+                        <div className="flex gap-[12px] items-center relative shrink-0">
+                          <div className="flex flex-col h-[23px] items-start relative shrink-0">
+                            <p className="font-bold leading-[1.5] not-italic relative shrink-0 text-[15px] text-[#5f5a58] text-right">
+                              {member.name || `멤버 ${index + 1}`}
+                            </p>
+                          </div>
+                          {member.major && (
+                            <div className="flex flex-col h-[20px] items-start relative shrink-0">
+                              <p className="font-normal leading-[1.5] not-italic relative shrink-0 text-[13px] text-[#85817e] text-right tracking-[-0.26px]">
+                                {member.major}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {member.role && (
+                          <div className="flex flex-col items-start relative shrink-0 w-full">
+                            <p className="font-normal leading-[1.5] not-italic relative shrink-0 text-[13px] text-[#85817e] tracking-[-0.26px]">
+                              {member.role}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 프로젝트 상품 섹션 */}
+      {project.relatedProducts && project.relatedProducts.length > 0 && (
+        <div className="flex flex-col gap-[12px] items-start relative shrink-0 w-full max-w-[375px] px-4 pb-8">
+          <div className="flex flex-col h-[59px] items-center relative shrink-0 w-full">
+            <div className="relative shrink-0">
+              <p className="font-bold leading-[30px] not-italic relative shrink-0 text-[#1a1918] text-[25px]">
+                프로젝트 상품
+              </p>
+            </div>
+            <div className="relative shrink-0">
+              <p className="font-normal leading-[21px] not-italic relative shrink-0 text-[#85817e] text-[14px]">
+                {project.title}팀이 만든 제품을 만나보세요
+              </p>
+            </div>
+          </div>
+          <div className="h-0 relative shrink-0 w-full">
+            <div className="absolute bottom-full left-0 right-0 top-0">
+              <img className="block max-w-none size-full" alt="" src={imgLine294} />
+            </div>
+          </div>
+          <div className="bg-[#eeebe6] flex flex-col items-start p-[16px] relative shrink-0 w-full">
+            {project.relatedProducts.map((product: any, index: number) => (
+              <Link 
+                key={index}
+                href={`/shop/${product.id}`}
+                className="flex flex-col gap-[8px] items-start relative shrink-0 w-full"
+              >
+                <div className="flex gap-[16px] items-start relative shrink-0 w-full">
+                  {product.image && (
+                    <div className="relative rounded-[4px] shrink-0 size-[100px] overflow-hidden">
+                      <img 
+                        alt={product.name} 
+                        className="absolute max-w-none object-cover size-full" 
+                        src={product.image}
+                      />
+                    </div>
+                  )}
+                  <div className="flex flex-[1_0_0] flex-col gap-[8px] items-start min-h-px min-w-px relative self-stretch shrink-0">
+                    <div className="flex flex-col items-start justify-end leading-[1.5] not-italic relative shrink-0 text-[#1a1918] w-full">
+                      <p className="font-bold relative shrink-0 text-[15px]">
+                        {product.name}
+                      </p>
+                      {product.seller && (
+                        <p className="font-normal min-w-full relative shrink-0 text-[13px] tracking-[-0.26px] w-[min-content] whitespace-pre-wrap">
+                          {product.seller}
+                        </p>
+                      )}
+                    </div>
+                    {product.description && (
+                      <div className="flex flex-col items-start relative shrink-0 w-full">
+                        <p className="font-normal leading-[1.5] not-italic relative shrink-0 text-[10px] text-[#85817e] w-full whitespace-pre-wrap">
+                          {product.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="bg-[#f8f6f4] flex flex-col items-start relative shrink-0 w-full">
+        <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
+        <div className="bg-[#f8f6f4] content-stretch flex items-center overflow-clip p-[21px] relative shrink-0 w-full">
+          <div className="content-stretch flex flex-col gap-[45px] items-start relative shrink-0 w-[263px]">
+            <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+              <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
+                <p className="leading-[1.5] whitespace-pre-wrap">고객지원</p>
+              </div>
+              <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
+                <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                  <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                    <span className="font-bold not-italic tracking-[-0.26px]">전화</span>
+                    <span>: 010-5238-0236</span>
+                  </p>
+                </div>
+                <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
+                  <p className="leading-[1.5] text-[13px]">
+                    <span className="font-bold not-italic tracking-[-0.26px]">이메일</span>
+                    <span>: gcsweb01234@gmail.com</span>
+                  </p>
+                </div>
+                <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                  <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                    <span className="font-bold not-italic tracking-[-0.26px]">주소</span>
+                    <span>: 서울특별시 강북구 솔샘로 174 136동 304호</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+              <div className="flex flex-col font-bold justify-center leading-[0] not-italic relative shrink-0 text-[17px] text-[#443e3c] w-full">
+                <p className="leading-[1.5] whitespace-pre-wrap">사업자 정보</p>
+              </div>
+              <div className="content-stretch flex flex-col gap-[12px] items-start leading-[0] not-italic relative shrink-0 text-[0px] text-[#85817e] tracking-[-0.26px] w-full">
+                <div className="content-stretch flex gap-[40px] items-center relative shrink-0 whitespace-nowrap">
+                  <div className="flex flex-col justify-center relative shrink-0">
+                    <p className="leading-[1.5] text-[13px]">
+                      <span className="font-bold not-italic tracking-[-0.26px]">대표</span>
+                      <span>: 안성은</span>
+                    </p>
+                  </div>
+                  <div className="flex flex-col justify-center relative shrink-0">
+                    <p className="leading-[1.5] text-[13px]">
+                      <span className="font-bold not-italic tracking-[-0.26px]">회사명</span>
+                      <span>: 안북스 스튜디오</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                  <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                    <span className="font-bold not-italic tracking-[-0.26px]">사업자등록번호</span>
+                    <span>: 693-01-03164</span>
+                  </p>
+                </div>
+                <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
+                  <p className="leading-[1.5] text-[13px] whitespace-pre-wrap">
+                    <span className="font-bold not-italic tracking-[-0.26px]">통신판매업신고번호</span>
+                    <span>: 제 2025-서울강북-0961호</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-[181px]">
+              <div className="h-[21px] relative shrink-0 w-[59px]">
+                <p className="text-[10px] font-bold text-[#1a1918]">GCS:Web</p>
+              </div>
+              <div className="content-stretch flex flex-col items-start leading-[0] not-italic relative shrink-0 text-[8px] text-[#443e3c] w-full">
+                <div className="flex flex-col justify-center relative shrink-0 w-full">
+                  <p className="leading-[1.5] whitespace-pre-wrap">© 2025 GCS:Web. All rights reserved.</p>
+                </div>
+                <div className="flex flex-col justify-center relative shrink-0 w-full">
+                  <button 
+                    onClick={() => setIsTermsModalOpen(true)} 
+                    className="[text-underline-position:from-font] decoration-solid leading-[1.5] underline whitespace-pre-wrap text-left"
+                  >
+                    이용약관
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#f8f6f4] h-[34px] shrink-0 w-full" />
+      </div>
+
+      {/* 이용약관 모달 */}
+      {isTermsModalOpen && (
+        <AboutTermsModal 
+          isOpen={isTermsModalOpen} 
+          onClose={() => setIsTermsModalOpen(false)} 
+        />
+      )}
     </div>
   )
 }
