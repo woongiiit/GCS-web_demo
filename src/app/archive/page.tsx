@@ -362,6 +362,7 @@ function ArchiveContent() {
 
         {/* 하단 Footer */}
         <Footer />
+      </div>
     </div>
   )
 }
