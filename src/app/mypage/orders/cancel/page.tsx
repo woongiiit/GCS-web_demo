@@ -469,7 +469,6 @@ function CancelOrdersContent() {
               <p className="text-gray-500">취소/변경 내역이 없습니다.</p>
             </div>
           )}
-          </div>
         </div>
       </div>
     </div>
