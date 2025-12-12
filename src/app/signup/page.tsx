@@ -166,12 +166,23 @@ export default function SignupPage() {
       return
     }
     try {
-      // TODO: 실제 API 호출
-      setEmailSent(true)
-      setTimer(300)
-      setError('')
+      const response = await fetch('/api/auth/send-verification-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        setEmailSent(true)
+        setTimer(300)
+        setError('')
+      } else {
+        setError(data.error || '인증번호 전송에 실패했습니다.')
+      }
     } catch (err) {
       console.error('인증번호 전송 오류:', err)
+      setError('인증번호 전송에 실패했습니다.')
     }
   }
 
@@ -181,15 +192,32 @@ export default function SignupPage() {
       setError('인증번호를 입력해주세요.')
       return
     }
+    if (!email.trim()) {
+      setError('이메일을 입력해주세요.')
+      return
+    }
     try {
-      // TODO: 실제 API 호출
-      setEmailVerified(true)
-      setEmailSent(false)
-      setTimer(0)
-      setError('')
+      const response = await fetch('/api/auth/verify-email-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: email.trim(),
+          code: verificationCode.trim()
+        }),
+      })
+
+      const data = await response.json()
+      if (response.ok && data.verified) {
+        setEmailVerified(true)
+        setEmailSent(false)
+        setTimer(0)
+        setError('')
+      } else {
+        setError(data.error || '인증번호가 올바르지 않습니다.')
+      }
     } catch (err) {
       console.error('인증번호 검증 오류:', err)
-      setError('인증번호가 올바르지 않습니다.')
+      setError('인증번호 검증에 실패했습니다.')
     }
   }
 
@@ -225,7 +253,7 @@ export default function SignupPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: nickname || name, // 닉네임이 있으면 닉네임을 이름으로 사용, 없으면 이름 사용
-          phone: phone.replace(/-/g, ''),
+          phone: phone, // 하이픈 포함 형식으로 전송 (010-XXXX-XXXX)
           email,
           password,
           userType,
